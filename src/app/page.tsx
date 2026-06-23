@@ -11,9 +11,9 @@ export default function Home() {
           <h1 className="text-4xl md:text-5xl">Welcome to SMCS</h1>
           <span className="mt-4 block h-1 w-24 bg-blue" />
           <p className="mt-6 text-xl">
-            This is the official SMCS website. Here you will find information
-            about who we are and the services we provide. More features,
-            including a live dashboard, are on the way.
+            This is the SMCS website. Here you will find information
+            about who we are and the services we provide. There is a Live Dashboard to
+            see all current and future services that are scheduled.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
