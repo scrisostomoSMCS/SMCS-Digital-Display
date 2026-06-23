@@ -95,8 +95,8 @@ export function getDashboardEvents(): DashboardEvent[] {
       name: "Evening Concert",
       description: "Local choir performance",
       location: "Main Hall",
-      start: at(5, 19, 0),
-      end: at(5, 20, 30),
+      start: at(5, 18, 0),
+      end: at(5, 19, 30),
     },
     {
       id: "8",
