@@ -165,8 +165,10 @@ h3 {
   color: var(--color-blue);
 }
 
-/* Display-only: hide any lingering interactive affordances (cursor/hover). */
-.tv-calendar .fc a,
+/* Events are clickable (open a detail popup); everything else is inert. */
 .tv-calendar .fc .fc-event {
+  cursor: pointer;
+}
+.tv-calendar .fc .fc-col-header-cell-cushion {
   cursor: default;
 }
