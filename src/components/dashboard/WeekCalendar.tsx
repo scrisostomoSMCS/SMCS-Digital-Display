@@ -4,7 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
-import type { EventContentArg, EventInput } from "@fullcalendar/core";
+import type {
+  EventClickArg,
+  EventContentArg,
+  EventInput,
+} from "@fullcalendar/core";
 import {
   DAYS_SHOWN,
   FIRST_DAY,
@@ -12,6 +16,7 @@ import {
   DAY_END_HOUR,
 } from "@/lib/dashboardConfig";
 import { getDashboardEvents, type DashboardEvent } from "@/lib/events";
+import EventModal, { type SelectedEvent } from "./EventModal";
 
 // Map our stable DashboardEvent shape onto FullCalendar's event input. Keeping
 // this here means the rest of the app never touches FullCalendar's types.
@@ -65,8 +70,25 @@ export default function WeekCalendar() {
   // a vertical agenda list when the viewport is narrow.
   const [narrow, setNarrow] = useState(false);
 
+  // The event whose detail popup is open (null = no popup).
+  const [selected, setSelected] = useState<SelectedEvent | null>(null);
+
   // Zero-pad an hour into the "HH:00:00" form FullCalendar's slot times expect.
   const slotTime = (h: number) => `${String(h).padStart(2, "0")}:00:00`;
+
+  // Clicking an event opens its detail popup. This is the only interaction the
+  // display allows — everything else stays locked (see the FullCalendar props).
+  function handleEventClick(arg: EventClickArg) {
+    arg.jsEvent.preventDefault();
+    setSelected({
+      name: arg.event.title,
+      description: arg.event.extendedProps.description as string | undefined,
+      location: arg.event.extendedProps.location as string | undefined,
+      start: arg.event.start,
+      end: arg.event.end,
+      allDay: arg.event.allDay,
+    });
+  }
 
   useEffect(() => {
     setMounted(true);
@@ -134,14 +156,18 @@ export default function WeekCalendar() {
         allDaySlot={false}
         expandRows
         nowIndicator={false}
-        // --- Display-only: this is a public wall-mounted TV, so every form of
-        // interaction is disabled (no clicking, dragging, editing, navigation,
-        // day links, or now-indicator). Editing arrives in a later phase.
+        // --- View-only: the only interaction allowed is clicking an event to
+        // open its detail popup. Editing/dragging/selecting/navigation all stay
+        // disabled (editing arrives in a later phase). eventInteractive makes
+        // events keyboard-focusable so the popup is reachable without a mouse.
+        eventInteractive
+        eventClick={handleEventClick}
         editable={false}
         selectable={false}
         navLinks={false}
-        eventInteractive={false}
       />
+
+      <EventModal event={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
