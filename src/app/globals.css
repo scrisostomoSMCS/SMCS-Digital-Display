@@ -40,3 +40,122 @@ h3 {
   line-height: 1.25;
   font-weight: 700;
 }
+
+/* ===========================================================================
+   Live Dashboard (Phase 2)
+   ======================================================================== */
+
+/*
+  Top info bar: horizontal marquee. The track holds the items twice, so
+  translating by -50% lands on an identical copy = a seamless loop.
+*/
+.marquee {
+  display: inline-block;
+  animation: marquee 35s linear infinite;
+  will-change: transform;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Respect users/displays that prefer no motion. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    animation: none;
+  }
+}
+
+/*
+  FullCalendar overrides for TV legibility: large text, generous spacing,
+  clear day headers, and a strict white/teal/blue palette. Scoped to
+  .tv-calendar so it never affects any future calendar elsewhere.
+*/
+.tv-calendar {
+  height: 100%;
+
+  /* Palette: white surfaces, neutral-gray borders, blue event blocks. */
+  --fc-page-bg-color: var(--color-paper);
+  --fc-neutral-bg-color: var(--color-paper);
+  --fc-border-color: var(--color-placeholder);
+  --fc-event-bg-color: var(--color-blue);
+  --fc-event-border-color: var(--color-blue);
+  --fc-event-text-color: var(--color-paper);
+  /* Today is highlighted with an accent frame, not a fill (see below). */
+  --fc-today-bg-color: transparent;
+}
+
+/* Title (current week range) shown in the header. */
+.tv-calendar .fc .fc-toolbar-title {
+  font-size: clamp(1.4rem, 2.5vw, 2.25rem);
+  font-weight: 700;
+}
+
+/* Day-of-week / date column headers. */
+.tv-calendar .fc .fc-col-header-cell-cushion {
+  display: block;
+  padding: 0.6rem 0.25rem;
+  font-size: clamp(1rem, 1.6vw, 1.5rem);
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* Hour labels down the left axis of the week grid. */
+.tv-calendar .fc .fc-timegrid-slot-label-cushion,
+.tv-calendar .fc .fc-timegrid-axis-cushion {
+  font-size: clamp(0.85rem, 1.1vw, 1.2rem);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* Event blocks: bigger text, comfortable padding, wrap rather than truncate. */
+.tv-calendar .fc .fc-timegrid-event,
+.tv-calendar .fc .fc-list-event {
+  font-size: clamp(0.95rem, 1.2vw, 1.35rem);
+  border-radius: 4px;
+  white-space: normal;
+}
+.tv-calendar .fc .fc-timegrid-event .fc-event-main {
+  padding: 2px 4px;
+}
+
+/* Agenda (phone) list rows. */
+.tv-calendar .fc .fc-list-day-cushion {
+  background: var(--color-paper);
+}
+.tv-calendar .fc .fc-list-day-text,
+.tv-calendar .fc .fc-list-day-side-text {
+  font-size: clamp(1.05rem, 2vw, 1.5rem);
+  font-weight: 700;
+}
+.tv-calendar .fc .fc-list-event-title,
+.tv-calendar .fc .fc-list-event-time {
+  font-size: clamp(1rem, 2vw, 1.4rem);
+}
+/* The list-event dot is interactive-looking; use a solid blue marker. */
+.tv-calendar .fc .fc-list-event-dot {
+  border-color: var(--color-blue);
+}
+
+/*
+  Emphasize today with accent colors via a frame/highlight only (no fill),
+  per the design rules. Inset box-shadow draws a teal frame inside the cells
+  and header without shifting layout; the header date turns blue.
+*/
+.tv-calendar .fc .fc-day-today {
+  box-shadow: inset 0 0 0 3px var(--color-teal);
+}
+.tv-calendar .fc .fc-col-header-cell.fc-day-today .fc-col-header-cell-cushion {
+  color: var(--color-blue);
+}
+
+/* Display-only: hide any lingering interactive affordances (cursor/hover). */
+.tv-calendar .fc a,
+.tv-calendar .fc .fc-event {
+  cursor: default;
+}
