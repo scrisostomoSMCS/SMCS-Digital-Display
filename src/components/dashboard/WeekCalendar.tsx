@@ -31,20 +31,34 @@ function toEventInput(e: DashboardEvent): EventInput {
   };
 }
 
-// Custom event body: time, name, then location, each on its own line so it
-// stays legible from across a room rather than truncating to one tight row.
+// Compact time like "9", "9:30", "12" (no leading zero, minutes only if non-zero).
+function hourMin(d: Date): string {
+  const h = d.getHours() % 12 || 12;
+  const m = d.getMinutes();
+  return m === 0 ? `${h}` : `${h}:${String(m).padStart(2, "0")}`;
+}
+const meridiem = (d: Date) => (d.getHours() < 12 ? "am" : "pm");
+
+// Short range like "9 – 10:30am" / "9:30am – 12pm" — kept compact so the
+// time + location usually fits on one line and the block stays short.
+function timeRange(start: Date | null, end: Date | null): string {
+  if (!start) return "";
+  if (!end) return `${hourMin(start)}${meridiem(start)}`;
+  const startMer = meridiem(start) === meridiem(end) ? "" : meridiem(start);
+  return `${hourMin(start)}${startMer} – ${hourMin(end)}${meridiem(end)}`;
+}
+
+// Custom event body: bold title, then a compact "time · location" line.
 function renderEvent(arg: EventContentArg) {
   const location = arg.event.extendedProps.location as string | undefined;
-  // Title, then time + location. Text wraps freely and is never truncated; the
-  // CSS min-height on the event block (see globals.css) lets short events grow
-  // to fit, bleeding past their slot like Google Calendar, so nothing is cut.
+  const time = timeRange(arg.event.start, arg.event.end);
   return (
     <div className="px-1 leading-tight">
       <div className="font-bold">{arg.event.title}</div>
-      {(arg.timeText || location) && (
+      {(time || location) && (
         <div className="text-xs opacity-90 md:text-sm">
-          {arg.timeText}
-          {arg.timeText && location ? " · " : ""}
+          {time}
+          {time && location ? " · " : ""}
           {location}
         </div>
       )}

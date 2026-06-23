@@ -15,96 +15,123 @@ export type DashboardEvent = {
   allDay?: boolean;
 };
 
-/* --- date helpers (sample data only) ------------------------------------- */
+/* --- date helpers (sample data only) ------------------------------------- *
+ * Events are placed by weekday NAME so it reads exactly like it looks on the
+ * calendar — "Sunday" really lands on Sunday. The dates are computed relative
+ * to the current week, so the sample schedule always fills the visible week.
+ * ------------------------------------------------------------------------- */
 
-// Midnight at the start of the current week, respecting FIRST_DAY. The sample
-// events are anchored to this so the demo always populates the visible week.
-function startOfCurrentWeek(): Date {
+type Weekday =
+  | "Sunday"
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday";
+
+const WEEKDAYS: Weekday[] = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+// ISO timestamp for the given weekday of the CURRENT week at the given time.
+//   at("Sunday", 9, 30)  ->  this week's Sunday at 9:30 AM
+//   at("Friday", 18)     ->  this week's Friday at 6:00 PM  (minute defaults to 0)
+// hour is 24-hour (0–23): 9 = 9 AM, 14 = 2 PM, 18 = 6 PM.
+function at(day: Weekday, hour: number, minute = 0): string {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
-  const offset = (d.getDay() - FIRST_DAY + 7) % 7;
-  d.setDate(d.getDate() - offset);
-  return d;
-}
 
-// ISO timestamp for `dayOffset` days into the current week at the given time.
-function at(dayOffset: number, hour: number, minute = 0): string {
-  const d = startOfCurrentWeek();
-  d.setDate(d.getDate() + dayOffset);
+  // Step back to the start of the visible week (respects FIRST_DAY)...
+  const toWeekStart = (d.getDay() - FIRST_DAY + 7) % 7;
+  d.setDate(d.getDate() - toWeekStart);
+
+  // ...then forward to the requested weekday within that week.
+  const toWeekday = (WEEKDAYS.indexOf(day) - FIRST_DAY + 7) % 7;
+  d.setDate(d.getDate() + toWeekday);
+
   d.setHours(hour, minute, 0, 0);
   return d.toISOString();
 }
 
 /* --- DATA SEAM ----------------------------------------------------------- *
- * Phase 2 returns this local sample array. In Phase 3, replace the body of
- * getDashboardEvents() with a Supabase fetch (and add a realtime subscription
- * in WeekCalendar where setEvents is called). Callers depend only on the
- * DashboardEvent[] return type, so swapping the source is a one-spot change.
+ * Phase 2 returns this local sample array. To add or remove events, edit the
+ * list below: copy an object, give it a new `id`, and set its name / time /
+ * location. In Phase 3, replace the body of getDashboardEvents() with a
+ * Supabase fetch (and add a realtime subscription in WeekCalendar where
+ * setEvents is called) — callers only depend on the DashboardEvent[] return
+ * type, so swapping the source is a one-spot change.
  * ------------------------------------------------------------------------- */
 export function getDashboardEvents(): DashboardEvent[] {
   return [
     {
       id: "1",
-      name: "Morning Service",
-      description: "Weekly community gathering",
+      name: "Sunday Service",
+      description: "Weekly community gathering. All welcome.",
       location: "Main Hall",
-      start: at(0, 9, 0),
-      end: at(0, 10, 30),
+      start: at("Sunday", 9, 0),
+      end: at("Sunday", 10, 30),
     },
     {
       id: "2",
       name: "Community Lunch",
-      description: "Open to all",
+      description: "Free lunch, open to everyone.",
       location: "Dining Room",
-      start: at(1, 12, 0),
-      end: at(1, 13, 30),
+      start: at("Monday", 12, 0),
+      end: at("Monday", 13, 30),
     },
     {
       id: "3",
       name: "Youth Group",
-      description: "Ages 12–18",
+      description: "For ages 12–18.",
       location: "Room B",
-      start: at(2, 16, 0),
-      end: at(2, 17, 30),
+      start: at("Tuesday", 16, 0),
+      end: at("Tuesday", 17, 30),
     },
     {
       id: "4",
       name: "Volunteer Meeting",
       location: "Conference Room",
-      start: at(2, 18, 0),
-      end: at(2, 19, 0),
+      start: at("Tuesday", 18, 0),
+      end: at("Tuesday", 19, 0),
     },
     {
       id: "5",
       name: "Bible Study",
-      description: "Bring your own copy",
+      description: "Bring your own copy.",
       location: "Library",
-      start: at(3, 10, 0),
-      end: at(3, 11, 0),
+      start: at("Wednesday", 10, 0),
+      end: at("Wednesday", 11, 0),
     },
     {
       id: "6",
       name: "Food Bank",
-      description: "Distribution and intake",
+      description: "Distribution and intake.",
       location: "Annex",
-      start: at(4, 9, 30),
-      end: at(4, 12, 0),
+      start: at("Thursday", 9, 30),
+      end: at("Thursday", 12, 0),
     },
     {
       id: "7",
       name: "Evening Concert",
-      description: "Local choir performance",
+      description: "Local choir performance.",
       location: "Main Hall",
-      start: at(5, 18, 0),
-      end: at(5, 19, 30),
+      start: at("Friday", 18, 0),
+      end: at("Friday", 19, 30),
     },
     {
       id: "8",
-      name: "Sunday Service",
-      description: "All welcome",
-      location: "Main Hall",
-      start: at(6, 10, 0),
-      end: at(6, 11, 30),
+      name: "Community Breakfast",
+      description: "Pancakes and coffee to start the weekend.",
+      location: "Dining Room",
+      start: at("Saturday", 9, 0),
+      end: at("Saturday", 10, 30),
     },
   ];
 }
