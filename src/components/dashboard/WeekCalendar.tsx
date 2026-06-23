@@ -37,7 +37,9 @@ function renderEvent(arg: EventContentArg) {
     <div className="overflow-hidden px-1 leading-tight">
       <div className="font-bold">{arg.event.title}</div>
       {(arg.timeText || location) && (
-        <div className="text-xs opacity-90 md:text-sm">
+        // Single line with ellipsis: keeps every event to a clean two lines max
+        // so even a 1-hour block never clips text mid-word.
+        <div className="truncate text-xs opacity-90 md:text-sm">
           {arg.timeText}
           {arg.timeText && location ? " · " : ""}
           {location}
@@ -119,7 +121,10 @@ export default function WeekCalendar() {
           meridiem: "short",
         }}
         dayHeaderFormat={{ weekday: "long", month: "short", day: "numeric" }}
-        headerToolbar={{ left: "", center: "title", right: "" }}
+        // No toolbar: the column headers already show each day's date, so the
+        // week-range title would just be redundant chrome. Dropping it lets the
+        // grid start right under the control row and fill the full height.
+        headerToolbar={false}
         height="100%"
         // Fit the whole week on one screen: only show the active hours and let
         // expandRows stretch them to fill the height — no scrolling in any

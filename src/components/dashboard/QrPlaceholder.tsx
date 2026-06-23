@@ -9,8 +9,8 @@ export default function QrPlaceholder() {
       <span className="hidden text-sm font-semibold text-blue sm:inline">
         Scan to view on your phone
       </span>
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center border-2 border-blue text-center text-xs font-semibold text-ink/40 md:h-20 md:w-20">
-        QR code
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center border-2 border-blue text-center text-[10px] font-semibold text-ink/40 md:h-14 md:w-14 md:text-xs">
+        QR
       </div>
     </div>
   );
