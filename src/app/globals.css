@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/*
+  Design tokens (strict palette).
+  White background + black text by default. Teal and blue are the ONLY
+  accent colors, used for borders, frames, highlights, buttons, dividers.
+*/
+@theme {
+  --color-teal: #00aaa6;
+  --color-blue: #0054a4;
+
+  --color-ink: #000000; /* default text */
+  --color-paper: #ffffff; /* default background */
+  --color-placeholder: #d4d4d4; /* neutral gray image placeholder */
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+/*
+  Base readability rules for an older audience:
+  large body text, generous line spacing, strong contrast.
+*/
+html {
+  font-size: 18px; /* minimum body size requirement */
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  font-weight: 700;
+}
