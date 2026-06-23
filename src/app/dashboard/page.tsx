@@ -1,29 +1,36 @@
-import Link from "next/link";
-import Section from "@/components/Section";
+import InfoBar from "@/components/dashboard/InfoBar";
+import WeekCalendar from "@/components/dashboard/WeekCalendar";
+import QrPlaceholder from "@/components/dashboard/QrPlaceholder";
 
 export const metadata = {
-  title: "Live Dashboard — Coming Soon | SMCS",
+  title: "Live Dashboard | SMCS",
 };
 
 /*
-  Placeholder route for the Phase 2 live dashboard.
+  Phase 2 Live Dashboard: a public, view-only, full-screen display for
+  wall-mounted TVs that also reflows to phone width (future QR-code target).
+  Lives outside the (site) route group so it renders without site chrome.
+
+  Layout, top to bottom: scrolling info bar, the week calendar (fills the
+  remaining height), and a reserved QR-code slot pinned bottom-right.
 */
 export default function DashboardPage() {
   return (
-    <Section title="Live Dashboard">
-      <div className="max-w-2xl">
-        <p className="text-2xl font-semibold text-blue">Coming soon</p>
-        <p className="mt-4 text-xl">
-          The live dashboard is part of a later phase and is not available yet.
-          Please check back soon.
-        </p>
-        <Link
-          href="/"
-          className="mt-8 inline-block border-2 border-teal px-6 py-3 text-lg font-semibold text-teal hover:bg-teal hover:text-paper"
-        >
-          Back to Home
-        </Link>
+    <div className="flex h-screen flex-col bg-paper">
+      <InfoBar />
+
+      <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 py-4 md:px-8 md:py-6">
+        {/* min-h-0 lets the calendar shrink within the flex column so its
+            internal scroll/height:100% works instead of overflowing the page. */}
+        <div className="min-h-0 flex-1">
+          <WeekCalendar />
+        </div>
+
+        {/* Reserved bottom-right slot for a future QR code. */}
+        <div className="flex justify-end">
+          <QrPlaceholder />
+        </div>
       </div>
-    </Section>
+    </div>
   );
 }
