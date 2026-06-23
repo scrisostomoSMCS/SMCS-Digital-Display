@@ -1,10 +1,9 @@
 # SMCS Website
 
-Public-facing website for SMCS. Built with **Next.js (App Router)**,
+Public website for SMCS. Built with **Next.js (App Router)**,
 **TypeScript**, and **Tailwind CSS**.
 
-This is **Phase 1**: a clean, public home page only. No dashboard, login, or
-database yet — those arrive in later phases.
+This is **Phase 1**: a working home page. Next phase will start implementing more information, links, and start on the live dashboard.
 
 ## Getting started
 
