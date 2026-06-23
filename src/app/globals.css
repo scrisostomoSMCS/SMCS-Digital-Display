@@ -126,13 +126,24 @@ h3 {
 }
 
 /*
-  Let short events grow to fit their content and bleed past their time slot
-  (like Google Calendar) instead of clipping. min-height on the absolutely
-  positioned harness overrides the duration-based height when the latter is
-  smaller, so a 1-hour event still shows title + time + location in full.
+  Let every event grow to fit its content and bleed past its time slot (like
+  Google Calendar) instead of clipping — block height accuracy matters less
+  than always showing the full title + time + location. The harness gets a
+  minimum height (rescues very short events) and lets content overflow; the
+  event itself sizes to its content while never shrinking below its slot.
 */
 .tv-calendar .fc .fc-timegrid-event-harness {
-  min-height: 4.75rem;
+  min-height: 4.5rem;
+  overflow: visible;
+}
+
+/*
+  The whole week must fit on one screen with no scrolling. expandRows already
+  sizes the grid to the container, but event bleed could otherwise introduce a
+  scrollbar — so the time-grid scroller is locked to never scroll.
+*/
+.tv-calendar .fc .fc-scroller {
+  overflow: hidden !important;
 }
 
 /* Agenda (phone) list rows. */
