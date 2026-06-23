@@ -30,16 +30,18 @@ function toEventInput(e: DashboardEvent): EventInput {
 // stays legible from across a room rather than truncating to one tight row.
 function renderEvent(arg: EventContentArg) {
   const location = arg.event.extendedProps.location as string | undefined;
+  // Title first so the event name is always the part that survives when a short
+  // (≤1hr) block is too small to show everything; time + location share one
+  // compact secondary line to save vertical space.
   return (
-    <div className="px-1 py-0.5 leading-tight">
-      {arg.timeText && (
-        <div className="text-sm font-semibold opacity-90 md:text-base">
-          {arg.timeText}
-        </div>
-      )}
+    <div className="overflow-hidden px-1 leading-tight">
       <div className="font-bold">{arg.event.title}</div>
-      {location && (
-        <div className="text-sm opacity-90 md:text-base">{location}</div>
+      {(arg.timeText || location) && (
+        <div className="text-xs opacity-90 md:text-sm">
+          {arg.timeText}
+          {arg.timeText && location ? " · " : ""}
+          {location}
+        </div>
       )}
     </div>
   );
