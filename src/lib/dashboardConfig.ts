@@ -16,7 +16,7 @@ export const FIRST_DAY = 0;
 // these hours and stretches them to fill the screen, so the whole week fits
 // on one display with no scrolling. Widen/narrow this to fit your schedule.
 export const DAY_START_HOUR = 8; // 8:00 AM
-export const DAY_END_HOUR = 21; // 9:00 PM
+export const DAY_END_HOUR = 20; // 8:00 PM
 
 // Content of the scrolling info bar at the top of the screen. Each string is
 // one item in the marquee. Kept as a single config value (placeholder contact

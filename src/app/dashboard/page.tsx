@@ -1,3 +1,4 @@
+import Link from "next/link";
 import InfoBar from "@/components/dashboard/InfoBar";
 import WeekCalendar from "@/components/dashboard/WeekCalendar";
 import QrPlaceholder from "@/components/dashboard/QrPlaceholder";
@@ -11,25 +12,31 @@ export const metadata = {
   wall-mounted TVs that also reflows to phone width (future QR-code target).
   Lives outside the (site) route group so it renders without site chrome.
 
-  Layout, top to bottom: scrolling info bar, the week calendar (fills the
-  remaining height), and a reserved QR-code slot pinned bottom-right.
+  Layout, top to bottom: scrolling info bar; a compact control row with a Home
+  link (left) and the reserved QR slot (right); then the week calendar, which
+  fills all remaining screen height.
 */
 export default function DashboardPage() {
   return (
     <div className="flex h-screen flex-col bg-paper">
       <InfoBar />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 py-4 md:px-8 md:py-6">
-        {/* min-h-0 lets the calendar shrink within the flex column so its
-            internal scroll/height:100% works instead of overflowing the page. */}
-        <div className="min-h-0 flex-1">
-          <WeekCalendar />
-        </div>
+      <div className="flex items-center justify-between gap-4 px-4 py-2 md:px-6">
+        <Link
+          href="/"
+          className="inline-block border-2 border-blue px-4 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper md:text-lg"
+        >
+          ← Home
+        </Link>
 
-        {/* Reserved bottom-right slot for a future QR code. */}
-        <div className="flex justify-end">
-          <QrPlaceholder />
-        </div>
+        {/* Reserved top-right slot for a future QR code. */}
+        <QrPlaceholder />
+      </div>
+
+      {/* min-h-0 lets the calendar shrink within the flex column so its
+          height:100% fills the remaining space instead of overflowing. */}
+      <div className="min-h-0 flex-1 px-2 pb-2 md:px-4 md:pb-4">
+        <WeekCalendar />
       </div>
     </div>
   );
