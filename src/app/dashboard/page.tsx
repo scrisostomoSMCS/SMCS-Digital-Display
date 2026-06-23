@@ -21,10 +21,12 @@ export default function DashboardPage() {
     <div className="flex h-screen flex-col bg-paper">
       <InfoBar />
 
-      <div className="flex items-center justify-between gap-4 px-4 py-2 md:px-6">
+      {/* Compact control row, kept short so the calendar starts high and uses
+          the most vertical space possible. */}
+      <div className="flex items-center justify-between gap-4 px-3 py-1.5 md:px-4">
         <Link
           href="/"
-          className="inline-block border-2 border-blue px-4 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper md:text-lg"
+          className="inline-block border-2 border-blue px-4 py-1.5 text-base font-semibold text-blue hover:bg-blue hover:text-paper md:text-lg"
         >
           ← Home
         </Link>
@@ -34,8 +36,8 @@ export default function DashboardPage() {
       </div>
 
       {/* min-h-0 lets the calendar shrink within the flex column so its
-          height:100% fills the remaining space instead of overflowing. */}
-      <div className="min-h-0 flex-1 px-2 pb-2 md:px-4 md:pb-4">
+          height:100% fills all remaining space instead of overflowing. */}
+      <div className="min-h-0 flex-1 px-2 pb-2 md:px-4">
         <WeekCalendar />
       </div>
     </div>
