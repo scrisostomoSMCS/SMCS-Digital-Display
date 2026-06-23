@@ -13,6 +13,7 @@
     "@fullcalendar/daygrid": "^6.1.21",
     "@fullcalendar/list": "^6.1.21",
     "@fullcalendar/react": "^6.1.21",
+    "@fullcalendar/timegrid": "^6.1.21",
     "next": "^15.5.19",
     "react": "19.1.0",
     "react-dom": "19.1.0"
