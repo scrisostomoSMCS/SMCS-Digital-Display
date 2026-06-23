@@ -133,7 +133,7 @@ h3 {
   event itself sizes to its content while never shrinking below its slot.
 */
 .tv-calendar .fc .fc-timegrid-event-harness {
-  min-height: 4.5rem;
+  min-height: 7rem;
   overflow: visible;
 }
 

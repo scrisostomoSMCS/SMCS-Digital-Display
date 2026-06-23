@@ -133,5 +133,15 @@ export function getDashboardEvents(): DashboardEvent[] {
       start: at("Saturday", 9, 0),
       end: at("Saturday", 10, 30),
     },
+
+    {
+      id: "9",
+      name: "Random Event",
+      description: "This event is random and has no real description. I'm making this description long to test if this will bug.",
+      location: "Random Location",
+      start: at("Sunday", 11, 0),
+      end: at("Sunday", 18, 0),
+    },
+
   ];
 }
