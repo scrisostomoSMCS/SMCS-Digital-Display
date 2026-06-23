@@ -122,6 +122,17 @@ h3 {
 }
 .tv-calendar .fc .fc-timegrid-event .fc-event-main {
   padding: 2px 4px;
+  overflow: visible; /* show the full title/time/location, never clip it */
+}
+
+/*
+  Let short events grow to fit their content and bleed past their time slot
+  (like Google Calendar) instead of clipping. min-height on the absolutely
+  positioned harness overrides the duration-based height when the latter is
+  smaller, so a 1-hour event still shows title + time + location in full.
+*/
+.tv-calendar .fc .fc-timegrid-event-harness {
+  min-height: 4.75rem;
 }
 
 /* Agenda (phone) list rows. */

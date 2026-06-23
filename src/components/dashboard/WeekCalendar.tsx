@@ -30,16 +30,14 @@ function toEventInput(e: DashboardEvent): EventInput {
 // stays legible from across a room rather than truncating to one tight row.
 function renderEvent(arg: EventContentArg) {
   const location = arg.event.extendedProps.location as string | undefined;
-  // Title first so the event name is always the part that survives when a short
-  // (≤1hr) block is too small to show everything; time + location share one
-  // compact secondary line to save vertical space.
+  // Title, then time + location. Text wraps freely and is never truncated; the
+  // CSS min-height on the event block (see globals.css) lets short events grow
+  // to fit, bleeding past their slot like Google Calendar, so nothing is cut.
   return (
-    <div className="overflow-hidden px-1 leading-tight">
+    <div className="px-1 leading-tight">
       <div className="font-bold">{arg.event.title}</div>
       {(arg.timeText || location) && (
-        // Single line with ellipsis: keeps every event to a clean two lines max
-        // so even a 1-hour block never clips text mid-word.
-        <div className="truncate text-xs opacity-90 md:text-sm">
+        <div className="text-xs opacity-90 md:text-sm">
           {arg.timeText}
           {arg.timeText && location ? " · " : ""}
           {location}
