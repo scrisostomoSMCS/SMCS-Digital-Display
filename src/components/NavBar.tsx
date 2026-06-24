@@ -1,8 +1,9 @@
 import Link from "next/link";
+import AuthNav from "@/components/auth/AuthNav";
 
 /*
-  Primary navigation, present on every page via the root layout.
-  "Live Dashboard" points to a placeholder route for now (Phase 2).
+  Primary navigation, present on every (site) page. Static public links here;
+  the auth-aware links (My Schedule / Log in / Log out) are rendered by AuthNav.
 */
 const navLinks = [
   { label: "Home", href: "/" },
@@ -25,6 +26,9 @@ export default function NavBar() {
             </Link>
           </li>
         ))}
+        {/* Push auth controls to the right */}
+        <span className="ml-auto" />
+        <AuthNav />
       </ul>
     </nav>
   );
