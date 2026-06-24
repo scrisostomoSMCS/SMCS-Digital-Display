@@ -32,13 +32,14 @@ function toEventInput(e: DashboardEvent): EventInput {
   };
 }
 
-// Compact time like "9", "9:30", "12" (no leading zero, minutes only if non-zero).
+// Times are read in UTC so the stored wall-clock time is shown as-is to every
+// viewer (TV and phones in any timezone) — matches the calendar's timeZone="UTC".
 function hourMin(d: Date): string {
-  const h = d.getHours() % 12 || 12;
-  const m = d.getMinutes();
+  const h = d.getUTCHours() % 12 || 12;
+  const m = d.getUTCMinutes();
   return m === 0 ? `${h}` : `${h}:${String(m).padStart(2, "0")}`;
 }
-const meridiem = (d: Date) => (d.getHours() < 12 ? "am" : "pm");
+const meridiem = (d: Date) => (d.getUTCHours() < 12 ? "am" : "pm");
 
 // Short range like "9 – 10:30am" / "9:30am – 12pm" — kept compact so the
 // time + location usually fits on one line and the block stays short.
@@ -165,6 +166,9 @@ export default function WeekCalendar() {
           list: { duration: { days: DAYS_SHOWN }, dateAlignment: "week" },
         }}
         firstDay={FIRST_DAY}
+        // Show stored times as fixed wall-clock times (no per-viewer timezone
+        // shift): an event saved as 9:00 reads as 9:00 everywhere.
+        timeZone="UTC"
         events={fcEvents}
         eventContent={renderEvent}
         eventTimeFormat={{

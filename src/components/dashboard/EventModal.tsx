@@ -15,16 +15,19 @@ export type SelectedEvent = {
 // "Tuesday, June 23 · 9:00 AM – 10:30 AM"
 function formatWhen(e: SelectedEvent): string {
   if (!e.start) return "";
+  // UTC throughout so the popup matches the calendar's wall-clock display.
   const dateFmt = new Intl.DateTimeFormat(undefined, {
     weekday: "long",
     month: "long",
     day: "numeric",
+    timeZone: "UTC",
   });
   if (e.allDay) return `${dateFmt.format(e.start)} · All day`;
 
   const timeFmt = new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "UTC",
   });
   const start = timeFmt.format(e.start);
   const end = e.end ? ` – ${timeFmt.format(e.end)}` : "";
