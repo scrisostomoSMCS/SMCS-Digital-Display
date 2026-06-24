@@ -15,7 +15,8 @@ import {
   DAY_START_HOUR,
   DAY_END_HOUR,
 } from "@/lib/dashboardConfig";
-import { getDashboardEvents, type DashboardEvent } from "@/lib/events";
+import { fetchDashboardEvents, type DashboardEvent } from "@/lib/events";
+import { supabase } from "@/lib/supabase";
 import EventModal, { type SelectedEvent } from "./EventModal";
 
 // Map our stable DashboardEvent shape onto FullCalendar's event input. Keeping
@@ -71,9 +72,8 @@ const NARROW_QUERY = "(max-width: 768px)";
 export default function WeekCalendar() {
   const calRef = useRef<FullCalendar>(null);
 
-  // Calendar state. Today this is seeded once from the local sample provider.
-  // PHASE 3 SEAM: replace getDashboardEvents() with a Supabase fetch and add a
-  // realtime subscription that calls setEvents — this is the single update point.
+  // Calendar state, fed from Supabase and kept live via a realtime subscription
+  // (see the mount effect). setEvents is the single update point.
   const [events, setEvents] = useState<DashboardEvent[]>([]);
 
   // Render FullCalendar only after mount: avoids any SSR/window issues and
@@ -106,12 +106,30 @@ export default function WeekCalendar() {
 
   useEffect(() => {
     setMounted(true);
-    setEvents(getDashboardEvents());
-    // PHASE 3 SEAM (realtime):
-    // const channel = supabase.channel("events")
-    //   .on("postgres_changes", { ... }, () => setEvents(fetchedRows))
-    //   .subscribe();
-    // return () => { supabase.removeChannel(channel); };
+
+    let active = true;
+    const load = async () => {
+      const data = await fetchDashboardEvents();
+      if (active) setEvents(data);
+    };
+    load();
+
+    // Realtime: re-load on any insert/update/delete to the events table so the
+    // wall display updates itself with no reload (refetching all is simplest and
+    // fine for a small schedule).
+    const channel = supabase
+      .channel("events-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "events" },
+        load,
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
