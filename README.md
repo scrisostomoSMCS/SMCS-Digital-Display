@@ -1,69 +1,33 @@
-# SMCS Website
+# Saint Mary's Care Services Website and App
 
-Public website for SMCS. Built with **Next.js (App Router)**,
-**TypeScript**, and **Tailwind CSS**.
+<!-- Add a screenshot here (it will sit above the description).
+     Place the image in the repo and reference it, for example:
+     ![SMCS Live Dashboard](docs/live-dashboard.png) -->
 
-This is **Phase 1**: a working home page. Next phase will start implementing more information, links, and start on the live dashboard.
+Saint Mary's Care Services (SMCS) is a community care organization. This is its
+public website and scheduling app — built to make SMCS's services and schedules
+clear, accessible, and always up to date.
 
-## Getting started
+The project brings together three views over a single, shared schedule:
 
-```bash
-npm install
-npm run dev
-```
+- a **public website** and a **Live Dashboard** designed to be read
+  from across a room on wall-mounted TVs (and on phones via a QR code);
+- **personal calendars**, where each client sees the services and
+  appointments they're signed up for;
+- a **staff editing tool**, where employees manage the schedule and their
+  changes appear everywhere in real time.
 
-Then open http://localhost:3000.
+**Goal & impact:** Confused on how to sign up for a service, or struggling to find when services are happening? This website along with the app solves that. Extremely accessible for an older audience so clients always know what's happening and when. Staff can update the schedule from one place and see it reflected instantly on every display and device.
 
-## Scripts
+## Features
 
-| Command         | Description                          |
-| --------------- | ------------------------------------ |
-| `npm run dev`   | Start the dev server (hot reload)    |
-| `npm run build` | Production build                     |
-| `npm run start` | Run the production build             |
-| `npm run lint`  | Lint with ESLint                     |
-
-## Project structure
-
-```
-src/
-  app/
-    layout.tsx          Root layout — Header + NavBar + Footer on every page
-    page.tsx            Home page (/)
-    dashboard/page.tsx  "Coming soon" placeholder (real dashboard is Phase 2)
-    globals.css         Tailwind + design tokens (palette, base font sizing)
-  components/
-    Header.tsx          SMCS name/logo placeholder
-    NavBar.tsx          Top nav (includes Live Dashboard link)
-    Footer.tsx          Site footer
-    Section.tsx         Consistent content section wrapper
-    ImageWithOverlay.tsx  Reusable image block with white-on-scrim overlay
-  lib/                  Reserved for data layer (Supabase/Prisma) — empty for now
-```
-
-## Design rules
-
-- White background, black text by default; large body text (18px min) and
-  generous line spacing for high readability.
-- Accent colors are **only** teal `#00aaa6` and blue `#0054a4`, used for
-  borders, frames, highlights, buttons, and dividers.
-- Flat and institutional: no gradients, glassmorphism, or heavy shadows.
-
-## Images
-
-Real images are added later. `ImageWithOverlay` currently renders neutral gray
-placeholders. To drop in a real image, pass `src` and `alt`:
-
-```tsx
-<ImageWithOverlay src="/photo.jpg" alt="Description">
-  <h3>Overlay heading</h3>
-</ImageWithOverlay>
-```
-
-Add any external image host domains to `images.remotePatterns` in
-`next.config.ts` when needed.
-
-## Later phases
-
-The `src/lib/` folder is reserved for Supabase/Prisma so they can be added
-without restructuring. `.env.example` lists the variables they will need.
+- **Live Dashboard** — a public nschedule of the day's/week's
+  services, designed for legibility on wall-mounted TVs and accessable on phones
+  via a QR code.
+- **Personal calendars** — each client signs in to see only the services and
+  appointments they're personally signed up for.
+- **Staff editing tool** — employees and administrators create, move, resize, and delete events from a calendar interface on a separate page.
+- **Real-time updates** — edits update to the live dashboard and every device
+  in real time.
+- **Role-based access** — client, employee, and admin roles.
+- **Accessible by design** — Similar design philosophy with the already existing SMCS website to assure the site is accessable for all audiences.
