@@ -1,11 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 /*
-  Browser Supabase client for the public, read-only dashboard.
+  Browser Supabase client (singleton). Used by all client components for
+  queries and realtime. With @supabase/ssr the session is stored in cookies,
+  so the server (middleware, server components) can read the same auth state.
 
-  Both values are NEXT_PUBLIC_ on purpose — they're safe to ship to the browser.
-  Access is restricted by Row Level Security (public can only SELECT events),
-  NOT by hiding these keys. Never use the service_role / secret key here.
+  Both env values are public on purpose — access is restricted by Row Level
+  Security, not by hiding these keys. Never use the service_role key here.
 */
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -17,4 +18,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
