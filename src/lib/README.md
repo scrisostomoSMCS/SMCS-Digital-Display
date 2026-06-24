@@ -2,10 +2,12 @@
 
 Shared, non-UI code lives here (data access, clients, helpers).
 
-Reserved for later phases — keep integrations isolated behind this folder so
-pages/components stay decoupled from the data layer:
+Integrations stay isolated behind this folder so pages/components stay
+decoupled from the data layer:
 
-- `supabase.ts` — Supabase client (Phase: data)
-- `prisma.ts` — Prisma client singleton (Phase: data)
+- `supabase.ts` — public (anon) Supabase client for the read-only dashboard.
+- `events.ts` — `DashboardEvent` type + `fetchDashboardEvents()` (reads the
+  `events` table). The calendar subscribes to realtime changes in
+  `components/dashboard/WeekCalendar.tsx`.
 
-Nothing here yet. Do not add Supabase/Prisma until their phase.
+The DB schema lives in `supabase/migrations/`.
