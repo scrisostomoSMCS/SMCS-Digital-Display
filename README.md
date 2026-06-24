@@ -1,8 +1,6 @@
 # Saint Mary's Care Services Website and App
 
-<!-- Add a screenshot here (it will sit above the description).
-     Place the image in the repo and reference it, for example:
-     ![SMCS Live Dashboard](docs/live-dashboard.png) -->
+![SMCS Live Dashboard](docs/dashboardss.png)
 
 Saint Mary's Care Services (SMCS) is a community care organization. This is its
 public website and scheduling app. Built to make SMCS's services and schedules
