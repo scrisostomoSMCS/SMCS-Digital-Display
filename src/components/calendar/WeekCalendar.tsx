@@ -15,8 +15,7 @@ import {
   DAY_START_HOUR,
   DAY_END_HOUR,
 } from "@/lib/dashboardConfig";
-import { fetchDashboardEvents, type DashboardEvent } from "@/lib/events";
-import { supabase } from "@/lib/supabase";
+import { type DashboardEvent } from "@/lib/events";
 import EventModal, { type SelectedEvent } from "./EventModal";
 
 // Map our stable DashboardEvent shape onto FullCalendar's event input. Keeping
@@ -70,15 +69,21 @@ function renderEvent(arg: EventContentArg) {
 
 const NARROW_QUERY = "(max-width: 768px)";
 
-export default function WeekCalendar() {
+/*
+  Presentational week calendar. Role-agnostic: it just renders whatever events
+  it's given, so the Live Dashboard (all events) and the Personal Calendar (a
+  user's own signups) — and future employee/admin views — reuse it unchanged.
+  Data loading + realtime live in thin wrapper components, not here.
+*/
+type WeekCalendarProps = {
+  events: DashboardEvent[];
+};
+
+export default function WeekCalendar({ events }: WeekCalendarProps) {
   const calRef = useRef<FullCalendar>(null);
 
-  // Calendar state, fed from Supabase and kept live via a realtime subscription
-  // (see the mount effect). setEvents is the single update point.
-  const [events, setEvents] = useState<DashboardEvent[]>([]);
-
   // Render FullCalendar only after mount: avoids any SSR/window issues and
-  // keeps date-derived sample data off the server-rendered HTML (no mismatch).
+  // prevents a hydration mismatch from client-only state (viewport, events).
   const [mounted, setMounted] = useState(false);
 
   // Phone vs. TV: a 7-column time grid is unreadable on a phone, so reflow to
@@ -107,30 +112,6 @@ export default function WeekCalendar() {
 
   useEffect(() => {
     setMounted(true);
-
-    let active = true;
-    const load = async () => {
-      const data = await fetchDashboardEvents();
-      if (active) setEvents(data);
-    };
-    load();
-
-    // Realtime: re-load on any insert/update/delete to the events table so the
-    // wall display updates itself with no reload (refetching all is simplest and
-    // fine for a small schedule).
-    const channel = supabase
-      .channel("events-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "events" },
-        load,
-      )
-      .subscribe();
-
-    return () => {
-      active = false;
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   useEffect(() => {
