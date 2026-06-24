@@ -1,6 +1,6 @@
 import Link from "next/link";
 import InfoBar from "@/components/dashboard/InfoBar";
-import WeekCalendar from "@/components/dashboard/WeekCalendar";
+import DashboardCalendar from "@/components/dashboard/DashboardCalendar";
 import QrPlaceholder from "@/components/dashboard/QrPlaceholder";
 
 export const metadata = {
@@ -38,7 +38,7 @@ export default function DashboardPage() {
       {/* min-h-0 lets the calendar shrink within the flex column so its
           height:100% fills all remaining space instead of overflowing. */}
       <div className="min-h-0 flex-1 px-2 pb-2 md:px-4">
-        <WeekCalendar />
+        <DashboardCalendar />
       </div>
     </div>
   );
