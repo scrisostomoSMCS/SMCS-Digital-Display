@@ -42,6 +42,25 @@ h3 {
 }
 
 /* ===========================================================================
+   Employee editor (Phase 3B) — on-brand FullCalendar theming (palette only).
+   Separate from the view-only dashboard's .tv-calendar styles.
+   ======================================================================== */
+.manage-calendar {
+  --fc-border-color: var(--color-placeholder);
+  --fc-today-bg-color: rgba(0, 170, 166, 0.08); /* faint teal highlight */
+  --fc-now-indicator-color: var(--color-blue);
+  --fc-button-bg-color: var(--color-blue);
+  --fc-button-border-color: var(--color-blue);
+  --fc-button-hover-bg-color: var(--color-teal);
+  --fc-button-hover-border-color: var(--color-teal);
+  --fc-button-active-bg-color: var(--color-teal);
+  --fc-button-active-border-color: var(--color-teal);
+}
+.manage-calendar .fc {
+  font-size: 0.95rem;
+}
+
+/* ===========================================================================
    Live Dashboard (Phase 2)
    ======================================================================== */
 

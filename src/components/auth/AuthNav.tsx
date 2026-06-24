@@ -13,15 +13,37 @@ import { supabase } from "@/lib/supabase";
 const linkClass =
   "inline-block px-3 py-2 text-lg font-semibold text-ink hover:text-blue hover:underline focus-visible:text-blue";
 
+const STAFF_ROLES = ["employee", "admin"];
+
 export default function AuthNav() {
   const router = useRouter();
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [isStaff, setIsStaff] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) =>
-      setSignedIn(!!session),
-    );
+    // Look up the signed-in user's role to decide whether to show the
+    // staff-only "Manage" link. (RLS still enforces access regardless of UI.)
+    async function syncRole(userId: string | undefined) {
+      if (!userId) {
+        setIsStaff(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+      setIsStaff(!!data && STAFF_ROLES.includes(data.role));
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSignedIn(!!data.session);
+      syncRole(data.session?.user.id);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSignedIn(!!session);
+      syncRole(session?.user.id);
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -50,6 +72,13 @@ export default function AuthNav() {
           My Schedule
         </Link>
       </li>
+      {isStaff && (
+        <li>
+          <Link href="/manage" className={linkClass}>
+            Manage
+          </Link>
+        </li>
+      )}
       <li>
         <button type="button" onClick={handleLogout} className={linkClass}>
           Log out
