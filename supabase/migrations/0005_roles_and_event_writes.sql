@@ -81,9 +81,9 @@ create policy "Staff delete events"
   to authenticated
   using (public.current_user_role() in ('employee', 'admin'));
 
--- 5) DEMO: make the test account an employee so it can use the editor.
--- (Leave a second account at the default 'client' role to demo the redirect.)
+-- 5) Make the employee account a staff member so it can use the editor.
+-- moresoup11 stays the default 'client' (use it to demo the /manage redirect).
 update public.profiles p
 set role = 'employee'
 from auth.users u
-where p.id = u.id and u.email = 'moresoup11@gmail.com';
+where p.id = u.id and u.email = 'moresoup13@gmail.com';
