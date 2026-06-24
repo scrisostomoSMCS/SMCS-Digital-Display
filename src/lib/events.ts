@@ -48,6 +48,11 @@ export async function fetchDashboardEvents(): Promise<DashboardEvent[]> {
   const { data, error } = await supabase
     .from("events")
     .select("id, name, description, location, starts_at, ends_at, all_day")
+    // The Live Dashboard is admin-curated: an event shows here only when an
+    // admin/employee has explicitly flagged it (show_on_dashboard). Client
+    // signups never appear here — they only land on the personal calendar.
+    // RLS also blocks the public from reading non-dashboard events.
+    .eq("show_on_dashboard", true)
     .order("starts_at", { ascending: true });
 
   if (error) {
@@ -56,4 +61,33 @@ export async function fetchDashboardEvents(): Promise<DashboardEvent[]> {
   }
 
   return (data ?? []).map(fromRow);
+}
+
+/*
+  Load the current user's OWN schedule: events they've been signed up for, read
+  through the `signups` join table. RLS on `signups` (user_id = auth.uid())
+  guarantees only the logged-in user's rows come back, so this can never expose
+  another user's schedule. Role-agnostic — works for any authenticated user.
+*/
+export async function fetchMySchedule(): Promise<DashboardEvent[]> {
+  const { data, error } = await supabase
+    .from("signups")
+    .select(
+      "event:events(id, name, description, location, starts_at, ends_at, all_day)",
+    );
+
+  if (error) {
+    console.error("Failed to load personal schedule:", error.message);
+    return [];
+  }
+
+  // Each row embeds its related event. PostgREST/types may surface the relation
+  // as a single object or a one-element array, so normalize both shapes.
+  return (data ?? [])
+    .flatMap((row) => {
+      const e = row.event as unknown as EventRow | EventRow[] | null;
+      if (!e) return [];
+      return Array.isArray(e) ? e : [e];
+    })
+    .map(fromRow);
 }
