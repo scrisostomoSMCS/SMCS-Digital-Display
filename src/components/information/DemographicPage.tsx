@@ -18,8 +18,8 @@ export default function DemographicPage() {
   return (
     <InfoPageShell bg="teal">
       {/* Ambient signature leaf in the open corner. */}
-      <div className="pointer-events-none absolute bottom-10 right-16 hidden lg:block">
-        <RotatingLeaf size={200} className="text-paper/30" duration={24} />
+      <div className="pointer-events-none absolute bottom-8 right-14 hidden lg:block">
+        <RotatingLeaf size={150} className="text-paper/30" duration={24} />
       </div>
 
       <motion.header
@@ -29,19 +29,21 @@ export default function DemographicPage() {
         className="shrink-0"
       >
         <InfoEyebrow tone="ink" />
-        <h1 className="font-display mt-3 text-5xl leading-none md:text-7xl">
+        <h1 className="font-display mt-2 text-4xl leading-none md:text-6xl">
           {d.heading}
         </h1>
-        <p className="font-body mt-4 max-w-4xl text-2xl font-medium md:text-3xl">
+        <p className="font-body mt-3 max-w-4xl text-xl font-medium md:text-2xl">
           {d.intro}
         </p>
       </motion.header>
 
+      {/* Fixed 3×2 grid fills the remaining height; the empty sixth cell leaves
+          room for the ambient leaf. Nothing is cut off. */}
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="relative z-10 mt-7 grid min-h-0 flex-1 grid-cols-2 gap-4 md:mt-8 lg:grid-cols-3 lg:gap-5"
+        className="relative z-10 mt-5 grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-4"
       >
         {d.services.map((s) => {
           const Icon = s.icon;
@@ -49,22 +51,22 @@ export default function DemographicPage() {
             <motion.div
               key={s.name}
               variants={riseItem}
-              className="flex flex-col bg-paper px-6 py-5 text-ink"
+              className="flex min-h-0 flex-col bg-paper px-6 py-4 text-ink"
             >
               <div className="flex items-center gap-3 text-blue">
-                {Icon && <Icon size={36} strokeWidth={2} aria-hidden="true" />}
-                <h2 className="font-body text-2xl font-semibold leading-tight md:text-3xl">
+                {Icon && <Icon size={30} strokeWidth={2} aria-hidden="true" />}
+                <h2 className="font-body text-xl font-semibold leading-tight md:text-2xl">
                   {s.name}
                 </h2>
               </div>
-              <p className="font-body mt-3 text-xl font-semibold md:text-2xl">
+              <p className="font-body mt-2 text-lg font-semibold md:text-xl">
                 {s.schedule}
               </p>
-              <p className="font-body mt-2 text-lg md:text-xl">
+              <p className="font-body mt-1 text-base md:text-lg">
                 {s.description}
               </p>
               {s.location && (
-                <p className="font-body mt-auto pt-3 text-base font-semibold uppercase tracking-widest text-ink/60 md:text-lg">
+                <p className="font-body mt-auto pt-2 text-sm font-semibold uppercase tracking-widest text-ink/60 md:text-base">
                   {s.location}
                 </p>
               )}
