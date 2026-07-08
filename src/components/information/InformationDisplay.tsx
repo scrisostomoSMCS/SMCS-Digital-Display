@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import { PAGE_DURATION } from "@/lib/informationContent";
 import ServicesOverviewPage from "./ServicesOverviewPage";
 import NewArrivalsPage from "./NewArrivalsPage";
@@ -10,36 +11,53 @@ import DemographicPage from "./DemographicPage";
 // The three rotating pages, in display order. Add/reorder here.
 const PAGES = [ServicesOverviewPage, NewArrivalsPage, DemographicPage];
 
+// Dot color per page so the indicator stays visible on each page's background
+// (white / blue / teal). Keep in sync with PAGES order.
+const DOT_TONE = ["blue", "white", "ink"] as const;
+const DOT_CLASS = {
+  blue: { border: "border-blue", on: "bg-blue", off: "bg-paper hover:bg-blue/30" },
+  white: { border: "border-paper", on: "bg-paper", off: "hover:bg-paper/30" },
+  ink: { border: "border-ink", on: "bg-ink", off: "hover:bg-ink/30" },
+} as const;
+
 /*
   Rotation controller: auto-advances through the pages on a continuous loop
   (1 → 2 → 3 → 1 → …), each shown for PAGE_DURATION. Runs unattended — no
-  clicking needed. Pages are stacked and cross-faded via opacity so the
-  transition is smooth. Interval lives in one constant (PAGE_DURATION).
+  clicking needed. The active page remounts (key) so it animates in each time.
+  Interval lives in one constant (PAGE_DURATION).
 */
 export default function InformationDisplay() {
   const [active, setActive] = useState(0);
 
+  // Schedule the next advance whenever `active` changes. Because the timer is
+  // keyed to `active`, clicking a dot (which sets `active`) resets the countdown
+  // so the chosen page gets a full PAGE_DURATION before auto-advancing.
   useEffect(() => {
-    const id = setInterval(
+    const id = setTimeout(
       () => setActive((a) => (a + 1) % PAGES.length),
       PAGE_DURATION,
     );
-    return () => clearInterval(id);
-  }, []);
+    return () => clearTimeout(id);
+  }, [active]);
+
+  const ActivePage = PAGES[active];
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-paper text-ink">
-      {PAGES.map((Page, i) => (
-        <div
-          key={i}
-          aria-hidden={i !== active}
-          className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-            i === active ? "opacity-100" : "pointer-events-none opacity-0"
-          }`}
+    <div className="font-body relative h-screen w-screen overflow-hidden bg-paper text-ink">
+      {/* Framer Motion cross-fades between pages; each page's own entrance
+          animations (headline + staggered cards) play as it mounts. */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={active}
+          className="h-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
         >
-          <Page />
-        </div>
-      ))}
+          <ActivePage />
+        </motion.div>
+      </AnimatePresence>
 
       {/* Back to home for anyone who walks up and taps the screen. */}
       <Link
@@ -49,17 +67,24 @@ export default function InformationDisplay() {
         ← Back to home
       </Link>
 
-      {/* Page indicator dots. */}
-      <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-4">
-        {PAGES.map((_, i) => (
-          <span
-            key={i}
-            aria-hidden="true"
-            className={`h-4 w-4 rounded-full border-2 border-blue ${
-              i === active ? "bg-blue" : "bg-paper"
-            }`}
-          />
-        ))}
+      {/* Page indicator dots — clickable to jump between pages. Colored to stay
+          visible on the current page's background. */}
+      <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-5">
+        {PAGES.map((_, i) => {
+          const c = DOT_CLASS[DOT_TONE[active]];
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setActive(i)}
+              aria-label={`Show page ${i + 1}`}
+              aria-current={i === active}
+              className={`h-5 w-5 rounded-full border-2 transition-colors ${c.border} ${
+                i === active ? c.on : c.off
+              }`}
+            />
+          );
+        })}
       </div>
     </div>
   );

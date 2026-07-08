@@ -7,47 +7,67 @@
 // How long each full-screen page is shown before advancing (milliseconds).
 export const PAGE_DURATION = 30000; // 30 seconds
 
+import type { LucideIcon } from "lucide-react";
+import {
+  UtensilsCrossed,
+  BedDouble,
+  ShowerHead,
+  Stethoscope,
+  Users,
+  Shirt,
+  Apple,
+  Baby,
+  Moon,
+} from "lucide-react";
+
 export type Service = {
   name: string;
   schedule: string;
   description: string;
   location?: string;
+  icon?: LucideIcon; // lucide icon shown on the card
 };
 
 // --- Page 1: general services overview (later: fetch from Supabase) ---------
 export const weeklyServices: Service[] = [
   {
     name: "Hot Meals",
+    icon: UtensilsCrossed,
     schedule: "Daily · 8 AM–7 PM",
     description: "Breakfast, lunch, and dinner at no cost.",
     location: "Dining Hall",
   },
   {
     name: "Overnight Shelter",
+    icon: BedDouble,
     schedule: "Nightly · Check-in 6 PM",
     description: "A safe, warm bed for the night.",
     location: "Main Building",
   },
   {
     name: "Showers & Hygiene",
+    icon: ShowerHead,
     schedule: "Daily · 7 AM–Noon",
     description: "Showers, toiletries, and clean towels.",
     location: "Wellness Center",
   },
   {
     name: "Medical Clinic",
+    icon: Stethoscope,
     schedule: "Mon, Wed, Fri · 9 AM–3 PM",
     description: "Walk-in care from on-site nurses.",
     location: "Health Office",
   },
   {
     name: "Caseworker Support",
+    icon: Users,
     schedule: "Weekdays · 9 AM–5 PM",
     description: "Help with housing, benefits, and next steps.",
     location: "Front Office",
   },
   {
     name: "Clothing Closet",
+    icon: Shirt,
     schedule: "Tue, Thu · 10 AM–2 PM",
     description: "Free clothing, shoes, and seasonal gear.",
     location: "Annex",
@@ -104,30 +124,35 @@ export const demographics = {
     services: [
       {
         name: "Prenatal Check-ups",
+        icon: Stethoscope,
         schedule: "Mon, Wed, Fri · 9 AM–3 PM",
         description: "On-site medical care throughout your pregnancy.",
         location: "Health Office",
       },
       {
         name: "Nutritious Meals",
+        icon: Apple,
         schedule: "Daily",
         description: "Priority access to healthy meals and snacks.",
         location: "Dining Hall",
       },
       {
         name: "Maternity & Baby Supplies",
+        icon: Baby,
         schedule: "Tue, Thu · 10 AM–2 PM",
         description: "Maternity clothing, diapers, and newborn essentials.",
         location: "Clothing Closet",
       },
       {
         name: "Private Rest Area",
+        icon: Moon,
         schedule: "Daily",
         description: "A quiet, comfortable space to rest.",
         location: "Wellness Center",
       },
       {
         name: "Program Referrals",
+        icon: Users,
         schedule: "Weekdays",
         description: "Connections to prenatal and parenting programs.",
         location: "Front Office",
