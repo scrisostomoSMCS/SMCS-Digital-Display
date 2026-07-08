@@ -29,6 +29,10 @@ export type Service = {
 };
 
 // --- Page 1: general services overview (later: fetch from Supabase) ---------
+export const servicesPage = {
+  title: "This Week's Services",
+};
+
 export const weeklyServices: Service[] = [
   {
     name: "Hot Meals",
@@ -76,9 +80,11 @@ export const weeklyServices: Service[] = [
 
 // --- Page 2: new arrivals (people who just came onto campus) -----------------
 export const newArrivals = {
-  heading: "Welcome — We're Glad You're Here",
+  headline: "Welcome.",
   intro:
     "If you've just arrived, you're in the right place. Here's how to get started, and what's available to you right now.",
+  stepsLabel: "Where to start",
+  availableLabel: "Available now",
   steps: [
     {
       title: "Check in at the Front Desk",

@@ -22,7 +22,10 @@ export default function RotatingLeaf({
     <motion.span
       className="inline-flex"
       aria-hidden="true"
-      animate={reduce ? undefined : { rotate: 360 }}
+      // Sideways spin: rotate around the vertical axis (a gentle coin-flip),
+      // with perspective so it reads as 3D. transformPerspective keeps it calm.
+      style={{ transformPerspective: 700 }}
+      animate={reduce ? undefined : { rotateY: 360 }}
       transition={{ duration, repeat: Infinity, ease: "linear" }}
     >
       <Leaf size={size} strokeWidth={2} className={className} />

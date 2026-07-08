@@ -17,8 +17,8 @@ export default function NewArrivalsPage() {
   return (
     <InfoPageShell bg="blue">
       {/* Ambient signature leaf in the deliberate empty space. */}
-      <div className="pointer-events-none absolute bottom-10 right-14 hidden lg:block">
-        <RotatingLeaf size={220} className="text-teal/25" duration={26} />
+      <div className="pointer-events-none absolute bottom-8 right-12 hidden lg:block">
+        <RotatingLeaf size={170} className="text-teal/25" duration={26} />
       </div>
 
       <motion.header
@@ -28,10 +28,10 @@ export default function NewArrivalsPage() {
         className="shrink-0"
       >
         <InfoEyebrow tone="white" />
-        <h1 className="font-display mt-4 text-7xl leading-[0.95] md:text-8xl">
-          Welcome.
+        <h1 className="font-display mt-2 text-6xl leading-[0.95] md:text-7xl">
+          {newArrivals.headline}
         </h1>
-        <p className="font-body mt-4 max-w-4xl text-3xl font-medium text-paper/90 md:text-4xl">
+        <p className="font-body mt-3 max-w-4xl text-2xl font-medium text-paper/90 md:text-3xl">
           {newArrivals.intro}
         </p>
       </motion.header>
@@ -40,23 +40,23 @@ export default function NewArrivalsPage() {
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="relative z-10 mt-8 grid min-h-0 flex-1 grid-cols-1 gap-10 md:mt-10 lg:grid-cols-5 lg:gap-14"
+        className="relative z-10 mt-6 grid min-h-0 flex-1 grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-12"
       >
-        <motion.section variants={riseItem} className="lg:col-span-3">
-          <p className="font-body text-lg font-semibold uppercase tracking-[0.3em] md:text-xl">
-            Where to start
+        <motion.section variants={riseItem} className="min-h-0 lg:col-span-3">
+          <p className="font-body text-base font-semibold uppercase tracking-[0.3em] md:text-lg">
+            {newArrivals.stepsLabel}
           </p>
-          <ol className="mt-6 space-y-6">
+          <ol className="mt-4 space-y-4">
             {newArrivals.steps.map((step, i) => (
-              <li key={step.title} className="flex items-baseline gap-6">
-                <span className="font-display text-6xl leading-none text-paper/40 md:text-7xl">
+              <li key={step.title} className="flex items-baseline gap-5">
+                <span className="font-display text-5xl leading-none text-paper/40 md:text-6xl">
                   {i + 1}
                 </span>
                 <div>
-                  <p className="font-body text-3xl font-semibold md:text-4xl">
+                  <p className="font-body text-2xl font-semibold md:text-3xl">
                     {step.title}
                   </p>
-                  <p className="font-body mt-1 text-xl text-paper/80 md:text-2xl">
+                  <p className="font-body mt-1 text-lg text-paper/80 md:text-xl">
                     {step.detail}
                   </p>
                 </div>
@@ -67,16 +67,16 @@ export default function NewArrivalsPage() {
 
         <motion.section
           variants={riseItem}
-          className="flex flex-col bg-teal p-8 text-ink lg:col-span-2"
+          className="flex min-h-0 flex-col bg-teal p-7 text-ink lg:col-span-2"
         >
-          <p className="font-body text-lg font-semibold uppercase tracking-[0.3em] md:text-xl">
-            Available now
+          <p className="font-body text-base font-semibold uppercase tracking-[0.3em] md:text-lg">
+            {newArrivals.availableLabel}
           </p>
-          <ul className="mt-5 space-y-4">
+          <ul className="mt-4 space-y-3">
             {newArrivals.availableNow.map((item) => (
               <li
                 key={item}
-                className="font-body text-2xl font-semibold leading-tight md:text-3xl"
+                className="font-body text-xl font-semibold leading-tight md:text-2xl"
               >
                 {item}
               </li>

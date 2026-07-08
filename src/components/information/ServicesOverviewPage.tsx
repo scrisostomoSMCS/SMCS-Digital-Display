@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import InfoPageShell from "./InfoPageShell";
 import InfoEyebrow from "./InfoEyebrow";
 import { staggerContainer, riseItem, headerIn } from "./motion";
-import { weeklyServices } from "@/lib/informationContent";
+import { servicesPage, weeklyServices } from "@/lib/informationContent";
 
 /*
   Page 1 — Services overview. Playfair title, Poppins service text, an energetic
@@ -21,16 +21,18 @@ export default function ServicesOverviewPage() {
         className="shrink-0"
       >
         <InfoEyebrow tone="blue" />
-        <h1 className="font-display mt-3 text-6xl leading-none md:text-8xl">
-          This Week&rsquo;s Services
+        <h1 className="font-display mt-2 text-5xl leading-none md:text-6xl">
+          {servicesPage.title}
         </h1>
       </motion.header>
 
+      {/* Fixed 3×2 grid that fills the remaining height, so all six cards fit
+          on-screen with nothing cut off. */}
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="mt-8 grid min-h-0 flex-1 grid-cols-2 gap-4 md:mt-10 lg:grid-cols-3 lg:gap-5"
+        className="mt-5 grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-4"
       >
         {weeklyServices.map((s, i) => {
           const blue = i % 2 === 0;
@@ -39,21 +41,21 @@ export default function ServicesOverviewPage() {
             <motion.div
               key={s.name}
               variants={riseItem}
-              className={`flex flex-col px-6 py-5 ${
+              className={`flex min-h-0 flex-col px-6 py-4 ${
                 blue ? "bg-blue text-paper" : "bg-teal text-ink"
               }`}
             >
               <div className="flex items-center gap-3">
-                {Icon && <Icon size={40} strokeWidth={2} aria-hidden="true" />}
-                <h2 className="font-body text-3xl font-semibold leading-tight md:text-4xl">
+                {Icon && <Icon size={34} strokeWidth={2} aria-hidden="true" />}
+                <h2 className="font-body text-2xl font-semibold leading-tight md:text-3xl">
                   {s.name}
                 </h2>
               </div>
-              <p className="font-body mt-3 text-2xl font-semibold md:text-3xl">
+              <p className="font-body mt-2 text-xl font-semibold md:text-2xl">
                 {s.schedule}
               </p>
               <p
-                className={`font-body mt-2 text-lg md:text-2xl ${
+                className={`font-body mt-1 text-base md:text-lg ${
                   blue ? "text-paper/90" : "text-ink/90"
                 }`}
               >
@@ -61,7 +63,7 @@ export default function ServicesOverviewPage() {
               </p>
               {s.location && (
                 <p
-                  className={`font-body mt-auto pt-3 text-base font-semibold uppercase tracking-widest md:text-lg ${
+                  className={`font-body mt-auto pt-2 text-sm font-semibold uppercase tracking-widest md:text-base ${
                     blue ? "text-paper/80" : "text-ink/70"
                   }`}
                 >
