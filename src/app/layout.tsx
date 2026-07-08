@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 /*
   Root layout: only the bare <html>/<body> + global styles.
   Site chrome (Header + NavBar + Footer) lives in the (site) route group so
-  the full-screen /dashboard display can opt out of it. Routes that should
-  show the chrome go under src/app/(site)/.
+  the full-screen /dashboard and /information displays can opt out of it.
+  The Information signage loads its own fonts (Playfair Display + Poppins).
 */
 export default function RootLayout({
   children,
