@@ -51,16 +51,27 @@ export default function ServicesOverviewPage() {
                   {s.name}
                 </h2>
               </div>
-              <p className="font-body mt-2 text-xl font-semibold md:text-2xl">
-                {s.schedule}
-              </p>
-              <p
-                className={`font-body mt-1 text-base md:text-lg ${
-                  blue ? "text-paper/90" : "text-ink/90"
-                }`}
-              >
-                {s.description}
-              </p>
+              {s.schedule && (
+                <p className="font-body mt-2 text-xl font-semibold md:text-2xl">
+                  {s.schedule}
+                </p>
+              )}
+              {s.details && (
+                <ul className="font-body mt-1 space-y-0.5 text-base font-medium md:text-lg">
+                  {s.details.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              )}
+              {s.description && (
+                <p
+                  className={`font-body mt-1 text-base md:text-lg ${
+                    blue ? "text-paper/90" : "text-ink/90"
+                  }`}
+                >
+                  {s.description}
+                </p>
+              )}
               {s.location && (
                 <p
                   className={`font-body mt-auto pt-2 text-sm font-semibold uppercase tracking-widest md:text-base ${
