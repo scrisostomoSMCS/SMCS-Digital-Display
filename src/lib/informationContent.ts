@@ -22,10 +22,11 @@ import {
 
 export type Service = {
   name: string;
-  schedule: string;
-  description: string;
+  schedule?: string;
+  description?: string;
   location?: string;
   icon?: LucideIcon; // lucide icon shown on the card
+  details?: string[]; // optional multi-line detail (e.g. per-meal times)
 };
 
 // --- Page 1: general services overview (later: fetch from Supabase) ---------
@@ -37,8 +38,11 @@ export const weeklyServices: Service[] = [
   {
     name: "Hot Meals",
     icon: UtensilsCrossed,
-    schedule: "Daily · 8 AM–7 PM",
-    description: "Breakfast, lunch, and dinner at no cost.",
+    details: [
+      "Breakfast · 8:30–9:15 AM",
+      "Lunch · 12:00–1:00 PM",
+      "Dinner · 4:30–5:30 PM",
+    ],
     location: "Dining Hall",
   },
   {
