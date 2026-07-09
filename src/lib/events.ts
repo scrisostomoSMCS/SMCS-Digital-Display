@@ -64,6 +64,36 @@ export async function fetchDashboardEvents(): Promise<DashboardEvent[]> {
 }
 
 /*
+  Load today's dashboard events for the /information display. "Today" is the
+  local calendar date expressed as UTC bounds, matching the app's UTC wall-clock
+  convention (an event stored at 09:00Z on this date reads as 9 AM today). Only
+  events flagged for the dashboard are public, so that's what the display shows.
+*/
+export async function fetchTodaysEvents(): Promise<DashboardEvent[]> {
+  const now = new Date();
+  const start = new Date(
+    Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()),
+  ).toISOString();
+  const end = new Date(
+    Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() + 1),
+  ).toISOString();
+
+  const { data, error } = await supabase
+    .from("events")
+    .select("id, name, description, location, starts_at, ends_at, all_day")
+    .eq("show_on_dashboard", true)
+    .gte("starts_at", start)
+    .lt("starts_at", end)
+    .order("starts_at", { ascending: true });
+
+  if (error) {
+    console.error("Failed to load today's events:", error.message);
+    return [];
+  }
+  return (data ?? []).map(fromRow);
+}
+
+/*
   Load the current user's OWN schedule: events they've been signed up for, read
   through the `signups` join table. RLS on `signups` (user_id = auth.uid())
   guarantees only the logged-in user's rows come back, so this can never expose
