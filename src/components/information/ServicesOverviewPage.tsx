@@ -4,14 +4,22 @@ import { motion } from "framer-motion";
 import InfoPageShell from "./InfoPageShell";
 import InfoEyebrow from "./InfoEyebrow";
 import { staggerContainer, riseItem, headerIn } from "./motion";
-import { servicesPage, weeklyServices } from "@/lib/informationContent";
+import {
+  iconFromKey,
+  serviceIconFor,
+  type InfoContent,
+} from "@/lib/infoContent";
 
 /*
-  Page 1 — Services overview. Playfair title, Poppins service text, an energetic
-  checkerboard of solid blue/teal cards (with lucide icons) that stagger in via
-  Framer Motion. High contrast: white text on blue, black on teal.
+  Page 1 — Services overview. Content-driven (edited on the manage page). A
+  service's `time` may hold several lines (e.g. meal times), split on newlines.
+  Icons are looked up by name. Fixed 3×2 grid so all cards fit on screen.
 */
-export default function ServicesOverviewPage() {
+export default function ServicesOverviewPage({
+  content,
+}: {
+  content: InfoContent["services"];
+}) {
   return (
     <InfoPageShell bg="paper">
       <motion.header
@@ -22,24 +30,24 @@ export default function ServicesOverviewPage() {
       >
         <InfoEyebrow tone="blue" />
         <h1 className="font-display mt-2 text-5xl leading-none md:text-6xl">
-          {servicesPage.title}
+          {content.title}
         </h1>
       </motion.header>
 
-      {/* Fixed 3×2 grid that fills the remaining height, so all six cards fit
-          on-screen with nothing cut off. */}
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="show"
         className="mt-5 grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-4"
       >
-        {weeklyServices.map((s, i) => {
+        {content.items.map((s, i) => {
           const blue = i % 2 === 0;
-          const Icon = s.icon;
+          // Prefer the saved icon key; fall back to name lookup for content
+          // saved before icons were editable.
+          const Icon = iconFromKey(s.icon) ?? serviceIconFor(s.name);
           return (
             <motion.div
-              key={s.name}
+              key={`${s.name}-${i}`}
               variants={riseItem}
               className={`flex min-h-0 flex-col px-6 py-4 ${
                 blue ? "bg-blue text-paper" : "bg-teal text-ink"
@@ -51,17 +59,12 @@ export default function ServicesOverviewPage() {
                   {s.name}
                 </h2>
               </div>
-              {s.schedule && (
-                <p className="font-body mt-2 text-xl font-semibold md:text-2xl">
-                  {s.schedule}
-                </p>
-              )}
-              {s.details && (
-                <ul className="font-body mt-1 space-y-0.5 text-base font-medium md:text-lg">
-                  {s.details.map((line) => (
-                    <li key={line}>{line}</li>
+              {s.time && (
+                <div className="font-body mt-2 space-y-0.5 text-xl font-semibold md:text-2xl">
+                  {s.time.split("\n").map((line) => (
+                    <p key={line}>{line}</p>
                   ))}
-                </ul>
+                </div>
               )}
               {s.description && (
                 <p

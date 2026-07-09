@@ -11,7 +11,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   UtensilsCrossed,
   BedDouble,
-  ShowerHead,
+  Droplets,
   Stethoscope,
   Users,
   Shirt,
@@ -54,7 +54,7 @@ export const weeklyServices: Service[] = [
   },
   {
     name: "Showers & Hygiene",
-    icon: ShowerHead,
+    icon: Droplets,
     schedule: "Daily · 7 AM–Noon",
     description: "Showers, toiletries, and clean towels.",
     location: "Wellness Center",
