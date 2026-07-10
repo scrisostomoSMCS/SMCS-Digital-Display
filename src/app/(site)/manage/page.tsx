@@ -4,6 +4,7 @@ import Section from "@/components/Section";
 import ManageCalendar from "@/components/manage/ManageCalendar";
 import InfoContentEditor from "@/components/manage/InfoContentEditor";
 import CustomSlidesEditor from "@/components/manage/CustomSlidesEditor";
+import QuickEventForm from "@/components/manage/QuickEventForm";
 import ManageSidebar from "@/components/manage/ManageSidebar";
 
 export const metadata = {
@@ -60,7 +61,20 @@ export default async function ManagePage() {
             </span>
           </p>
 
-          <div className="mt-6 h-[80vh] min-h-[560px]">
+          {/* Second entry point for events — writes to the same events data
+              as the calendar (and thus the dashboard + "Events today" slide). */}
+          <div className="mt-8">
+            <h3 className="text-xl font-bold text-blue">Quick add an event</h3>
+            <span className="mt-1 mb-3 block h-1 w-16 bg-teal" />
+            <p className="mb-4 max-w-3xl text-base text-ink/70">
+              Adds to the calendar, the Live Dashboard, and &ldquo;Events
+              happening today&rdquo; — the same as adding it on the calendar
+              below.
+            </p>
+            <QuickEventForm />
+          </div>
+
+          <div className="mt-8 h-[80vh] min-h-[560px]">
             <ManageCalendar />
           </div>
         </Section>
