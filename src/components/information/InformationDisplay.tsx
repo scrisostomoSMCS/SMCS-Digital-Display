@@ -10,6 +10,7 @@ import {
   type InfoContent,
 } from "@/lib/infoContent";
 import { fetchSlides, type Slide } from "@/lib/slides";
+import { fetchHiddenBuiltins, type BuiltinKey } from "@/lib/displaySettings";
 import { supabase } from "@/lib/supabase";
 import ServicesOverviewPage from "./ServicesOverviewPage";
 import NewArrivalsPage from "./NewArrivalsPage";
@@ -24,59 +25,60 @@ const DOT_CLASS = {
 } as const;
 type Tone = keyof typeof DOT_CLASS;
 
-// Dot tone per built-in page (visible on its background); custom-slide
-// backgrounds cycle blue → teal → white, so their dot tones cycle to match.
-const BASE_TONES: Tone[] = ["blue", "white", "ink", "blue"];
-const SLIDE_TONES: Tone[] = ["white", "ink", "blue"];
+// Dot tone that stays visible on a given slide background.
+const toneForBg = (bg: "blue" | "teal" | "paper"): Tone =>
+  bg === "blue" ? "white" : bg === "teal" ? "ink" : "blue";
 
 /*
   Rotation controller: auto-advances on a continuous loop, each page shown for
-  PAGE_DURATION. Order: the three content-driven messaging pages, then events
-  today, then any employee-created custom slides (slides table) at the end.
-  Content + slides load from Supabase and stay live via realtime.
+  PAGE_DURATION. Order: the built-in pages (services, new arrivals, demographic,
+  events today) minus any an employee hid, then employee-created custom slides.
+  Content, slides, and hidden-settings load from Supabase and stay live.
 */
 export default function InformationDisplay() {
   const [active, setActive] = useState(0);
   const [content, setContent] = useState<InfoContent>(defaultInfoContent);
   const [slides, setSlides] = useState<Slide[]>([]);
+  const [hidden, setHidden] = useState<BuiltinKey[]>([]);
 
   useEffect(() => {
     const loadContent = async () => setContent(await fetchInfoContent());
     const loadSlides = async () => setSlides(await fetchSlides());
+    const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
     loadContent();
     loadSlides();
+    loadHidden();
     const channel = supabase
       .channel("info-display")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "info_content" },
-        loadContent,
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "slides" },
-        loadSlides,
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "info_content" }, loadContent)
+      .on("postgres_changes", { event: "*", schema: "public", table: "slides" }, loadSlides)
+      .on("postgres_changes", { event: "*", schema: "public", table: "display_settings" }, loadHidden)
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
 
-  const pages = [
-    <ServicesOverviewPage key="s" content={content.services} />,
-    <NewArrivalsPage key="n" content={content.newArrivals} />,
-    <DemographicPage key="d" content={content.demographic} />,
-    <EventsTodayPage key="e" />,
-    ...slides.map((s, i) => <CustomSlidePage key={s.id} slide={s} index={i} />),
+  // Built-in pages, each tagged with a key (for hiding) and a dot tone.
+  const builtinDefs: { key: BuiltinKey; node: React.ReactNode; tone: Tone }[] = [
+    { key: "services", node: <ServicesOverviewPage content={content.services} />, tone: "blue" },
+    { key: "new-arrivals", node: <NewArrivalsPage content={content.newArrivals} />, tone: "white" },
+    { key: "demographic", node: <DemographicPage content={content.demographic} />, tone: "ink" },
+    { key: "events-today", node: <EventsTodayPage />, tone: "blue" },
   ];
-  const dotTones: Tone[] = [
-    ...BASE_TONES,
-    ...slides.map((_, i) => SLIDE_TONES[i % SLIDE_TONES.length]),
-  ];
+  const builtins = builtinDefs.filter((b) => !hidden.includes(b.key));
 
-  // Advance on a timer; depends on page count so adding/removing slides reflows.
+  const custom = slides.map((s) => ({
+    node: <CustomSlidePage key={s.id} slide={s} />,
+    tone: toneForBg(s.background),
+  }));
+
+  const all = [...builtins, ...custom];
+  const pages = all.map((p) => p.node);
+  const dotTones = all.map((p) => p.tone);
+
   useEffect(() => {
+    if (pages.length === 0) return;
     const id = setTimeout(
       () => setActive((a) => (a + 1) % pages.length),
       PAGE_DURATION,
@@ -84,13 +86,14 @@ export default function InformationDisplay() {
     return () => clearTimeout(id);
   }, [active, pages.length]);
 
-  // Guard against a stale index if slides were removed mid-cycle.
+  if (pages.length === 0) {
+    return <div className="h-screen w-screen bg-paper" />;
+  }
+
   const current = active % pages.length;
 
   return (
     <div className="font-body relative h-screen w-screen overflow-hidden bg-paper text-ink">
-      {/* Framer Motion cross-fades between pages; each page's own entrance
-          animations play as it mounts. */}
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -104,7 +107,6 @@ export default function InformationDisplay() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Back to home for anyone who walks up and taps the screen. */}
       <Link
         href="/"
         className="absolute right-8 top-8 z-10 border-2 border-blue bg-paper px-5 py-2 text-lg font-semibold text-blue hover:bg-blue hover:text-paper"
@@ -112,8 +114,7 @@ export default function InformationDisplay() {
         ← Back to home
       </Link>
 
-      {/* Page indicator dots — clickable. All dots use the CURRENT page's tone
-          so they stay visible on whatever background is showing. */}
+      {/* All dots use the CURRENT page's tone so they stay visible. */}
       <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-5">
         {pages.map((_, i) => {
           const c = DOT_CLASS[dotTones[current] ?? "blue"];
