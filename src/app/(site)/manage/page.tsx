@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Section from "@/components/Section";
 import ManageCalendar from "@/components/manage/ManageCalendar";
 import InfoContentEditor from "@/components/manage/InfoContentEditor";
+import CustomSlidesEditor from "@/components/manage/CustomSlidesEditor";
 import ManageSidebar from "@/components/manage/ManageSidebar";
 
 export const metadata = {
@@ -64,6 +65,11 @@ export default async function ManagePage() {
     {/* Info-display editor lives below the calendar, in its own section. */}
     <Section title="Edit information display" className="scroll-mt-6">
       <InfoContentEditor />
+    </Section>
+
+    {/* Employee-created slides (add via the sidebar; edit/delete here). */}
+    <Section title="Custom slides" className="scroll-mt-6">
+      <CustomSlidesEditor />
     </Section>
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
   type InfoService,
   type InfoStep,
 } from "@/lib/infoContent";
+import { Field, Group, inputClass, labelClass, smallBtn } from "./editorFields";
 
 /*
   Employee/admin editor for the /information display's three messaging pages.
@@ -17,50 +18,6 @@ import {
   page is not here — it updates itself from the calendar. Access is gated by the
   manage page (role check) and by RLS on info_content.
 */
-
-const inputClass =
-  "mt-1 w-full border-2 border-ink/30 px-3 py-2 text-base focus:border-blue focus:outline-none";
-const labelClass = "block text-base font-semibold";
-
-function Field({
-  label,
-  value,
-  onChange,
-  hint,
-  textarea,
-  rows = 2,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  hint?: string;
-  textarea?: boolean;
-  rows?: number;
-}) {
-  return (
-    <label className="block">
-      <span className={labelClass}>{label}</span>
-      {hint && <span className="block text-sm text-ink/60">{hint}</span>}
-      {textarea ? (
-        <textarea
-          className={inputClass}
-          rows={rows}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      ) : (
-        <input
-          className={inputClass}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-    </label>
-  );
-}
-
-const smallBtn =
-  "border-2 border-blue px-3 py-1 text-sm font-semibold text-blue hover:bg-blue hover:text-paper";
 
 // Editor for a list of services (used by the services and demographic pages).
 function ServiceListEditor({
@@ -139,28 +96,6 @@ function ServiceListEditor({
         + Add service
       </button>
     </div>
-  );
-}
-
-function Group({
-  id,
-  title,
-  children,
-}: {
-  id?: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  // id + scroll-mt make each page group a jump target for the manage sidebar.
-  return (
-    <section
-      id={id}
-      className="scroll-mt-8 border-2 border-placeholder p-6"
-    >
-      <h3 className="text-2xl font-bold text-blue">{title}</h3>
-      <span className="mt-2 mb-5 block h-1 w-16 bg-teal" />
-      <div className="space-y-5">{children}</div>
-    </section>
   );
 }
 
