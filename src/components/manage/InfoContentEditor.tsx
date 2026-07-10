@@ -9,7 +9,13 @@ import {
   type InfoService,
   type InfoStep,
 } from "@/lib/infoContent";
-import { Field, Group, inputClass, labelClass, smallBtn } from "./editorFields";
+import {
+  Field,
+  CollapsiblePanel,
+  inputClass,
+  labelClass,
+  smallBtn,
+} from "./editorFields";
 
 /*
   Employee/admin editor for the /information display's three messaging pages.
@@ -105,8 +111,37 @@ export default function InfoContentEditor() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const toggle = (id: string) =>
+    setOpen((p) => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+
   useEffect(() => {
     fetchInfoContent().then(setContent);
+  }, []);
+
+  // Open + scroll to a page when the sidebar links to it via the hash.
+  useEffect(() => {
+    const ids = ["services", "new-arrivals", "demographic"];
+    const onHash = () => {
+      const id = location.hash.slice(1);
+      if (!ids.includes(id)) return;
+      setOpen((p) => new Set(p).add(id));
+      setTimeout(
+        () =>
+          document
+            .getElementById(id)
+            ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        50,
+      );
+    };
+    onHash();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
   // Immutable helpers for the nested content shape.
@@ -153,7 +188,12 @@ export default function InfoContentEditor() {
       </p>
 
       {/* --- Services overview page --- */}
-      <Group id="services" title="Services page">
+      <CollapsiblePanel
+        id="services"
+        title="Services page"
+        open={open.has("services")}
+        onToggle={() => toggle("services")}
+      >
         <Field
           label="Services page — title"
           value={content.services.title}
@@ -168,10 +208,15 @@ export default function InfoContentEditor() {
             />
           </div>
         </div>
-      </Group>
+      </CollapsiblePanel>
 
       {/* --- New arrivals page --- */}
-      <Group id="new-arrivals" title="New arrivals page">
+      <CollapsiblePanel
+        id="new-arrivals"
+        title="New arrivals page"
+        open={open.has("new-arrivals")}
+        onToggle={() => toggle("new-arrivals")}
+      >
         <Field
           label="New arrivals page — headline"
           value={na.headline}
@@ -283,12 +328,14 @@ export default function InfoContentEditor() {
             </button>
           </div>
         </div>
-      </Group>
+      </CollapsiblePanel>
 
       {/* --- Demographic page --- */}
-      <Group
+      <CollapsiblePanel
         id="demographic"
         title="Featured group page (currently expecting mothers)"
+        open={open.has("demographic")}
+        onToggle={() => toggle("demographic")}
       >
         <Field
           label="Featured group page — title"
@@ -311,7 +358,7 @@ export default function InfoContentEditor() {
             />
           </div>
         </div>
-      </Group>
+      </CollapsiblePanel>
 
       {/* --- Save --- */}
       <div className="flex items-center gap-4">

@@ -178,6 +178,15 @@ export async function swapSlidePositions(a: Slide, b: Slide): Promise<void> {
   await supabase.from("slides").update({ position: a.position }).eq("id", b.id);
 }
 
+// Persist an explicit order (used after drag-reorder): position = index.
+export async function persistSlideOrder(orderedIds: string[]): Promise<void> {
+  await Promise.all(
+    orderedIds.map((id, i) =>
+      supabase.from("slides").update({ position: i }).eq("id", id),
+    ),
+  );
+}
+
 /* --- images (Supabase Storage: bucket "slide-images") -------------------- */
 
 // Upload an image and return its storage path (stored on the slide).

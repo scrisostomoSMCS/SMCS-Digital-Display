@@ -1,32 +1,126 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Reorder, useDragControls } from "framer-motion";
+import { GripVertical } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { fetchSlides, swapSlidePositions, type Slide } from "@/lib/slides";
+import { fetchSlides, persistSlideOrder, type Slide } from "@/lib/slides";
 import SlideEditor from "./SlideEditor";
 import { smallBtn } from "./editorFields";
 
 /*
-  Inline editors for the employee-created slides — one collapsible card per slide,
-  each a full structured editor (SlideEditor). Reactive: adding a slide makes its
-  card appear (and auto-expands it) with no refresh. Each card is a jump target
-  (id "slide-<id>") for the sidebar.
+  Inline editors for employee-created slides — one collapsible panel per slide
+  (collapsed by default so the page is a compact, scannable list). Reorder by
+  dragging the grip handle OR the ↑/↓ buttons; the new order persists to Supabase
+  (position) and drives the rotation. Reactive: a newly added slide's panel
+  appears and auto-expands. Each panel is a jump target (id "slide-<id>").
 */
+
+function SlidePanel({
+  slide,
+  index,
+  count,
+  open,
+  onToggle,
+  onMove,
+  onDragEnd,
+}: {
+  slide: Slide;
+  index: number;
+  count: number;
+  open: boolean;
+  onToggle: () => void;
+  onMove: (dir: -1 | 1) => void;
+  onDragEnd: () => void;
+}) {
+  const controls = useDragControls();
+  return (
+    <Reorder.Item
+      as="div"
+      value={slide}
+      id={`slide-${slide.id}`}
+      dragListener={false} // only the grip handle starts a drag
+      dragControls={controls}
+      onDragEnd={onDragEnd}
+      className="scroll-mt-8 border-2 border-placeholder bg-paper"
+    >
+      <div className="flex items-center gap-2 bg-ink/5 px-3 py-3">
+        <button
+          type="button"
+          onPointerDown={(e) => controls.start(e)}
+          className="cursor-grab touch-none text-ink/40 hover:text-ink active:cursor-grabbing"
+          aria-label="Drag to reorder"
+        >
+          <GripVertical size={22} />
+        </button>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        >
+          <span aria-hidden="true" className="text-lg text-ink/50">
+            {open ? "▾" : "▸"}
+          </span>
+          <span className="truncate text-xl font-bold text-blue">
+            {slide.title.trim() || "Untitled slide"}
+          </span>
+        </button>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            className={smallBtn}
+            disabled={index === 0}
+            onClick={() => onMove(-1)}
+            aria-label="Move slide up"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className={smallBtn}
+            disabled={index === count - 1}
+            onClick={() => onMove(1)}
+            aria-label="Move slide down"
+          >
+            ↓
+          </button>
+        </div>
+      </div>
+      {open && (
+        <div className="p-5">
+          <SlideEditor slide={slide} />
+        </div>
+      )}
+    </Reorder.Item>
+  );
+}
+
 export default function CustomSlidesEditor() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [open, setOpen] = useState<Set<string>>(new Set());
   const known = useRef<Set<string>>(new Set());
+  const slidesRef = useRef<Slide[]>([]);
+  slidesRef.current = slides;
+
+  const expand = (id: string) => setOpen((p) => new Set(p).add(id));
+  const toggle = (id: string) =>
+    setOpen((p) => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
 
   const load = useCallback(async () => {
     const next = await fetchSlides();
-    // A brand-new slide (id not seen before) is auto-expanded + scrolled to.
     const added = next.find((s) => !known.current.has(s.id));
     known.current = new Set(next.map((s) => s.id));
     setSlides(next);
     setLoaded(true);
     if (added) {
-      setExpandedId(added.id);
+      expand(added.id);
       setTimeout(
         () =>
           document
@@ -53,7 +147,7 @@ export default function CustomSlidesEditor() {
     const onHash = () => {
       const m = location.hash.match(/^#slide-(.+)$/);
       if (!m) return;
-      setExpandedId(m[1]);
+      expand(m[1]);
       setTimeout(
         () =>
           document
@@ -67,9 +161,17 @@ export default function CustomSlidesEditor() {
     return () => window.removeEventListener("hashchange", onHash);
   }, [slides.length]);
 
-  async function move(i: number, dir: -1 | 1) {
-    const other = slides[i + dir];
-    if (other) await swapSlidePositions(slides[i], other);
+  // Persist the current on-screen order (position = index).
+  const persistOrder = () =>
+    persistSlideOrder(slidesRef.current.map((s) => s.id));
+
+  function move(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= slides.length) return;
+    const next = [...slides];
+    [next[i], next[j]] = [next[j], next[i]];
+    setSlides(next);
+    persistSlideOrder(next.map((s) => s.id));
   }
 
   if (loaded && slides.length === 0) {
@@ -82,58 +184,25 @@ export default function CustomSlidesEditor() {
   }
 
   return (
-    <div className="space-y-4">
-      {slides.map((s, i) => {
-        const open = expandedId === s.id;
-        return (
-          <section
-            key={s.id}
-            id={`slide-${s.id}`}
-            className="scroll-mt-8 border-2 border-placeholder"
-          >
-            <div className="flex items-center justify-between gap-3 bg-ink/5 px-5 py-3">
-              <button
-                type="button"
-                onClick={() => setExpandedId(open ? null : s.id)}
-                aria-expanded={open}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left"
-              >
-                <span aria-hidden="true" className="text-lg text-ink/50">
-                  {open ? "▾" : "▸"}
-                </span>
-                <span className="truncate text-xl font-bold text-blue">
-                  {s.title.trim() || "Untitled slide"}
-                </span>
-              </button>
-              <div className="flex shrink-0 gap-2">
-                <button
-                  type="button"
-                  className={smallBtn}
-                  disabled={i === 0}
-                  onClick={() => move(i, -1)}
-                  aria-label="Move slide up"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  className={smallBtn}
-                  disabled={i === slides.length - 1}
-                  onClick={() => move(i, 1)}
-                  aria-label="Move slide down"
-                >
-                  ↓
-                </button>
-              </div>
-            </div>
-            {open && (
-              <div className="p-5">
-                <SlideEditor slide={s} />
-              </div>
-            )}
-          </section>
-        );
-      })}
-    </div>
+    <Reorder.Group
+      as="div"
+      axis="y"
+      values={slides}
+      onReorder={setSlides}
+      className="space-y-4"
+    >
+      {slides.map((s, i) => (
+        <SlidePanel
+          key={s.id}
+          slide={s}
+          index={i}
+          count={slides.length}
+          open={open.has(s.id)}
+          onToggle={() => toggle(s.id)}
+          onMove={(dir) => move(i, dir)}
+          onDragEnd={persistOrder}
+        />
+      ))}
+    </Reorder.Group>
   );
 }

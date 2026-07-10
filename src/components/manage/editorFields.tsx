@@ -72,6 +72,39 @@ export function Group({
   );
 }
 
+// Collapsible titled panel (controlled). Collapsed keeps the editing area a
+// compact list; the header doubles as a sidebar jump target (id).
+export function CollapsiblePanel({
+  id,
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  id?: string;
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section id={id} className="scroll-mt-8 border-2 border-placeholder">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 bg-ink/5 px-5 py-3 text-left"
+      >
+        <span aria-hidden="true" className="text-lg text-ink/50">
+          {open ? "▾" : "▸"}
+        </span>
+        <span className="truncate text-xl font-bold text-blue">{title}</span>
+      </button>
+      {open && <div className="space-y-5 p-5">{children}</div>}
+    </section>
+  );
+}
+
 // Editor for a simple list of strings (add / edit / remove).
 export function StringListEditor({
   items,
