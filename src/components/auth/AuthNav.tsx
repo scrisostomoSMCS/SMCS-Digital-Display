@@ -19,13 +19,15 @@ export default function AuthNav() {
   const router = useRouter();
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [isStaff, setIsStaff] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Look up the signed-in user's role to decide whether to show the
-    // staff-only "Manage" link. (RLS still enforces access regardless of UI.)
+    // Look up the signed-in user's role to decide which staff-only links to show
+    // ("Manage" for staff, "Admin" for admins). RLS still enforces access.
     async function syncRole(userId: string | undefined) {
       if (!userId) {
         setIsStaff(false);
+        setIsAdmin(false);
         return;
       }
       const { data } = await supabase
@@ -34,6 +36,7 @@ export default function AuthNav() {
         .eq("id", userId)
         .single();
       setIsStaff(!!data && STAFF_ROLES.includes(data.role));
+      setIsAdmin(data?.role === "admin");
     }
 
     supabase.auth.getSession().then(({ data }) => {
@@ -76,6 +79,13 @@ export default function AuthNav() {
         <li>
           <Link href="/manage" className={linkClass}>
             Manage
+          </Link>
+        </li>
+      )}
+      {isAdmin && (
+        <li>
+          <Link href="/admin" className={linkClass}>
+            Admin
           </Link>
         </li>
       )}

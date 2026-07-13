@@ -45,8 +45,15 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-// Protect logged-in routes. /manage additionally checks role in the page
-// (and RLS enforces write access regardless).
+// Protect logged-in routes. /manage and /admin additionally check role in the
+// page (and RLS enforces access regardless).
 export const config = {
-  matcher: ["/schedule", "/schedule/:path*", "/manage", "/manage/:path*"],
+  matcher: [
+    "/schedule",
+    "/schedule/:path*",
+    "/manage",
+    "/manage/:path*",
+    "/admin",
+    "/admin/:path*",
+  ],
 };
