@@ -1,26 +1,46 @@
 import Link from "next/link";
+import { Mail, Phone } from "lucide-react";
+import AuthNav from "@/components/auth/AuthNav";
+import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/siteConfig";
 
 /*
-  Site header with the SMCS name/logo placeholder.
-  The square block stands in for a real logo to be supplied later.
+  Teal utility top bar (every page): SMCS logo in a white block, contact info,
+  and the auth controls (Log in / account menu) on the right.
 */
 export default function Header() {
+  const telHref = `tel:${CONTACT_PHONE.replace(/[^0-9+]/g, "")}`;
+
   return (
-    <header className="border-b-4 border-teal bg-paper">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-5">
-        <Link href="/" className="flex items-center gap-4">
-          {/* Logo placeholder — replace with real logo asset in a later phase */}
-          <span
-            aria-hidden="true"
-            className="flex h-14 w-14 items-center justify-center border-2 border-blue text-lg font-bold text-blue"
-          >
-            LOGO
-          </span>
-          <span className="flex flex-col leading-tight">
-            <span className="text-2xl font-bold tracking-tight">SMCS</span>
-            <span className="text-base text-ink/70">Official Website</span>
-          </span>
+    <header className="bg-teal text-paper">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2">
+        {/* Logo placeholder in a white block */}
+        <Link
+          href="/"
+          className="flex items-center bg-paper px-4 py-2 text-lg font-bold tracking-tight text-blue"
+          aria-label="SMCS home"
+        >
+          SMCS LOGO
         </Link>
+
+        {/* Contact */}
+        <div className="hidden items-center gap-6 text-base font-semibold md:flex">
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="flex items-center gap-2 hover:underline"
+          >
+            <Mail size={18} strokeWidth={2} aria-hidden="true" />
+            {CONTACT_EMAIL}
+          </a>
+          <a href={telHref} className="flex items-center gap-2 hover:underline">
+            <Phone size={18} strokeWidth={2} aria-hidden="true" />
+            {CONTACT_PHONE}
+          </a>
+        </div>
+
+        {/* Auth controls (styled for the teal bar) */}
+        <ul className="flex items-center gap-1">
+          <AuthNav />
+        </ul>
       </div>
     </header>
   );

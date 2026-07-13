@@ -23,7 +23,7 @@ export default function Section({
       <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
         {title && (
           <div className="mb-6">
-            <h2 className="text-3xl md:text-4xl">{title}</h2>
+            <h2 className="font-display text-4xl md:text-5xl">{title}</h2>
             {/* Teal accent divider under each section heading */}
             <span className="mt-3 block h-1 w-20 bg-teal" />
           </div>
