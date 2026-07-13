@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import Section from "@/components/Section";
 import LoginForm from "@/components/auth/LoginForm";
 
@@ -21,6 +22,14 @@ export default function LoginPage() {
       <Suspense fallback={null}>
         <LoginForm />
       </Suspense>
+
+      <p className="mt-8 max-w-md border-t border-placeholder pt-6 text-base">
+        SMCS staff member?{" "}
+        <Link href="/signup" className="font-semibold text-blue hover:underline">
+          Create an account
+        </Link>
+        .
+      </p>
     </Section>
   );
 }
