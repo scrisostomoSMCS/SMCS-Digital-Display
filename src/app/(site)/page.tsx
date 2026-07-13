@@ -5,32 +5,41 @@ import ImageWithOverlay from "@/components/ImageWithOverlay";
 export default function Home() {
   return (
     <>
-      {/* Intro / welcome */}
-      <Section>
-        <div className="max-w-3xl">
-          <h1 className="text-4xl md:text-5xl">Welcome to SMCS</h1>
-          <span className="mt-4 block h-1 w-24 bg-blue" />
-          <p className="mt-6 text-xl">
-            This is the SMCS website. Here you will find information
-            about who we are and the services we provide. There is a Live Dashboard to
-            see all current and future services that are scheduled.
+      {/* Hero — full-bleed image with a dark scrim + big serif headline.
+          Drop a photo at public/hero.jpg; until then the dark teal/blue shows. */}
+      <section className="relative flex min-h-[70vh] items-center overflow-hidden bg-blue text-paper">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/hero.jpg')" }}
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-ink/55" aria-hidden="true" />
+        <div className="relative mx-auto w-full max-w-6xl px-6 py-20">
+          <h1 className="font-display text-6xl font-bold leading-[0.9] md:text-8xl lg:text-9xl">
+            Make A
+            <br />
+            Difference.
+          </h1>
+          <p className="mt-6 max-w-2xl text-xl text-paper/90 md:text-2xl">
+            Saint Mary&rsquo;s Community Services — connecting our community to
+            the care and services they need.
           </p>
-          <div className="mt-8 flex flex-wrap gap-4">
+          <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/dashboard"
-              className="inline-block border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue"
+              className="inline-block border-2 border-paper bg-blue px-7 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue"
             >
               Live Dashboard
             </Link>
             <Link
               href="/#about"
-              className="inline-block border-2 border-teal px-6 py-3 text-lg font-semibold text-teal hover:bg-teal hover:text-paper"
+              className="inline-block border-2 border-paper px-7 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-ink"
             >
               Learn More
             </Link>
           </div>
         </div>
-      </Section>
+      </section>
 
       {/* About — image-with-overlay demo */}
       <Section id="about" title="About Us">

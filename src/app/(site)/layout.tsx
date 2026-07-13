@@ -1,12 +1,20 @@
+import { Playfair_Display } from "next/font/google";
 import Header from "@/components/Header";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 
+// Editorial serif for big headings across the site (hero + section titles).
+// Exposed as --font-display; used via the `.font-display` utility.
+const serif = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
+
 /*
-  Marketing/site layout: Header + NavBar on top, Footer at the bottom,
-  page content in <main>. Applies to every route in the (site) group.
-  The /dashboard route intentionally lives outside this group so the
-  wall-mounted TV display can render full-screen without site chrome.
+  Marketing/site layout: teal top bar (Header) + primary nav, page content in
+  <main>, Footer at the bottom. Applies to every route in the (site) group.
 */
 export default function SiteLayout({
   children,
@@ -14,7 +22,7 @@ export default function SiteLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className={`${serif.variable} flex min-h-screen flex-col`}>
       <Header />
       <NavBar />
       <main className="flex-1">{children}</main>
