@@ -48,7 +48,7 @@ export async function fetchDashboardEvents(): Promise<DashboardEvent[]> {
   const { data, error } = await supabase
     .from("events")
     .select("id, name, description, location, starts_at, ends_at, all_day")
-    // The Live Dashboard is admin-curated: an event shows here only when an
+    // The Live Calendar is admin-curated: an event shows here only when an
     // admin/employee has explicitly flagged it (show_on_dashboard). Client
     // signups never appear here, they only land on the personal calendar.
     // RLS also blocks the public from reading non-dashboard events.

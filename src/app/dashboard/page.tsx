@@ -4,11 +4,11 @@ import DashboardCalendar from "@/components/dashboard/DashboardCalendar";
 import QrPlaceholder from "@/components/dashboard/QrPlaceholder";
 
 export const metadata = {
-  title: "Live Dashboard | SMCS",
+  title: "Live Calendar | SMCS",
 };
 
 /*
-  Phase 2 Live Dashboard: a public, view-only, full-screen display for
+  Phase 2 Live Calendar: a public, view-only, full-screen display for
   wall-mounted TVs that also reflows to phone width (future QR-code target).
   Lives outside the (site) route group so it renders without site chrome.
 

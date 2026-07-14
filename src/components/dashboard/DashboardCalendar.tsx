@@ -5,7 +5,7 @@ import { fetchDashboardEvents } from "@/lib/events";
 import { useLiveEvents } from "@/lib/useLiveEvents";
 
 /*
-  Live Dashboard data source: ALL events, kept live on changes to the events
+  Live Calendar data source: ALL events, kept live on changes to the events
   table. Feeds the shared WeekCalendar.
 */
 export default function DashboardCalendar() {

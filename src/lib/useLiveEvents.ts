@@ -8,7 +8,7 @@ import type { DashboardEvent } from "./events";
   Loads events once on mount, then re-loads whenever any of the given tables
   change (Supabase realtime). Shared by every calendar surface, each passes its
   own loader and the table(s) that affect its data:
-    - Live Dashboard: fetchDashboardEvents, ["events"]
+    - Live Calendar: fetchDashboardEvents, ["events"]
     - Personal Calendar: fetchMySchedule, ["signups", "events"]
 
   `load` and `tables` are expected to be stable per mount (module-level fn and a

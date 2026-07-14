@@ -2,7 +2,7 @@ import { Playfair_Display, Poppins } from "next/font/google";
 import InformationDisplay from "@/components/information/InformationDisplay";
 
 export const metadata = {
-  title: "Information | SMCS",
+  title: "Digital Schedule | SMCS",
 };
 
 // Titles: Playfair Display SemiBold (600). Body/labels/service text: Poppins
@@ -24,7 +24,7 @@ const poppins = Poppins({
 /*
   Full-screen, auto-rotating informational display for wall-mounted campus
   screens. Lives outside the (site) route group so it renders without site
-  chrome (like the Live Dashboard). Runs unattended; has its own Back to home.
+  chrome (like the Live Calendar). Runs unattended; has its own Back to home.
 */
 export default function InformationPage() {
   return (

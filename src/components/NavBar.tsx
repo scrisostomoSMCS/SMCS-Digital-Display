@@ -8,8 +8,8 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "About", href: "/#about" },
   { label: "Services", href: "/#services" },
-  { label: "Live Dashboard", href: "/dashboard" },
-  { label: "Information", href: "/information" },
+  { label: "Live Calendar", href: "/dashboard" },
+  { label: "Digital Schedule", href: "/information" },
 ];
 
 export default function NavBar() {

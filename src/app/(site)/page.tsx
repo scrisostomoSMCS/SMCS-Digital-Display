@@ -30,7 +30,7 @@ export default function Home() {
               href="/dashboard"
               className="inline-block border-2 border-paper bg-paper px-7 py-3 text-lg font-semibold text-blue hover:bg-blue hover:text-paper"
             >
-              Live Dashboard
+              Live Calendar
             </Link>
             <Link
               href="/#about"

@@ -1,5 +1,5 @@
 /*
-  Single source of truth for the Live Dashboard display settings.
+  Single source of truth for the Live Calendar display settings.
   Everything an operator might want to tweak lives here so it's a one-spot
   change today and an easy target for a CMS/admin editor in a later phase.
 */
