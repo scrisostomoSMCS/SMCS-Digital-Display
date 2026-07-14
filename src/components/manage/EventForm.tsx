@@ -139,7 +139,7 @@ export default function EventForm({
             checked={state.showOnDashboard}
             onChange={(e) => set("showOnDashboard", e.target.checked)}
           />
-          Show on Live Dashboard
+          Show on Live Calendar
         </label>
 
         {error && (

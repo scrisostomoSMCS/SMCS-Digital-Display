@@ -4,7 +4,7 @@ import type { DashboardEvent } from "./events";
 /*
   Editor (employee/admin) data layer: read ALL events and create/update/delete
   them. Writes hit the single Supabase `events` table, the same source the
-  view-only Live Dashboard reads, so changes propagate via realtime. RLS
+  view-only Live Calendar reads, so changes propagate via realtime. RLS
   ("Staff …" policies) enforces that only employee/admin can actually write.
 
   Times follow the app-wide convention: stored as UTC wall-clock (an event at

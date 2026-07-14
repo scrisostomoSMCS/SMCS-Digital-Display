@@ -1,6 +1,6 @@
 # Saint Mary's Care Services Website and App
 
-![SMCS Live Dashboard](docs/dashboardss.png)
+![SMCS Live Calendar](docs/dashboardss.png)
 
 Saint Mary's Care Services (SMCS) is a community care organization. This is its
 public website and scheduling app. Built to make SMCS's services and schedules
@@ -8,7 +8,7 @@ clear, accessible, and always up to date.
 
 The project brings together three views over a single, shared schedule:
 
-- a **public website** and a **Live Dashboard** designed to be read
+- a **public website** and a **Live Calendar** designed to be read
   from across a room on wall-mounted TVs (and on phones via a QR code);
 - **personal calendars**, where each client sees the services and
   appointments they're signed up for;
@@ -19,7 +19,7 @@ The project brings together three views over a single, shared schedule:
 
 ## Features
 
-- **Live Dashboard**, a public nschedule of the day's/week's
+- **Live Calendar**, a public nschedule of the day's/week's
   services, designed for legibility on wall-mounted TVs and accessable on phones
   via a QR code.
 - **Personal calendars**, each client signs in to see only the services and

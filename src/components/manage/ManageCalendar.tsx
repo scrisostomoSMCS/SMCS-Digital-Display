@@ -24,7 +24,7 @@ import EventForm, { type EventFormState } from "./EventForm";
 
 /*
   Interactive, Google-Calendar-style editor for employees/admins. SEPARATE from
-  the view-only Live Dashboard component on purpose: editing controls must never
+  the view-only Live Calendar component on purpose: editing controls must never
   appear on the public/TV display. All writes go to the one Supabase `events`
   table; the dashboard and app pick up changes through their existing realtime
   subscriptions. This is a desktop tool, so it scrolls and is laid out for a

@@ -179,8 +179,8 @@ export default function InfoContentEditor() {
   return (
     <div className="space-y-6">
       <p className="max-w-3xl text-lg">
-        Edit the text shown on the public Information screens. Changes save to
-        the display right away.
+        Edit the text shown on the public Digital Schedule screens. Changes save
+        to the display right away.
       </p>
       <p className="max-w-3xl border-l-4 border-teal bg-teal/10 py-2 pl-4 text-base">
         The <strong>“Happening today”</strong> screen is not listed here, it

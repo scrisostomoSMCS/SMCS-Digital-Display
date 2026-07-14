@@ -71,7 +71,7 @@ const NARROW_QUERY = "(max-width: 768px)";
 
 /*
   Presentational week calendar. Role-agnostic: it just renders whatever events
-  it's given, so the Live Dashboard (all events) and the Personal Calendar (a
+  it's given, so the Live Calendar (all events) and the Personal Calendar (a
   user's own signups), and future employee/admin views, reuse it unchanged.
   Data loading + realtime live in thin wrapper components, not here.
 */

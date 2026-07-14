@@ -17,7 +17,7 @@ const STAFF_ROLES = ["employee", "admin"];
   Employee/admin editing page. Role gate here is convenience on top of RLS (the
   real enforcement, only staff can write events). Unauthenticated → login;
   signed-in clients → sent home. Editing lives on this separate route so the
-  view-only Live Dashboard never renders editing controls.
+  view-only Live Calendar never renders editing controls.
 
   Layout: sticky section sidebar (jump links + slide menus) alongside three
   clearly-separated areas, the calendar, the built-in information pages, and
@@ -49,11 +49,11 @@ export default async function ManagePage() {
           <p className="max-w-3xl text-lg">
             Add and edit the schedule here. Click a time slot to create an event;
             drag to move it, or drag an edge to resize. Click an event to edit or
-            delete it. Changes appear on the Live Dashboard within a second or two.
+            delete it. Changes appear on the Live Calendar within a second or two.
           </p>
           <p className="mt-3 flex flex-wrap items-center gap-4 text-base">
             <span className="flex items-center gap-2">
-              <span className="inline-block h-4 w-4 bg-blue" /> On Live Dashboard
+              <span className="inline-block h-4 w-4 bg-blue" /> On Live Calendar
             </span>
             <span className="flex items-center gap-2">
               <span className="inline-block h-4 w-4 bg-teal" /> Off dashboard
@@ -67,7 +67,7 @@ export default async function ManagePage() {
             <h3 className="text-xl font-bold text-blue">Quick add an event</h3>
             <span className="mt-1 mb-3 block h-1 w-16 bg-teal" />
             <p className="mb-4 max-w-3xl text-base text-ink/70">
-              Adds to the calendar, the Live Dashboard, and &ldquo;Events
+              Adds to the calendar, the Live Calendar, and &ldquo;Events
               happening today&rdquo;, the same as adding it on the calendar
               below.
             </p>
@@ -80,12 +80,12 @@ export default async function ManagePage() {
         </Section>
 
         <Section
-          title="Information display pages"
+          title="Digital Schedule pages"
           className="scroll-mt-6"
         >
           <p className="max-w-3xl text-lg">
-            The built-in pages that rotate on the public Information screens. Edit
-            their text below, changes show on the display right away.
+            The built-in pages that rotate on the public Digital Schedule screens.
+            Edit their text below, changes show on the display right away.
           </p>
           <div className="mt-6">
             <InfoContentEditor />
