@@ -21,6 +21,7 @@ import {
   type ManageEvent,
 } from "@/lib/manageEvents";
 import EventForm, { type EventFormState } from "./EventForm";
+import { DEFAULT_EVENT_COLOR } from "@/lib/eventColors";
 
 /*
   Interactive, Google-Calendar-style editor for employees/admins. SEPARATE from
@@ -80,19 +81,22 @@ export default function ManageCalendar() {
     };
   }, [load]);
 
-  // Dashboard events render blue, off-dashboard (personal/appointments) teal,
-  // so staff can tell at a glance what's on the public board.
+  // Each event renders in its chosen color (the same tint it shows on the Live
+  // Calendar). Off-dashboard events are dimmed (see .evt-off-board) so staff can
+  // still tell at a glance which events are on the public board.
   const fcEvents: EventInput[] = events.map((e) => ({
     id: e.id,
     title: e.name,
     start: e.start,
     end: e.end,
-    backgroundColor: e.showOnDashboard ? "#0054a4" : "#00aaa6",
-    borderColor: e.showOnDashboard ? "#0054a4" : "#00aaa6",
+    backgroundColor: e.color || DEFAULT_EVENT_COLOR,
+    borderColor: e.color || DEFAULT_EVENT_COLOR,
+    classNames: e.showOnDashboard ? undefined : ["evt-off-board"],
     extendedProps: {
       description: e.description,
       location: e.location,
       showOnDashboard: e.showOnDashboard,
+      color: e.color || DEFAULT_EVENT_COLOR,
     },
   }));
 
@@ -109,6 +113,7 @@ export default function ManageCalendar() {
         startLocal: dateToLocal(sel.start),
         endLocal: dateToLocal(sel.end),
         showOnDashboard: true,
+        color: DEFAULT_EVENT_COLOR,
       },
     });
     sel.view.calendar.unselect();
@@ -128,6 +133,7 @@ export default function ManageCalendar() {
         startLocal: e.start ? dateToLocal(e.start) : "",
         endLocal: e.end ? dateToLocal(e.end) : "",
         showOnDashboard: Boolean(e.extendedProps.showOnDashboard),
+        color: (e.extendedProps.color as string) ?? DEFAULT_EVENT_COLOR,
       },
     });
   }
@@ -159,6 +165,7 @@ export default function ManageCalendar() {
       start: localToISO(s.startLocal),
       end: localToISO(s.endLocal),
       showOnDashboard: s.showOnDashboard,
+      color: s.color,
     };
     const err =
       form.mode === "create"

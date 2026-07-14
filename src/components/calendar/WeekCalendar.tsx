@@ -16,17 +16,22 @@ import {
   DAY_END_HOUR,
 } from "@/lib/dashboardConfig";
 import { type DashboardEvent } from "@/lib/events";
+import { DEFAULT_EVENT_COLOR } from "@/lib/eventColors";
 import EventModal, { type SelectedEvent } from "./EventModal";
 
 // Map our stable DashboardEvent shape onto FullCalendar's event input. Keeping
-// this here means the rest of the app never touches FullCalendar's types.
+// this here means the rest of the app never touches FullCalendar's types. Each
+// event is tinted with its own color so overlapping blocks stay distinguishable.
 function toEventInput(e: DashboardEvent): EventInput {
+  const color = e.color || DEFAULT_EVENT_COLOR;
   return {
     id: e.id,
     title: e.name,
     start: e.start,
     end: e.end,
     allDay: e.allDay,
+    backgroundColor: color,
+    borderColor: color,
     extendedProps: { description: e.description, location: e.location },
   };
 }

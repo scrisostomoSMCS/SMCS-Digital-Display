@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ColorPicker from "./ColorPicker";
 
 /*
   Create/edit form shown when an employee clicks a slot or an event. Pure UI:
@@ -14,6 +15,7 @@ export type EventFormState = {
   startLocal: string; // "YYYY-MM-DDTHH:mm" (UTC wall-clock)
   endLocal: string;
   showOnDashboard: boolean;
+  color: string; // hex tint used on the calendars
 };
 
 type EventFormProps = {
@@ -130,6 +132,13 @@ export default function EventForm({
               required
             />
           </label>
+        </div>
+
+        <div className="mt-4">
+          <ColorPicker
+            value={state.color}
+            onChange={(v) => set("color", v)}
+          />
         </div>
 
         <label className="mt-4 flex items-center gap-2 text-base font-semibold">

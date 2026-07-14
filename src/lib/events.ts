@@ -12,6 +12,7 @@ export type DashboardEvent = {
   start: string; // ISO 8601
   end?: string; // ISO 8601
   allDay?: boolean;
+  color?: string; // hex; the calendar tints the event block with this
 };
 
 // Raw row shape from the `events` table (snake_case, nullable columns).
@@ -23,6 +24,7 @@ type EventRow = {
   starts_at: string;
   ends_at: string | null;
   all_day: boolean | null;
+  color: string | null;
 };
 
 // Map a DB row onto the DashboardEvent contract the calendar renders.
@@ -35,6 +37,7 @@ function fromRow(row: EventRow): DashboardEvent {
     start: row.starts_at,
     end: row.ends_at ?? undefined,
     allDay: row.all_day ?? undefined,
+    color: row.color ?? undefined,
   };
 }
 
@@ -47,7 +50,7 @@ function fromRow(row: EventRow): DashboardEvent {
 export async function fetchDashboardEvents(): Promise<DashboardEvent[]> {
   const { data, error } = await supabase
     .from("events")
-    .select("id, name, description, location, starts_at, ends_at, all_day")
+    .select("id, name, description, location, starts_at, ends_at, all_day, color")
     // The Live Calendar is admin-curated: an event shows here only when an
     // admin/employee has explicitly flagged it (show_on_dashboard). Client
     // signups never appear here, they only land on the personal calendar.
@@ -80,7 +83,7 @@ export async function fetchTodaysEvents(): Promise<DashboardEvent[]> {
 
   const { data, error } = await supabase
     .from("events")
-    .select("id, name, description, location, starts_at, ends_at, all_day")
+    .select("id, name, description, location, starts_at, ends_at, all_day, color")
     .eq("show_on_dashboard", true)
     .gte("starts_at", start)
     .lt("starts_at", end)
@@ -103,7 +106,7 @@ export async function fetchMySchedule(): Promise<DashboardEvent[]> {
   const { data, error } = await supabase
     .from("signups")
     .select(
-      "event:events(id, name, description, location, starts_at, ends_at, all_day)",
+      "event:events(id, name, description, location, starts_at, ends_at, all_day, color)",
     );
 
   if (error) {
