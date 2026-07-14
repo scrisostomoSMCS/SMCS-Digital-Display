@@ -22,6 +22,7 @@ export type EventFormData = {
   start: string;
   end?: string;
   showOnDashboard: boolean;
+  color: string; // hex; how the event renders on the calendars
 };
 
 type EventRow = {
@@ -33,6 +34,7 @@ type EventRow = {
   ends_at: string | null;
   all_day: boolean | null;
   show_on_dashboard: boolean;
+  color: string | null;
 };
 
 function fromRow(r: EventRow): ManageEvent {
@@ -45,11 +47,12 @@ function fromRow(r: EventRow): ManageEvent {
     end: r.ends_at ?? undefined,
     allDay: r.all_day ?? undefined,
     showOnDashboard: r.show_on_dashboard,
+    color: r.color ?? undefined,
   };
 }
 
 const COLUMNS =
-  "id, name, description, location, starts_at, ends_at, all_day, show_on_dashboard";
+  "id, name, description, location, starts_at, ends_at, all_day, show_on_dashboard, color";
 
 export async function fetchAllEvents(): Promise<ManageEvent[]> {
   const { data, error } = await supabase
@@ -73,6 +76,7 @@ function toRow(d: EventFormData) {
     starts_at: d.start,
     ends_at: d.end || null,
     show_on_dashboard: d.showOnDashboard,
+    color: d.color,
   };
 }
 

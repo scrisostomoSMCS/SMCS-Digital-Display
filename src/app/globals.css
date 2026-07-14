@@ -59,6 +59,11 @@ h3 {
   --fc-button-active-bg-color: var(--color-teal);
   --fc-button-active-border-color: var(--color-teal);
 }
+/* Events not shown on the public Live Calendar are dimmed in the editor so
+   staff can still tell them apart from on-board events at a glance. */
+.manage-calendar .fc .evt-off-board {
+  opacity: 0.5;
+}
 .manage-calendar .fc {
   font-size: 0.95rem;
 }
@@ -195,10 +200,7 @@ h3 {
 .tv-calendar .fc .fc-list-event-time {
   font-size: clamp(1rem, 2vw, 1.4rem);
 }
-/* The list-event dot is interactive-looking; use a solid blue marker. */
-.tv-calendar .fc .fc-list-event-dot {
-  border-color: var(--color-blue);
-}
+/* The dot marker follows each event's own color (set inline by FullCalendar). */
 
 /*
   Emphasize today with accent colors via a frame/highlight only (no fill),

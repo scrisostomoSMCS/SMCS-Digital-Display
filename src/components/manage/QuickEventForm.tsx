@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { createEvent } from "@/lib/manageEvents";
+import { DEFAULT_EVENT_COLOR } from "@/lib/eventColors";
 import { Field, inputClass, labelClass } from "./editorFields";
+import ColorPicker from "./ColorPicker";
 
 /*
   A second entry point for adding a calendar event, alongside the calendar
@@ -19,6 +21,7 @@ export default function QuickEventForm() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [onDashboard, setOnDashboard] = useState(true);
+  const [color, setColor] = useState(DEFAULT_EVENT_COLOR);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +45,7 @@ export default function QuickEventForm() {
       start: new Date(`${date}T${start}:00Z`).toISOString(),
       end: new Date(`${date}T${end}:00Z`).toISOString(),
       showOnDashboard: onDashboard,
+      color,
     });
     setSaving(false);
     if (err) {
@@ -99,6 +103,8 @@ export default function QuickEventForm() {
           />
         </label>
       </div>
+
+      <ColorPicker value={color} onChange={setColor} />
 
       <label className="flex items-center gap-3 text-base font-semibold">
         <input
