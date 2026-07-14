@@ -24,6 +24,9 @@
 */
 html {
   font-size: 18px; /* minimum body size requirement */
+  /* Shown in the overscroll / rubber-band area past the top and bottom of the
+     page (the body's own white background covers the normal content area). */
+  background-color: #2071c1;
 }
 
 body {

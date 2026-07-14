@@ -9,7 +9,7 @@ export default function Home() {
           A neutral dark scrim over the photo darkens it and keeps the white
           text readable; adjust bg-ink/NN to darken more or less. The nav bar
           overlays the top of this image on the home page (see NavBar). */}
-      <section className="relative flex min-h-[70vh] items-center overflow-hidden bg-blue text-paper">
+      <section className="relative flex min-h-[calc(100vh-3rem)] items-center overflow-hidden bg-blue text-paper">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url('/hero.avif')" }}
@@ -50,15 +50,20 @@ export default function Home() {
             frame="teal"
             src="/cafeteria.webp"
             alt="SMCS cafeteria serving the community"
-            scrimClassName="bg-black/70"
+            scrimClassName="bg-black/60"
           >
             <h3 className="text-2xl font-bold">Serving Our Community</h3>
           </ImageWithOverlay>
           <div>
             <p className="text-xl">
-              SMCS is committed to providing clear, reliable information and
-              services to the people we serve. This section will hold a fuller
-              description of our mission and history.
+              Individuals and families who are living in poverty or experiencing homelessness
+              need provisions to get through today, services that open doors for a stable tomorrow,
+              and caring support that gives them hope for a brighter future.
+            </p>
+            <p className="mt-4 text-xl">
+              For nearly seven decades the Stockton community has supported St. Mary’s Community Services
+              through financial gifts, partnerships, volunteer hours and donations–sustaining our efforts
+              to help individuals in vulnerable circumstances meet their daily challenges and rebuild their lives.
             </p>
           </div>
         </div>
@@ -72,21 +77,62 @@ export default function Home() {
               frame="blue"
               src="/dog.jpg"
               alt="Service dog at SMCS"
-              scrimClassName="bg-black/70"
+              scrimClassName="bg-black/60"
             >
               <h3 className="text-2xl font-bold">What We Offer</h3>
             </ImageWithOverlay>
           </div>
           <div className="md:order-1">
             <p className="text-xl">
-              A short summary of the services SMCS provides will go here. Each
-              service can later link to its own detail page as the site grows.
+              There are as many reasons why people experience homelessness as there are people
+              who are homeless. Our caring staff provides individualized attention to guests to
+              not only ensure that they have daily provisions, but to also support and connect them
+              with services that can lead to healthier lives and permanent housing.
             </p>
             <ul className="mt-4 space-y-2 text-xl">
-              <li className="border-l-4 border-teal pl-4">Service area one</li>
-              <li className="border-l-4 border-blue pl-4">Service area two</li>
-              <li className="border-l-4 border-teal pl-4">Service area three</li>
+              <li className="border-l-4 border-teal pl-4">
+                <a
+                  href="https://smcares.org/programs/essential-services/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue hover:underline"
+                >
+                  Essential Services
+                </a>
+              </li>
+              <li className="border-l-4 border-blue pl-4">
+                <a
+                  href="https://smcares.org/programs/social-services/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue hover:underline"
+                >
+                  Social Services
+                </a>
+              </li>
+              <li className="border-l-4 border-teal pl-4">
+                <a
+                  href="https://smcares.org/programs/health-services/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-blue hover:underline"
+                >
+                  Health Services
+                </a>
+              </li>
             </ul>
+            <p className="mt-6 text-xl">
+              Learn more about our full list of services{" "}
+              <a
+                href="https://smcares.org/programs/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-blue hover:underline"
+              >
+                here
+              </a>
+              .
+            </p>
           </div>
         </div>
       </Section>
