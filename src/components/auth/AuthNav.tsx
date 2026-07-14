@@ -90,7 +90,7 @@ export default function AuthNav() {
       {isAdmin && (
         <li>
           <Link href="/admin" className={linkClass}>
-            Admin
+            Admin Panel
           </Link>
         </li>
       )}
