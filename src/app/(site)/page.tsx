@@ -5,16 +5,17 @@ import ImageWithOverlay from "@/components/ImageWithOverlay";
 export default function Home() {
   return (
     <>
-      {/* Hero, solid brand blue (#0054A4) placeholder + big serif headline.
-          Drop a photo at public/hero.jpg; the blue scrim keeps it on-brand and
-          keeps the white text readable. */}
+      {/* Hero, background photo (public/hero.avif) + big serif headline.
+          A neutral dark scrim over the photo darkens it and keeps the white
+          text readable; adjust bg-ink/NN to darken more or less. The nav bar
+          overlays the top of this image on the home page (see NavBar). */}
       <section className="relative flex min-h-[70vh] items-center overflow-hidden bg-blue text-paper">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/hero.jpg')" }}
+          style={{ backgroundImage: "url('/hero.avif')" }}
           aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-blue/70" aria-hidden="true" />
+        <div className="absolute inset-0 bg-ink/70" aria-hidden="true" />
         <div className="relative mx-auto w-full max-w-6xl px-6 py-20">
           <h1 className="font-display text-6xl font-bold leading-[0.9] md:text-8xl lg:text-9xl">
             Make A

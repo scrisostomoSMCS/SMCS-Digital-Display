@@ -24,8 +24,11 @@ export default function SiteLayout({
   return (
     <div className={`${serif.variable} flex min-h-screen flex-col`}>
       <Header />
-      <NavBar />
-      <main className="flex-1">{children}</main>
+      {/* Positioning context so the home page nav can overlay the hero image */}
+      <div className="relative flex flex-1 flex-col">
+        <NavBar />
+        <main className="flex-1">{children}</main>
+      </div>
       <Footer />
     </div>
   );
