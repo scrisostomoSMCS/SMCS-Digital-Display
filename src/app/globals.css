@@ -44,6 +44,27 @@ h3 {
   font-weight: 700;
 }
 
+/* Anything clickable shows the pointer ("hand") cursor. Browsers default
+   <button> to a normal arrow, so buttons, menu triggers, selects, and
+   checkboxes/radios all need this; links already show the pointer. Disabled
+   controls fall back to the not-allowed cursor. */
+button,
+[role="button"],
+summary,
+select,
+label:has(> input[type="checkbox"]),
+label:has(> input[type="radio"]),
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}
+button:disabled,
+button[disabled],
+select:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* ===========================================================================
    Employee editor (Phase 3B), on-brand FullCalendar theming (palette only).
    Separate from the view-only dashboard's .tv-calendar styles.

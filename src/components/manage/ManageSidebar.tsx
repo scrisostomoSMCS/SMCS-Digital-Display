@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   fetchSlides,
@@ -18,9 +18,10 @@ import {
 import SlideMenu from "./SlideMenu";
 
 /*
-  Sticky manage-page navigation. Every slide in the rotation gets a three-dots
-  Edit/Delete menu. Built-in Edit jumps to that page's existing editor; custom
-  Edit opens the structured template editor.
+  Sticky manage-page navigation, grouped to mirror the page's three sections:
+  Calendar, Digital Schedule Pages, and Custom Slides. Every slide in the
+  rotation gets a three-dots Edit/Delete menu. Built-in Edit jumps to that
+  page's existing editor; custom Edit opens the structured template editor.
 
   Default pages that are always needed, Services, New arrivals, Events today,
   cannot be deleted (no Delete option). Only the featured-group (pregnant women)
@@ -44,6 +45,35 @@ const linkClass = (active: boolean) =>
       ? "border-blue bg-blue/5 text-blue"
       : "border-transparent text-ink hover:bg-ink/5 hover:text-blue"
   }`;
+
+// Section header that marks a break between the sidebar's groups. Clickable:
+// jumps to that section of the page.
+function GroupTitle({
+  children,
+  onClick,
+  active,
+}: {
+  children: ReactNode;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="block w-full px-4 pb-2 text-left"
+    >
+      <h2
+        className={`text-lg font-bold uppercase tracking-wide hover:text-blue ${
+          active ? "text-blue" : "text-ink"
+        }`}
+      >
+        {children}
+      </h2>
+      <span aria-hidden="true" className="mt-1 block h-0.5 w-8 bg-teal" />
+    </button>
+  );
+}
 
 export default function ManageSidebar() {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -164,12 +194,18 @@ export default function ManageSidebar() {
 
   const hasRecoverable = hiddenBuiltins.length > 0 || deleted.length > 0;
 
+  // Highlight a section title when the reader is inside that section.
+  const calendarActive = active === "calendar";
+  const dspActive = ["services", "new-arrivals", "demographic"].includes(active);
+  const customActive = active.startsWith("slide-");
+
   return (
     <nav aria-label="Manage sections" className="hidden w-56 shrink-0 lg:block">
       <div className="sticky top-6">
-        <p className="px-4 pb-2 text-sm font-semibold uppercase tracking-wider text-ink/50">
-          Jump to
-        </p>
+        {/* Calendar */}
+        <GroupTitle onClick={() => jump("calendar")} active={calendarActive}>
+          Calendar
+        </GroupTitle>
         <ul className="space-y-1">
           <li>
             <button
@@ -177,52 +213,85 @@ export default function ManageSidebar() {
               onClick={() => jump("calendar")}
               className={linkClass(active === "calendar")}
             >
-              Calendar
+              Weekly calendar
             </button>
           </li>
-
-          {visibleBuiltins.map((b) => {
-            const deletable = !PROTECTED.includes(b.key);
-            return (
-              <li key={b.key} className="flex items-center pr-1">
-                <button
-                  type="button"
-                  onClick={() => b.anchor && jump(b.anchor)}
-                  className={linkClass(!!b.anchor && active === b.anchor)}
-                >
-                  {b.label}
-                </button>
-                <SlideMenu
-                  onEdit={b.anchor ? () => jump(b.anchor as string) : undefined}
-                  editNote="Auto-updates from calendar"
-                  onDelete={
-                    deletable ? () => hideBuiltin(b.key, b.label) : undefined
-                  }
-                />
-              </li>
-            );
-          })}
-
-          {slides.map((s) => (
-            <li key={s.id} className="flex items-center pr-1">
-              <button
-                type="button"
-                onClick={() => jumpToSlide(s.id)}
-                className={linkClass(active === `slide-${s.id}`)}
-              >
-                {s.title.trim() || "Untitled slide"}
-              </button>
-              <SlideMenu
-                onEdit={() => jumpToSlide(s.id)}
-                onDelete={() => removeCustom(s)}
-              />
-            </li>
-          ))}
         </ul>
+
+        {/* Digital Schedule Pages */}
+        <div className="mt-6">
+          <GroupTitle
+            onClick={() => jump("digital-schedule")}
+            active={dspActive}
+          >
+            Digital Schedule Pages
+          </GroupTitle>
+          <ul className="space-y-1">
+            {visibleBuiltins.map((b) => {
+              const deletable = !PROTECTED.includes(b.key);
+              return (
+                <li key={b.key} className="flex items-center pr-1">
+                  <button
+                    type="button"
+                    onClick={() => b.anchor && jump(b.anchor)}
+                    className={linkClass(!!b.anchor && active === b.anchor)}
+                  >
+                    {b.label}
+                  </button>
+                  <SlideMenu
+                    onEdit={b.anchor ? () => jump(b.anchor as string) : undefined}
+                    editNote="Auto-updates from calendar"
+                    onDelete={
+                      deletable ? () => hideBuiltin(b.key, b.label) : undefined
+                    }
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* Custom Slides */}
+        <div className="mt-6">
+          <GroupTitle onClick={() => jump("custom-slides")} active={customActive}>
+            Custom Slides
+          </GroupTitle>
+          {slides.length > 0 && (
+            <ul className="space-y-1">
+              {slides.map((s) => (
+                <li key={s.id} className="flex items-center pr-1">
+                  <button
+                    type="button"
+                    onClick={() => jumpToSlide(s.id)}
+                    className={linkClass(active === `slide-${s.id}`)}
+                  >
+                    {s.title.trim() || "Untitled slide"}
+                  </button>
+                  <SlideMenu
+                    onEdit={() => jumpToSlide(s.id)}
+                    onDelete={() => removeCustom(s)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-2 px-1">
+            <button
+              type="button"
+              onClick={addSlide}
+              className="flex w-full items-center gap-2 border-2 border-blue bg-blue px-4 py-2 text-lg font-semibold text-paper hover:bg-paper hover:text-blue"
+            >
+              <span aria-hidden="true" className="text-xl leading-none">
+                +
+              </span>
+              Add new slide
+            </button>
+          </div>
+        </div>
 
         {/* Recovery: restore hidden built-ins or soft-deleted custom slides. */}
         {hasRecoverable && (
-          <div className="mt-3 border-t-2 border-placeholder pt-3">
+          <div className="mt-6 border-t-2 border-placeholder pt-3">
             <p className="px-4 pb-1 text-sm font-semibold uppercase tracking-wider text-ink/40">
               Recently deleted
             </p>
@@ -265,19 +334,6 @@ export default function ManageSidebar() {
             </ul>
           </div>
         )}
-
-        <div className="mt-3 border-t-2 border-placeholder pt-3">
-          <button
-            type="button"
-            onClick={addSlide}
-            className="flex w-full items-center gap-2 border-2 border-blue bg-blue px-4 py-2 text-lg font-semibold text-paper hover:bg-paper hover:text-blue"
-          >
-            <span aria-hidden="true" className="text-xl leading-none">
-              +
-            </span>
-            Add new slide
-          </button>
-        </div>
       </div>
     </nav>
   );

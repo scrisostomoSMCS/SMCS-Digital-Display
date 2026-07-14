@@ -80,6 +80,7 @@ export default async function ManagePage() {
         </Section>
 
         <Section
+          id="digital-schedule"
           title="Digital Schedule pages"
           className="scroll-mt-6"
         >
@@ -92,7 +93,7 @@ export default async function ManagePage() {
           </div>
         </Section>
 
-        <Section title="Custom slides" className="scroll-mt-6">
+        <Section id="custom-slides" title="Custom slides" className="scroll-mt-6">
           <p className="max-w-3xl text-lg">
             Slides you&rsquo;ve added to the rotation. Expand one to edit its
             layout, text, colors, and image; each saves on its own. Add or delete
