@@ -119,7 +119,7 @@ export default function AdminUserManager({
                     )}
                     {needsReview && (
                       <span className="mt-1 inline-block border-2 border-teal px-2 py-0.5 text-sm font-semibold text-ink">
-                        Staff — needs review
+                        Staff: needs review
                       </span>
                     )}
                   </td>

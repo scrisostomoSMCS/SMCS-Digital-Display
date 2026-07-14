@@ -9,7 +9,7 @@ import { STAFF_EMAIL_DOMAIN, isStaffEmail } from "@/lib/staffSignup";
   Staff sign-up: create an account with an @smcs.org email + password. The
   domain is checked here for a clear message and enforced again in the database
   (migration 0011) so it can't be bypassed. Email confirmation is required
-  (Supabase) — the account isn't active until the emailed link is clicked. New
+  (Supabase), the account isn't active until the emailed link is clicked. New
   accounts get the powerless default role; an admin elevates them separately.
 */
 const inputClass =

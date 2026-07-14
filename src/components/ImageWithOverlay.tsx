@@ -12,7 +12,7 @@ import Image from "next/image";
 type ImageWithOverlayProps = {
   /** Image source. Leave undefined to show the gray placeholder. */
   src?: string;
-  /** Alt text — required when a real image is used. */
+  /** Alt text, required when a real image is used. */
   alt?: string;
   /** Overlay content (rendered in white over a dark scrim). */
   children?: React.ReactNode;

@@ -22,7 +22,7 @@ import SlideMenu from "./SlideMenu";
   Edit/Delete menu. Built-in Edit jumps to that page's existing editor; custom
   Edit opens the structured template editor.
 
-  Default pages that are always needed — Services, New arrivals, Events today —
+  Default pages that are always needed, Services, New arrivals, Events today,
   cannot be deleted (no Delete option). Only the featured-group (pregnant women)
   page and custom slides can be removed, and removals are RECOVERABLE: hidden
   built-ins and soft-deleted custom slides appear under "Recently deleted" with
@@ -140,7 +140,7 @@ export default function ManageSidebar() {
     await setHiddenBuiltins([...hidden, key]);
   }
 
-  // Soft delete — moves the slide to "Recently deleted" (recoverable).
+  // Soft delete, moves the slide to "Recently deleted" (recoverable).
   async function removeCustom(slide: Slide) {
     if (!guardLastSlide()) return;
     if (

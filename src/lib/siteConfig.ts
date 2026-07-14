@@ -1,5 +1,5 @@
 /*
-  Site-wide contact details shown in the top bar. Placeholders — edit to the
+  Site-wide contact details shown in the top bar. Placeholders, edit to the
   real SMCS values. Kept in one spot so they're easy to change.
 */
 export const CONTACT_EMAIL = "info@smcares.org";

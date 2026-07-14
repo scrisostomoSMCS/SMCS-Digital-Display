@@ -1,4 +1,4 @@
--- SMCS — custom slides for the /information rotating display.
+-- SMCS, custom slides for the /information rotating display.
 -- Employees can add their own slides (title + message + list of items) on top
 -- of the built-in pages. Stored here so they persist and drive the display.
 -- Public reads; only staff can create/edit/delete. Run in Supabase SQL Editor.

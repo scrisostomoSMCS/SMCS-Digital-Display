@@ -5,7 +5,7 @@ import ImageWithOverlay from "@/components/ImageWithOverlay";
 export default function Home() {
   return (
     <>
-      {/* Hero — solid brand blue (#0054A4) placeholder + big serif headline.
+      {/* Hero, solid brand blue (#0054A4) placeholder + big serif headline.
           Drop a photo at public/hero.jpg; the blue scrim keeps it on-brand and
           keeps the white text readable. */}
       <section className="relative flex min-h-[70vh] items-center overflow-hidden bg-blue text-paper">
@@ -22,7 +22,7 @@ export default function Home() {
             Difference.
           </h1>
           <p className="mt-6 max-w-2xl text-xl text-paper/90 md:text-2xl">
-            Saint Mary&rsquo;s Community Services — connecting our community to
+            Saint Mary&rsquo;s Community Services, connecting our community to
             the care and services they need.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
@@ -42,7 +42,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About — image-with-overlay demo */}
+      {/* About, image-with-overlay demo */}
       <Section id="about" title="About Us">
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <ImageWithOverlay frame="teal">
@@ -62,7 +62,7 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* Services — image-with-overlay demo */}
+      {/* Services, image-with-overlay demo */}
       <Section id="services" title="Our Services">
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <div className="md:order-2">

@@ -5,7 +5,7 @@
 */
 
 // How many day columns the week shows. This is the ONLY edit needed to switch
-// the display range — e.g. 7 for the full week, or 5 (with FIRST_DAY = 1) for
+// the display range, e.g. 7 for the full week, or 5 (with FIRST_DAY = 1) for
 // a Mon–Fri view. The grid always aligns to the start of the current week.
 export const DAYS_SHOWN = 7;
 
@@ -22,7 +22,7 @@ export const DAY_END_HOUR = 20; // 8:00 PM
 // one item in the marquee. Kept as a single config value (placeholder contact
 // info + announcements for now) so it's trivial to make editable later.
 export const INFO_BAR_ITEMS: string[] = [
-  "Welcome to SMCS — this week's scheduled services are shown below",
+  "Welcome to SMCS, this week's scheduled services are shown below",
   "Phone: (555) 123-4567",
   "Email: info@smcs.example",
   "Office hours: Monday–Friday, 9:00 AM – 5:00 PM",

@@ -1,4 +1,4 @@
--- SMCS dashboard — events schema, public read-only access, realtime, + seed.
+-- SMCS dashboard, events schema, public read-only access, realtime, + seed.
 -- Run this in the Supabase dashboard: SQL Editor → New query → paste → Run.
 
 -- 1) Table -----------------------------------------------------------------

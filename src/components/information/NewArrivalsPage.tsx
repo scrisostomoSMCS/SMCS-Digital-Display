@@ -8,7 +8,7 @@ import { staggerContainer, riseItem, headerIn } from "./motion";
 import type { InfoContent } from "@/lib/infoContent";
 
 /*
-  Page 2 — New arrivals. Content-driven (edited on the manage page). Full-bleed
+  Page 2, New arrivals. Content-driven (edited on the manage page). Full-bleed
   blue with a big warm Playfair welcome and Poppins supporting copy. A large
   signature leaf sits in the empty space.
 */

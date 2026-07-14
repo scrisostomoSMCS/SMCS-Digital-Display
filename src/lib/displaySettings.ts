@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 /*
   Which built-in slides are hidden from the rotation. Lets an employee "delete"
   a built-in slide (services / new-arrivals / demographic / events-today)
-  without losing its editor — it's just removed from the display. Stored as a
+  without losing its editor, it's just removed from the display. Stored as a
   singleton row in public.display_settings.
 */
 export type BuiltinKey =

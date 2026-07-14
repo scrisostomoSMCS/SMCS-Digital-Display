@@ -19,13 +19,13 @@ The project brings together three views over a single, shared schedule:
 
 ## Features
 
-- **Live Dashboard** — a public nschedule of the day's/week's
+- **Live Dashboard**, a public nschedule of the day's/week's
   services, designed for legibility on wall-mounted TVs and accessable on phones
   via a QR code.
-- **Personal calendars** — each client signs in to see only the services and
+- **Personal calendars**, each client signs in to see only the services and
   appointments they're personally signed up for.
-- **Staff editing tool** — employees and administrators create, move, resize, and delete events from a calendar interface on a separate page.
-- **Real-time updates** — edits update to the live dashboard and every device
+- **Staff editing tool**, employees and administrators create, move, resize, and delete events from a calendar interface on a separate page.
+- **Real-time updates**, edits update to the live dashboard and every device
   in real time.
-- **Role-based access** — client, employee, and admin roles.
-- **Accessible by design** — Similar design philosophy with the already existing SMCS website to assure the site is accessable for all audiences.
+- **Role-based access**, client, employee, and admin roles.
+- **Accessible by design**, Similar design philosophy with the already existing SMCS website to assure the site is accessable for all audiences.

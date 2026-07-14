@@ -1,9 +1,9 @@
--- SMCS — restrict self sign-up to staff (@smcs.org) at the DATABASE level, so
+-- SMCS, restrict self sign-up to staff (@smcs.org) at the DATABASE level, so
 -- the domain rule can't be bypassed by calling the auth API directly. The UI
 -- checks too, but this trigger is the real enforcement.
 --
 -- Notes:
---   * BEFORE INSERT only — existing accounts are unaffected.
+--   * BEFORE INSERT only, existing accounts are unaffected.
 --   * New sign-ups still default to the powerless 'client' role (via
 --     handle_new_user from 0005). The domain gates REGISTRATION, not access:
 --     an admin must still elevate someone to employee/admin.

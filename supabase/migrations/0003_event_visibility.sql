@@ -1,4 +1,4 @@
--- SMCS — event visibility. Public events show on the Live Dashboard (and to
+-- SMCS, event visibility. Public events show on the Live Dashboard (and to
 -- anyone); private events (e.g. personal appointments) appear ONLY on the
 -- personal calendar of users signed up for them, and are not readable publicly.
 -- Run in Supabase: SQL Editor → New query → paste → Run.

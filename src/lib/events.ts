@@ -50,7 +50,7 @@ export async function fetchDashboardEvents(): Promise<DashboardEvent[]> {
     .select("id, name, description, location, starts_at, ends_at, all_day")
     // The Live Dashboard is admin-curated: an event shows here only when an
     // admin/employee has explicitly flagged it (show_on_dashboard). Client
-    // signups never appear here — they only land on the personal calendar.
+    // signups never appear here, they only land on the personal calendar.
     // RLS also blocks the public from reading non-dashboard events.
     .eq("show_on_dashboard", true)
     .order("starts_at", { ascending: true });
@@ -97,7 +97,7 @@ export async function fetchTodaysEvents(): Promise<DashboardEvent[]> {
   Load the current user's OWN schedule: events they've been signed up for, read
   through the `signups` join table. RLS on `signups` (user_id = auth.uid())
   guarantees only the logged-in user's rows come back, so this can never expose
-  another user's schedule. Role-agnostic — works for any authenticated user.
+  another user's schedule. Role-agnostic, works for any authenticated user.
 */
 export async function fetchMySchedule(): Promise<DashboardEvent[]> {
   const { data, error } = await supabase

@@ -32,7 +32,7 @@ function toEventInput(e: DashboardEvent): EventInput {
 }
 
 // Times are read in UTC so the stored wall-clock time is shown as-is to every
-// viewer (TV and phones in any timezone) — matches the calendar's timeZone="UTC".
+// viewer (TV and phones in any timezone), matches the calendar's timeZone="UTC".
 function hourMin(d: Date): string {
   const h = d.getUTCHours() % 12 || 12;
   const m = d.getUTCMinutes();
@@ -40,7 +40,7 @@ function hourMin(d: Date): string {
 }
 const meridiem = (d: Date) => (d.getUTCHours() < 12 ? "am" : "pm");
 
-// Short range like "9 – 10:30am" / "9:30am – 12pm" — kept compact so the
+// Short range like "9 – 10:30am" / "9:30am – 12pm", kept compact so the
 // time + location usually fits on one line and the block stays short.
 function timeRange(start: Date | null, end: Date | null): string {
   if (!start) return "";
@@ -72,7 +72,7 @@ const NARROW_QUERY = "(max-width: 768px)";
 /*
   Presentational week calendar. Role-agnostic: it just renders whatever events
   it's given, so the Live Dashboard (all events) and the Personal Calendar (a
-  user's own signups) — and future employee/admin views — reuse it unchanged.
+  user's own signups), and future employee/admin views, reuse it unchanged.
   Data loading + realtime live in thin wrapper components, not here.
 */
 type WeekCalendarProps = {
@@ -97,7 +97,7 @@ export default function WeekCalendar({ events }: WeekCalendarProps) {
   const slotTime = (h: number) => `${String(h).padStart(2, "0")}:00:00`;
 
   // Clicking an event opens its detail popup. This is the only interaction the
-  // display allows — everything else stays locked (see the FullCalendar props).
+  // display allows, everything else stays locked (see the FullCalendar props).
   function handleEventClick(arg: EventClickArg) {
     arg.jsEvent.preventDefault();
     setSelected({
@@ -164,7 +164,7 @@ export default function WeekCalendar({ events }: WeekCalendarProps) {
         headerToolbar={false}
         height="100%"
         // Fit the whole week on one screen: only show the active hours and let
-        // expandRows stretch them to fill the height — no scrolling in any
+        // expandRows stretch them to fill the height, no scrolling in any
         // direction. Adjust the window via DAY_START_HOUR / DAY_END_HOUR.
         slotMinTime={slotTime(DAY_START_HOUR)}
         slotMaxTime={slotTime(DAY_END_HOUR)}

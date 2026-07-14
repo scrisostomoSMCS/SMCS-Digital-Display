@@ -97,7 +97,7 @@ export const newArrivals = {
     },
     {
       title: "Have a hot meal",
-      detail: "The Dining Hall is open now — no cost, no questions.",
+      detail: "The Dining Hall is open now, no cost, no questions.",
     },
     {
       title: "Talk with a caseworker",
@@ -123,7 +123,7 @@ export type Demographic = {
 /*
   The demographic page shows ONE demographic at a time. To rotate the focus
   later (veterans, families, seniors, …), add an entry here and point
-  `featuredDemographicKey` at it — the page component doesn't change.
+  `featuredDemographicKey` at it, the page component doesn't change.
 */
 export const demographics = {
   pregnantWomen: {

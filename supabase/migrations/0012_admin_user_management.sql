@@ -1,4 +1,4 @@
--- SMCS — admin user management. Admins can view all users and change roles,
+-- SMCS, admin user management. Admins can view all users and change roles,
 -- replacing the manual SQL role updates. Run in Supabase SQL Editor.
 
 -- 1) profiles RLS: admins can read all rows and update roles. (Defense in depth

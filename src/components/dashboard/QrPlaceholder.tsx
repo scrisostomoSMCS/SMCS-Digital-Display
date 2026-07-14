@@ -1,5 +1,5 @@
 /*
-  Reserved slot for a future QR code (generated in a later phase — not yet).
+  Reserved slot for a future QR code (generated in a later phase, not yet).
   Compact horizontal form for the top-right corner: caption beside a small,
   accent-framed empty box sized for a QR code.
 */

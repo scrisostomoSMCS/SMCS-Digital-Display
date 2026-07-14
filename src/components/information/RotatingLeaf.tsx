@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Leaf } from "lucide-react";
 
 /*
-  Signature motif: a leaf that spins slowly and continuously — an elegant,
+  Signature motif: a leaf that spins slowly and continuously, an elegant,
   calm accent (never fast/distracting). Recurs across all three pages. Honors
   reduced-motion by staying still.
 */

@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase";
 import { fetchTodaysEvents, type DashboardEvent } from "@/lib/events";
 
 /*
-  Page 4 — Events happening today. Auto-populated from the calendar's Supabase
+  Page 4, Events happening today. Auto-populated from the calendar's Supabase
   events (today's dashboard events), kept live via realtime. No manual editing.
 */
 
@@ -41,7 +41,7 @@ export default function EventsTodayPage() {
       setLoaded(true);
     };
     load();
-    // Reuse the events realtime the dashboard uses — re-load on any change.
+    // Reuse the events realtime the dashboard uses, re-load on any change.
     const channel = supabase
       .channel("events-today")
       .on(
@@ -79,7 +79,7 @@ export default function EventsTodayPage() {
             No events scheduled today.
           </p>
           <p className="font-body mt-3 max-w-3xl text-2xl font-medium md:text-3xl">
-            Our everyday services are still open — see the services list for
+            Our everyday services are still open, see the services list for
             what&rsquo;s always available.
           </p>
         </div>

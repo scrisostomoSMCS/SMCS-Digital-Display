@@ -5,7 +5,7 @@ import { createBrowserClient } from "@supabase/ssr";
   queries and realtime. With @supabase/ssr the session is stored in cookies,
   so the server (middleware, server components) can read the same auth state.
 
-  Both env values are public on purpose — access is restricted by Row Level
+  Both env values are public on purpose, access is restricted by Row Level
   Security, not by hiding these keys. Never use the service_role key here.
 */
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

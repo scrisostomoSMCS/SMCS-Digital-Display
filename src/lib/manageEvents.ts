@@ -3,8 +3,8 @@ import type { DashboardEvent } from "./events";
 
 /*
   Editor (employee/admin) data layer: read ALL events and create/update/delete
-  them. Writes hit the single Supabase `events` table — the same source the
-  view-only Live Dashboard reads — so changes propagate via realtime. RLS
+  them. Writes hit the single Supabase `events` table, the same source the
+  view-only Live Dashboard reads, so changes propagate via realtime. RLS
   ("Staff …" policies) enforces that only employee/admin can actually write.
 
   Times follow the app-wide convention: stored as UTC wall-clock (an event at
@@ -97,7 +97,7 @@ export async function updateEvent(
   return null;
 }
 
-// Drag/resize only changes the times — a lighter write than the full form.
+// Drag/resize only changes the times, a lighter write than the full form.
 export async function moveEvent(
   id: string,
   start: string,

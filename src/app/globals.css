@@ -42,7 +42,7 @@ h3 {
 }
 
 /* ===========================================================================
-   Employee editor (Phase 3B) — on-brand FullCalendar theming (palette only).
+   Employee editor (Phase 3B), on-brand FullCalendar theming (palette only).
    Separate from the view-only dashboard's .tv-calendar styles.
    ======================================================================== */
 .manage-calendar {
@@ -61,7 +61,7 @@ h3 {
 }
 
 /* ===========================================================================
-   Information wall display (auto-rotating) — fonts.
+   Information wall display (auto-rotating), fonts.
    Motion is handled by Framer Motion in the components; only type is set here.
    Titles: Playfair Display (600). Everything else: Poppins (500/600).
    ======================================================================== */
@@ -160,7 +160,7 @@ h3 {
 
 /*
   Let every event grow to fit its content and bleed past its time slot (like
-  Google Calendar) instead of clipping — block height accuracy matters less
+  Google Calendar) instead of clipping, block height accuracy matters less
   than always showing the full title + time + location. The harness gets a
   minimum height (rescues very short events) and lets content overflow; the
   event itself sizes to its content while never shrinking below its slot.
@@ -173,7 +173,7 @@ h3 {
 /*
   The whole week must fit on one screen with no scrolling. expandRows already
   sizes the grid to the container, but event bleed could otherwise introduce a
-  scrollbar — so the time-grid scroller is locked to never scroll.
+  scrollbar, so the time-grid scroller is locked to never scroll.
 */
 .tv-calendar .fc .fc-scroller {
   overflow: hidden !important;

@@ -11,7 +11,7 @@ import {
 } from "@/lib/infoContent";
 
 /*
-  Page 1 — Services overview. Content-driven (edited on the manage page). A
+  Page 1, Services overview. Content-driven (edited on the manage page). A
   service's `time` may hold several lines (e.g. meal times), split on newlines.
   Icons are looked up by name. Fixed 3×2 grid so all cards fit on screen.
 */
