@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "SMCS",
-  description: "SMCS — official website",
+  description: "SMCS, official website",
 };
 
 /*

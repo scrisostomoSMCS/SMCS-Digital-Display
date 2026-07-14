@@ -9,7 +9,7 @@ import SlideEditor from "./SlideEditor";
 import { smallBtn } from "./editorFields";
 
 /*
-  Inline editors for employee-created slides — one collapsible panel per slide
+  Inline editors for employee-created slides, one collapsible panel per slide
   (collapsed by default so the page is a compact, scannable list). Reorder by
   dragging the grip handle OR the ↑/↓ buttons; the new order persists to Supabase
   (position) and drives the rotation. Reactive: a newly added slide's panel

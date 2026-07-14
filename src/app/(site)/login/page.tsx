@@ -16,7 +16,7 @@ export default function LoginPage() {
   return (
     <Section title="Sign in">
       <p className="max-w-md text-lg">
-        Sign in to view your personal calendar — the services and appointments
+        Sign in to view your personal calendar, the services and appointments
         you&rsquo;re signed up for.
       </p>
       <Suspense fallback={null}>

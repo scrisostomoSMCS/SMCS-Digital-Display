@@ -8,7 +8,7 @@ import { Field, inputClass, labelClass } from "./editorFields";
   A second entry point for adding a calendar event, alongside the calendar
   itself. It writes to the SAME Supabase events (via the shared createEvent),
   so an event added here shows on the calendar, the Live Dashboard, and the
-  "Events happening today" slide — not a separate list. Times follow the app's
+  "Events happening today" slide, not a separate list. Times follow the app's
   UTC wall-clock convention (what you enter is what displays).
 */
 export default function QuickEventForm() {

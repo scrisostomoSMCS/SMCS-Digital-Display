@@ -12,7 +12,7 @@ import {
 } from "@/lib/infoContent";
 
 /*
-  Page 3 — demographic focus (currently expecting mothers). Content-driven
+  Page 3, demographic focus (currently expecting mothers). Content-driven
   (edited on the manage page). Full-bleed teal, white icon cards, large corner
   leaf. Fixed 3×2 grid so nothing is cut off.
 */

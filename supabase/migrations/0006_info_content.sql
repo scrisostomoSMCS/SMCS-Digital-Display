@@ -1,8 +1,8 @@
--- SMCS — editable content for the /information wall display.
+-- SMCS, editable content for the /information wall display.
 -- One singleton row holds a JSON blob of the three messaging pages' text
 -- (services overview, new arrivals, demographic). The public display reads it;
 -- only employees/admins can write it. The "Events happening today" page is NOT
--- stored here — it's driven live by the events table.
+-- stored here, it's driven live by the events table.
 -- Run in Supabase: SQL Editor → New query → paste → Run.
 
 create table if not exists public.info_content (

@@ -9,7 +9,7 @@ export const metadata = {
 /*
   Public staff registration. Only @smcs.org emails can create an account (checked
   here and enforced in the database). New accounts have no editing access until
-  an administrator grants employee/admin — the domain gates registration, not
+  an administrator grants employee/admin, the domain gates registration, not
   access. This is separate from the client eligibility path.
 */
 export default function SignUpPage() {
@@ -19,7 +19,7 @@ export default function SignUpPage() {
         Create an SMCS staff account using your{" "}
         <strong>@{STAFF_EMAIL_DOMAIN}</strong> email. You&rsquo;ll confirm it by
         email before signing in. New accounts start with{" "}
-        <strong>no editing access</strong> — an administrator grants employee or
+        <strong>no editing access</strong>, an administrator grants employee or
         admin access afterward.
       </p>
       <SignUpForm />

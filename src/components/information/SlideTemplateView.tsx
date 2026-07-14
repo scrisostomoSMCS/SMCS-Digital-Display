@@ -10,7 +10,7 @@ import { slideImageUrl, type Slide } from "@/lib/slides";
 /*
   Renders a custom slide in one of the on-brand layout templates. This SAME
   component draws the live /information display AND the editor's preview, driven
-  by the same slide data — so the preview always matches the wall screen.
+  by the same slide data, so the preview always matches the wall screen.
   Styling is fixed here (Playfair title, Poppins body, brand backgrounds, fitted
   image slots); the employee supplies content, template, and one brand color.
 */

@@ -1,9 +1,9 @@
--- SMCS — make the Live Dashboard admin-curated.
+-- SMCS, make the Live Dashboard admin-curated.
 --
 -- Model: an event appears on the Live Dashboard ONLY when an admin/employee
 -- explicitly flags it (show_on_dashboard). It defaults to false, so nothing
 -- lands on the dashboard by default. A client signing up for a service only
--- ever puts it on that client's personal calendar (via the signups table) —
+-- ever puts it on that client's personal calendar (via the signups table),
 -- never on the dashboard.
 --
 -- This replaces the earlier `visibility` column from 0003.

@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 
 /*
   Admin-only user management. Both calls go through SECURITY DEFINER RPCs
-  (migration 0012) that enforce admin access + guardrails in the database — the
+  (migration 0012) that enforce admin access + guardrails in the database, the
   client can't bypass them.
 */
 export type Role = "client" | "employee" | "admin";

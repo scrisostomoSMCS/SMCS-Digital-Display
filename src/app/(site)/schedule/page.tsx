@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 /*
-  Personal Calendar — the logged-in user's own week. Middleware already gates
+  Personal Calendar, the logged-in user's own week. Middleware already gates
   this route; the server-side auth check here is defense-in-depth so the page
   can never render for an unauthenticated request. RLS guarantees the data is
   only ever this user's own signups. Role-agnostic: any signed-in user works.

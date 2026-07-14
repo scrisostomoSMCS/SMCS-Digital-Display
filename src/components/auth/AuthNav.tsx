@@ -14,7 +14,7 @@ import { supabase } from "@/lib/supabase";
 const linkClass =
   "flex h-full items-center px-4 text-base font-semibold text-paper hover:underline";
 
-// The one blue corner block — Log In / Log out (full bar height, flush to edge).
+// The one blue corner block, Log In / Log out (full bar height, flush to edge).
 const authBtnClass =
   "flex h-full items-center bg-blue px-6 text-base font-semibold text-paper hover:bg-blue/90";
 

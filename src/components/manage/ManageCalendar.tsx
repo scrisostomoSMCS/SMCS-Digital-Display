@@ -65,7 +65,7 @@ export default function ManageCalendar() {
   useEffect(() => {
     setMounted(true);
     load();
-    // Stay in sync with edits from anywhere (other staff, the app) — same
+    // Stay in sync with edits from anywhere (other staff, the app), same
     // realtime channel pattern the rest of the app uses.
     const channel = supabase
       .channel("manage-events")
@@ -201,7 +201,7 @@ export default function ManageCalendar() {
         }}
         timeZone="UTC"
         nowIndicator
-        // Full interactive mode — click-to-create, drag, resize.
+        // Full interactive mode, click-to-create, drag, resize.
         selectable
         selectMirror
         editable

@@ -1,4 +1,4 @@
--- SMCS — per-slide background choice (one of the brand backgrounds). Lets the
+-- SMCS, per-slide background choice (one of the brand backgrounds). Lets the
 -- editor's preview match the live display exactly instead of depending on the
 -- slide's position in the rotation. Run in Supabase SQL Editor.
 

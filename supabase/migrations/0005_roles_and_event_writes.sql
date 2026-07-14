@@ -1,4 +1,4 @@
--- SMCS — roles (profiles) + employee/admin write access to events.
+-- SMCS, roles (profiles) + employee/admin write access to events.
 -- Run in Supabase: SQL Editor → New query → paste → Run.
 
 -- 1) profiles: one row per auth user, carrying their role.
@@ -55,7 +55,7 @@ $$;
 
 -- 4) Events write access for staff. Reads stay as-is (public dashboard events +
 -- a user's own signups); we ADD: staff can read ALL events and create/update/
--- delete them. RLS is the real enforcement — the editing UI is convenience.
+-- delete them. RLS is the real enforcement, the editing UI is convenience.
 drop policy if exists "Staff read all events" on public.events;
 create policy "Staff read all events"
   on public.events for select

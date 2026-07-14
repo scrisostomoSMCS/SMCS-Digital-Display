@@ -1,4 +1,4 @@
--- SMCS personal calendar — signups join table (which user is signed up for
+-- SMCS personal calendar, signups join table (which user is signed up for
 -- which event), with strict row-ownership RLS so a user sees ONLY their own.
 -- Run in Supabase: SQL Editor → New query → paste → Run.
 

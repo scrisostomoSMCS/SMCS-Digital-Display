@@ -15,12 +15,12 @@ const STAFF_ROLES = ["employee", "admin"];
 
 /*
   Employee/admin editing page. Role gate here is convenience on top of RLS (the
-  real enforcement — only staff can write events). Unauthenticated → login;
+  real enforcement, only staff can write events). Unauthenticated → login;
   signed-in clients → sent home. Editing lives on this separate route so the
   view-only Live Dashboard never renders editing controls.
 
   Layout: sticky section sidebar (jump links + slide menus) alongside three
-  clearly-separated areas — the calendar, the built-in information pages, and
+  clearly-separated areas, the calendar, the built-in information pages, and
   the custom slides.
 */
 export default async function ManagePage() {
@@ -61,14 +61,14 @@ export default async function ManagePage() {
             </span>
           </p>
 
-          {/* Second entry point for events — writes to the same events data
+          {/* Second entry point for events, writes to the same events data
               as the calendar (and thus the dashboard + "Events today" slide). */}
           <div className="mt-8">
             <h3 className="text-xl font-bold text-blue">Quick add an event</h3>
             <span className="mt-1 mb-3 block h-1 w-16 bg-teal" />
             <p className="mb-4 max-w-3xl text-base text-ink/70">
               Adds to the calendar, the Live Dashboard, and &ldquo;Events
-              happening today&rdquo; — the same as adding it on the calendar
+              happening today&rdquo;, the same as adding it on the calendar
               below.
             </p>
             <QuickEventForm />
@@ -85,7 +85,7 @@ export default async function ManagePage() {
         >
           <p className="max-w-3xl text-lg">
             The built-in pages that rotate on the public Information screens. Edit
-            their text below — changes show on the display right away.
+            their text below, changes show on the display right away.
           </p>
           <div className="mt-6">
             <InfoContentEditor />

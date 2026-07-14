@@ -17,7 +17,7 @@ import { Field, StringListEditor, labelClass, smallBtn } from "./editorFields";
 /*
   Structured editor for one custom slide, used inline on the manage page. Employees
   pick a layout + brand color, fill in text, and upload an image into a fitted
-  slot — no free positioning, no font/color control. The live preview renders the
+  slot, no free positioning, no font/color control. The live preview renders the
   EXACT display component (SlideTemplateView) scaled down, so it always matches
   the wall screen. Saves to Supabase; the rotation updates via realtime.
 */

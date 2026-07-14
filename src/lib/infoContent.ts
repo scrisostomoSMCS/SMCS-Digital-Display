@@ -28,7 +28,7 @@ import {
   employees can edit it and the public display reads it. Defaults below come
   from informationContent.ts and are used until/if a saved row exists.
 
-  A service's `time` field may contain multiple lines (e.g. per-meal times) —
+  A service's `time` field may contain multiple lines (e.g. per-meal times),
   the display splits it on newlines. Icons are NOT edited (too technical); the
   display looks them up by service name via serviceIconFor().
 */
@@ -158,7 +158,7 @@ export async function fetchInfoContent(): Promise<InfoContent> {
     .eq("id", 1)
     .maybeSingle();
   if (error) {
-    // Expected before migration 0006 runs (no table yet) — fall back quietly.
+    // Expected before migration 0006 runs (no table yet), fall back quietly.
     console.warn("Info content unavailable, using defaults:", error.message);
     return defaultInfoContent;
   }

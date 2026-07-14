@@ -1,4 +1,4 @@
--- SMCS — template-based custom slides + image storage + built-in slide hiding.
+-- SMCS, template-based custom slides + image storage + built-in slide hiding.
 -- Run in Supabase SQL Editor. Builds on 0007 (slides table) and 0005 (roles).
 
 -- 1) Extend slides with a layout template, caption, and an image reference.

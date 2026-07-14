@@ -21,7 +21,7 @@ import {
   Employee/admin editor for the /information display's three messaging pages.
   Plain labels, grouped by page; saves the whole content blob to Supabase
   (public.info_content), which the display reads. The "Events happening today"
-  page is not here — it updates itself from the calendar. Access is gated by the
+  page is not here, it updates itself from the calendar. Access is gated by the
   manage page (role check) and by RLS on info_content.
 */
 
@@ -183,7 +183,7 @@ export default function InfoContentEditor() {
         the display right away.
       </p>
       <p className="max-w-3xl border-l-4 border-teal bg-teal/10 py-2 pl-4 text-base">
-        The <strong>“Happening today”</strong> screen is not listed here — it
+        The <strong>“Happening today”</strong> screen is not listed here, it
         updates itself automatically from the calendar.
       </p>
 
@@ -195,12 +195,12 @@ export default function InfoContentEditor() {
         onToggle={() => toggle("services")}
       >
         <Field
-          label="Services page — title"
+          label="Services page: title"
           value={content.services.title}
           onChange={(v) => setServices({ title: v })}
         />
         <div>
-          <p className={labelClass}>Services page — service list</p>
+          <p className={labelClass}>Services page: service list</p>
           <div className="mt-2">
             <ServiceListEditor
               services={content.services.items}
@@ -218,12 +218,12 @@ export default function InfoContentEditor() {
         onToggle={() => toggle("new-arrivals")}
       >
         <Field
-          label="New arrivals page — headline"
+          label="New arrivals page: headline"
           value={na.headline}
           onChange={(v) => setArrivals({ headline: v })}
         />
         <Field
-          label="New arrivals page — message"
+          label="New arrivals page: message"
           value={na.intro}
           onChange={(v) => setArrivals({ intro: v })}
           textarea
@@ -247,13 +247,13 @@ export default function InfoContentEditor() {
               return (
                 <div key={i} className="border-2 border-placeholder p-4">
                   <Field
-                    label={`Step ${i + 1} — title`}
+                    label={`Step ${i + 1}: title`}
                     value={step.title}
                     onChange={(v) => patch({ title: v })}
                   />
                   <div className="mt-3">
                     <Field
-                      label={`Step ${i + 1} — detail`}
+                      label={`Step ${i + 1}: detail`}
                       value={step.detail}
                       onChange={(v) => patch({ detail: v })}
                     />
@@ -338,19 +338,19 @@ export default function InfoContentEditor() {
         onToggle={() => toggle("demographic")}
       >
         <Field
-          label="Featured group page — title"
+          label="Featured group page: title"
           value={content.demographic.heading}
           onChange={(v) => setDemographic({ heading: v })}
         />
         <Field
-          label="Featured group page — message"
+          label="Featured group page: message"
           value={content.demographic.intro}
           onChange={(v) => setDemographic({ intro: v })}
           textarea
           rows={3}
         />
         <div>
-          <p className={labelClass}>Featured group page — service list</p>
+          <p className={labelClass}>Featured group page: service list</p>
           <div className="mt-2">
             <ServiceListEditor
               services={content.demographic.services}
@@ -375,7 +375,7 @@ export default function InfoContentEditor() {
             role="status"
             className="text-lg font-semibold text-blue"
           >
-            ✓ Saved — the display is updated.
+            ✓ Saved. The display is updated.
           </span>
         )}
         {error && (
