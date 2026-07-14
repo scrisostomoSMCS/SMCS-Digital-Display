@@ -46,7 +46,12 @@ export default function Home() {
       {/* About, image-with-overlay demo */}
       <Section id="about" title="About Us">
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
-          <ImageWithOverlay frame="teal">
+          <ImageWithOverlay
+            frame="teal"
+            src="/cafeteria.webp"
+            alt="SMCS cafeteria serving the community"
+            scrimClassName="bg-black/70"
+          >
             <h3 className="text-2xl font-bold">Serving Our Community</h3>
           </ImageWithOverlay>
           <div>
@@ -54,10 +59,6 @@ export default function Home() {
               SMCS is committed to providing clear, reliable information and
               services to the people we serve. This section will hold a fuller
               description of our mission and history.
-            </p>
-            <p className="mt-4 text-xl">
-              The image on the left is a placeholder showing where a real photo
-              will sit, with white text overlaid for readability.
             </p>
           </div>
         </div>
@@ -67,7 +68,12 @@ export default function Home() {
       <Section id="services" title="Our Services">
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <div className="md:order-2">
-            <ImageWithOverlay frame="blue">
+            <ImageWithOverlay
+              frame="blue"
+              src="/dog.jpg"
+              alt="Service dog at SMCS"
+              scrimClassName="bg-black/70"
+            >
               <h3 className="text-2xl font-bold">What We Offer</h3>
             </ImageWithOverlay>
           </div>

@@ -20,6 +20,8 @@ type ImageWithOverlayProps = {
   heightClassName?: string;
   /** Accent frame color. */
   frame?: "teal" | "blue";
+  /** Dark scrim over the image, behind the overlay text. */
+  scrimClassName?: string;
 };
 
 export default function ImageWithOverlay({
@@ -28,6 +30,7 @@ export default function ImageWithOverlay({
   children,
   heightClassName = "h-72 md:h-96",
   frame = "teal",
+  scrimClassName = "bg-black/55",
 }: ImageWithOverlayProps) {
   const frameClass = frame === "blue" ? "border-blue" : "border-teal";
 
@@ -52,7 +55,7 @@ export default function ImageWithOverlay({
       {children && (
         <>
           {/* Dark scrim improves contrast for white overlay text. */}
-          <div className="absolute inset-0 bg-black/55" />
+          <div className={`absolute inset-0 ${scrimClassName}`} />
           <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-paper">
             <div className="max-w-2xl">{children}</div>
           </div>
