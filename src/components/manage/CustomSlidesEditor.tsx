@@ -101,6 +101,7 @@ export default function CustomSlidesEditor() {
   const [loaded, setLoaded] = useState(false);
   const [open, setOpen] = useState<Set<string>>(new Set());
   const known = useRef<Set<string>>(new Set());
+  const firstLoadDone = useRef(false);
   const slidesRef = useRef<Slide[]>([]);
   slidesRef.current = slides;
 
@@ -115,7 +116,14 @@ export default function CustomSlidesEditor() {
 
   const load = useCallback(async () => {
     const next = await fetchSlides();
-    const added = next.find((s) => !known.current.has(s.id));
+    // Only auto-expand/scroll to a slide that appears AFTER the first load.
+    // On the initial load every existing slide is "new", so skip it, otherwise
+    // the page would jump down to the slides section when you open Manage.
+    const isFirstLoad = !firstLoadDone.current;
+    firstLoadDone.current = true;
+    const added = isFirstLoad
+      ? undefined
+      : next.find((s) => !known.current.has(s.id));
     known.current = new Set(next.map((s) => s.id));
     setSlides(next);
     setLoaded(true);
