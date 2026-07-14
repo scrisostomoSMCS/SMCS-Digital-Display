@@ -5,15 +5,16 @@ import ImageWithOverlay from "@/components/ImageWithOverlay";
 export default function Home() {
   return (
     <>
-      {/* Hero — full-bleed image with a dark scrim + big serif headline.
-          Drop a photo at public/hero.jpg; until then the dark teal/blue shows. */}
+      {/* Hero — solid brand blue (#0054A4) placeholder + big serif headline.
+          Drop a photo at public/hero.jpg; the blue scrim keeps it on-brand and
+          keeps the white text readable. */}
       <section className="relative flex min-h-[70vh] items-center overflow-hidden bg-blue text-paper">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url('/hero.jpg')" }}
           aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-ink/55" aria-hidden="true" />
+        <div className="absolute inset-0 bg-blue/70" aria-hidden="true" />
         <div className="relative mx-auto w-full max-w-6xl px-6 py-20">
           <h1 className="font-display text-6xl font-bold leading-[0.9] md:text-8xl lg:text-9xl">
             Make A
@@ -27,7 +28,7 @@ export default function Home() {
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/dashboard"
-              className="inline-block border-2 border-paper bg-blue px-7 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue"
+              className="inline-block border-2 border-paper bg-paper px-7 py-3 text-lg font-semibold text-blue hover:bg-blue hover:text-paper"
             >
               Live Dashboard
             </Link>

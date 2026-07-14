@@ -4,26 +4,27 @@ import AuthNav from "@/components/auth/AuthNav";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/siteConfig";
 
 /*
-  Teal utility top bar (every page): SMCS logo in a white block, contact info,
-  and the auth controls (Log in / account menu) on the right.
+  Teal utility top bar (every page): SMCS logo on the left, contact info in the
+  middle, and the auth controls on the right — only the Log In / Log out button
+  carries a blue background.
 */
 export default function Header() {
   const telHref = `tel:${CONTACT_PHONE.replace(/[^0-9+]/g, "")}`;
 
   return (
     <header className="bg-teal text-paper">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2">
-        {/* Logo placeholder in a white block */}
+      <div className="flex items-stretch justify-between">
+        {/* Logo placeholder — white text on the teal bar (no box) */}
         <Link
           href="/"
-          className="flex items-center bg-paper px-4 py-2 text-lg font-bold tracking-tight text-blue"
+          className="flex items-center px-6 py-3 text-lg font-bold tracking-tight text-paper"
           aria-label="SMCS home"
         >
           SMCS LOGO
         </Link>
 
         {/* Contact */}
-        <div className="hidden items-center gap-6 text-base font-semibold md:flex">
+        <div className="hidden flex-1 items-center justify-center gap-8 px-4 text-base font-semibold md:flex">
           <a
             href={`mailto:${CONTACT_EMAIL}`}
             className="flex items-center gap-2 hover:underline"
@@ -37,8 +38,8 @@ export default function Header() {
           </a>
         </div>
 
-        {/* Auth controls (styled for the teal bar) */}
-        <ul className="flex items-center gap-1">
+        {/* Auth controls — only the Log In / Log out button is the blue corner block */}
+        <ul className="flex items-stretch">
           <AuthNav />
         </ul>
       </div>

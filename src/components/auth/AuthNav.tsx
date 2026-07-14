@@ -10,9 +10,13 @@ import { supabase } from "@/lib/supabase";
   Signed out: a log in link. Renders nothing until the session is known to avoid
   a hydration flash (the server doesn't know the client's auth state).
 */
-// White links for the teal top bar.
+// White account links on the teal top bar (full bar height).
 const linkClass =
-  "inline-block px-3 py-2 text-base font-semibold text-paper hover:underline";
+  "flex h-full items-center px-4 text-base font-semibold text-paper hover:underline";
+
+// The one blue corner block — Log In / Log out (full bar height, flush to edge).
+const authBtnClass =
+  "flex h-full items-center bg-blue px-6 text-base font-semibold text-paper hover:bg-blue/90";
 
 const STAFF_ROLES = ["employee", "admin"];
 
@@ -62,10 +66,7 @@ export default function AuthNav() {
   if (!signedIn) {
     return (
       <li>
-        <Link
-          href="/login"
-          className="inline-block border-2 border-paper bg-blue px-5 py-1.5 text-base font-semibold text-paper hover:bg-paper hover:text-blue"
-        >
+        <Link href="/login" className={authBtnClass}>
           Log In
         </Link>
       </li>
@@ -94,7 +95,7 @@ export default function AuthNav() {
         </li>
       )}
       <li>
-        <button type="button" onClick={handleLogout} className={linkClass}>
+        <button type="button" onClick={handleLogout} className={authBtnClass}>
           Log out
         </button>
       </li>
