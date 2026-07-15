@@ -1,19 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 /*
   Email + password login. On success the session is stored in cookies (browser
-  client), then we send the user to where they were headed (redirectTo) or to
-  their personal calendar. router.refresh() re-runs server components so the nav
-  and protected pages immediately see the new session.
+  client), then we send everyone to the home page (staff and clients alike).
+  router.refresh() re-runs server components so the nav and protected pages
+  immediately see the new session.
 */
 export default function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/schedule";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +34,7 @@ export default function LoginForm() {
       return;
     }
 
-    router.push(redirectTo);
+    router.push("/");
     router.refresh();
   }
 
