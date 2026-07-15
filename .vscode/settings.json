@@ -1,0 +1,15 @@
+{
+  // Next.js rewrites the .next/ build folder constantly while `npm run dev`
+  // runs. VS Code doesn't exclude it by default, so those file-change events
+  // flood the editor and make the UI / Source Control hang. Excluding it from
+  // the file watcher (and search) fixes the infinite loading.
+  "files.watcherExclude": {
+    "**/.next/**": true,
+    "**/node_modules/**": true,
+    "**/.git/**": true
+  },
+  "search.exclude": {
+    "**/.next/**": true,
+    "**/node_modules/**": true
+  }
+}

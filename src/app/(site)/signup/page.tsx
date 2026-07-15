@@ -18,9 +18,7 @@ export default function SignUpPage() {
       <p className="max-w-md text-lg">
         Create an SMCS staff account using your{" "}
         <strong>@{STAFF_EMAIL_DOMAIN}</strong> email. You&rsquo;ll confirm it by
-        email before signing in. New accounts start with{" "}
-        <strong>no editing access</strong>, an administrator grants employee or
-        admin access afterward.
+        email before signing in.
       </p>
       <SignUpForm />
     </Section>
