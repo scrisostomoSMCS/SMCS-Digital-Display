@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import AuthNav from "@/components/auth/AuthNav";
+import MobileHeader from "@/components/MobileHeader";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/siteConfig";
 
 /*
@@ -13,7 +14,9 @@ export default function Header() {
 
   return (
     <header className="bg-teal text-paper">
-      <div className="flex items-stretch justify-between">
+      <MobileHeader />
+
+      <div className="hidden items-stretch justify-between md:flex">
         {/* Logo placeholder, white text on the teal bar (no box) */}
         <Link
           href="/"
