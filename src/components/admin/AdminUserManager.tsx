@@ -24,6 +24,13 @@ const ROLE_LABEL: Record<Role, string> = {
   admin: "Administrator",
 };
 
+// Role phrased with its article for use mid-sentence ("is now an employee").
+const ROLE_PHRASE: Record<Role, string> = {
+  client: "a client",
+  employee: "an employee",
+  admin: "an administrator",
+};
+
 // Prefer a real name; otherwise make a friendly one from the email local part.
 function displayName(u: AdminUser): string {
   if (u.full_name && u.full_name.trim()) return u.full_name.trim();
@@ -185,7 +192,7 @@ export default function AdminUserManager({
     );
     setNotice({
       ok: true,
-      text: `${displayName(user)} is now ${ROLE_LABEL[newRole]}.`,
+      text: `${displayName(user)} is now ${ROLE_PHRASE[newRole]}.`,
     });
   }
 
