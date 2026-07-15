@@ -1,0 +1,88 @@
+<!--
+  SMCS staff sign-up confirmation email.
+
+  WHERE THIS GOES: Supabase Dashboard, Authentication, Emails, Templates,
+  "Confirm signup". Paste this into the Message (HTML) body. Suggested subject:
+    Confirm your email for Saint Mary's Community Services
+
+  Supabase fills in {{ .ConfirmationURL }} with the confirmation link. Keep that
+  variable exactly as written. Email-safe HTML only (tables + inline styles),
+  so it renders consistently in Gmail, Apple Mail, and Outlook.
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;margin:0;padding:0;">
+  <tr>
+    <td align="center" style="padding:24px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border:1px solid #e5e7eb;">
+        <!-- Top accent bar -->
+        <tr>
+          <td style="height:6px;line-height:6px;font-size:6px;background-color:#0054a4;">&nbsp;</td>
+        </tr>
+
+        <!-- Wordmark -->
+        <tr>
+          <td style="padding:28px 32px 0 32px;font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:bold;color:#0054a4;">
+            Saint Mary&rsquo;s Community Services
+            <div style="margin-top:8px;height:3px;width:44px;background-color:#00aaa6;line-height:3px;font-size:3px;">&nbsp;</div>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:20px 32px 8px 32px;font-family:Arial,Helvetica,sans-serif;color:#000000;">
+            <h1 style="margin:0 0 12px 0;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:bold;color:#000000;">
+              Confirm your email
+            </h1>
+            <p style="margin:0 0 16px 0;font-size:16px;line-height:1.6;color:#1f2937;">
+              Thanks for signing up for a Saint Mary&rsquo;s Community Services
+              staff account. Please confirm this email address to activate your
+              account.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Button -->
+        <tr>
+          <td style="padding:8px 32px 8px 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" bgcolor="#0054a4" style="background-color:#0054a4;">
+                  <a href="{{ .ConfirmationURL }}"
+                     style="display:inline-block;padding:14px 28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;">
+                    Confirm my email
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- After-confirmation note + fallback link -->
+        <tr>
+          <td style="padding:12px 32px 24px 32px;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+            <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#374151;">
+              After you confirm, an administrator will review your account and
+              grant your access. You will not have staff access until then.
+            </p>
+            <p style="margin:0 0 6px 0;font-size:13px;line-height:1.5;color:#6b7280;">
+              If the button doesn&rsquo;t work, copy and paste this link into
+              your browser:
+            </p>
+            <p style="margin:0;font-size:13px;line-height:1.5;word-break:break-all;">
+              <a href="{{ .ConfirmationURL }}" style="color:#0054a4;">{{ .ConfirmationURL }}</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:16px 32px 24px 32px;border-top:1px solid #e5e7eb;font-family:Arial,Helvetica,sans-serif;">
+            <p style="margin:0;font-size:12px;line-height:1.5;color:#9ca3af;">
+              If you didn&rsquo;t create a Saint Mary&rsquo;s Community Services
+              account, you can safely ignore this email.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
