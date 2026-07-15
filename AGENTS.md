@@ -129,3 +129,13 @@ The user manages the development server manually.
 - When verifying UI changes, use the existing application running on `http://localhost:3000` whenever possible.
 - You may run one-time verification commands such as `npm run build` and `npm run lint`, but do not leave any long-running background processes running.
 - If you accidentally start a development server, stop it before completing the task.
+
+## Next.js Build Safety
+
+- The user normally keeps `npm run dev` running on `http://localhost:3000`.
+- Do not run `npm run build` while the development server is running.
+- Before running a production build, ask the user to stop the development server.
+- Do not run `npm run start` unless the user explicitly requests production-server testing.
+- Use `npm run lint` for routine verification while the development server is running.
+- If a full production build is necessary, tell the user first so the development server can be stopped.
+- Never run development and production build processes concurrently against the same `.next` directory.

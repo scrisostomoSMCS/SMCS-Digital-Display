@@ -39,7 +39,7 @@ export default function StickySubNav({ mainNavRef }: StickySubNavProps) {
       {visible && (
         <motion.nav
           aria-label="Sticky primary navigation"
-          className="font-body fixed inset-x-0 top-0 z-50 border-b-2 border-teal bg-blue text-paper"
+          className="font-body fixed inset-x-0 top-0 z-50 hidden border-b-2 border-teal bg-blue text-paper md:block"
           initial={hiddenState}
           animate={{ opacity: 1, y: 0 }}
           exit={hiddenState}

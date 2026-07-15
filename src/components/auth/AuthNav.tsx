@@ -20,7 +20,20 @@ const authBtnClass =
 
 const STAFF_ROLES = ["employee", "admin"];
 
-export default function AuthNav() {
+type AuthNavProps = {
+  variant?: "desktop" | "mobile";
+  onNavigate?: () => void;
+};
+
+const mobileLinkClass =
+  "flex min-h-12 items-center border-l-4 border-transparent px-5 py-3 text-base font-semibold text-ink hover:border-teal hover:bg-blue/5 hover:text-blue";
+const mobileAuthBtnClass =
+  "flex min-h-12 w-full items-center bg-blue px-6 py-3 text-left text-base font-semibold text-paper hover:bg-blue/90";
+
+export default function AuthNav({
+  variant = "desktop",
+  onNavigate,
+}: AuthNavProps) {
   const router = useRouter();
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [isStaff, setIsStaff] = useState(false);
@@ -57,6 +70,7 @@ export default function AuthNav() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
+    onNavigate?.();
     router.push("/");
     router.refresh();
   }
@@ -66,7 +80,11 @@ export default function AuthNav() {
   if (!signedIn) {
     return (
       <li>
-        <Link href="/login" className={authBtnClass}>
+        <Link
+          href="/login"
+          onClick={onNavigate}
+          className={variant === "mobile" ? mobileAuthBtnClass : authBtnClass}
+        >
           Log In
         </Link>
       </li>
@@ -76,26 +94,42 @@ export default function AuthNav() {
   return (
     <>
       <li>
-        <Link href="/schedule" className={linkClass}>
+        <Link
+          href="/schedule"
+          onClick={onNavigate}
+          className={variant === "mobile" ? mobileLinkClass : linkClass}
+        >
           My Schedule
         </Link>
       </li>
       {isStaff && (
         <li>
-          <Link href="/manage" className={linkClass}>
+          <Link
+            href="/manage"
+            onClick={onNavigate}
+            className={variant === "mobile" ? mobileLinkClass : linkClass}
+          >
             Manage
           </Link>
         </li>
       )}
       {isAdmin && (
         <li>
-          <Link href="/admin" className={linkClass}>
+          <Link
+            href="/admin"
+            onClick={onNavigate}
+            className={variant === "mobile" ? mobileLinkClass : linkClass}
+          >
             Admin Panel
           </Link>
         </li>
       )}
       <li>
-        <button type="button" onClick={handleLogout} className={authBtnClass}>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className={variant === "mobile" ? mobileAuthBtnClass : authBtnClass}
+        >
           Log out
         </button>
       </li>

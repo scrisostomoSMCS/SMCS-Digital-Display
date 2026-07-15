@@ -24,8 +24,8 @@ export default function NavBar() {
         aria-label="Primary navigation"
         className={
           overlay
-            ? "absolute inset-x-0 top-0 z-20 text-paper"
-            : "bg-blue text-paper"
+            ? "absolute inset-x-0 top-0 z-20 hidden text-paper md:block"
+            : "hidden bg-blue text-paper md:block"
         }
       >
         <ul className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-1 px-4 py-1.5">
