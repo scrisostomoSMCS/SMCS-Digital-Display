@@ -44,7 +44,11 @@ export default function Home() {
       </section>
 
       {/* About, image-with-overlay demo */}
-      <Section id="about" title="About Us">
+      <Section
+        id="about"
+        title="About Us"
+        className="scroll-mt-28 md:scroll-mt-16"
+      >
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <ImageWithOverlay
             frame="teal"
@@ -70,7 +74,11 @@ export default function Home() {
       </Section>
 
       {/* Services, image-with-overlay demo */}
-      <Section id="services" title="Our Services">
+      <Section
+        id="services"
+        title="Our Services"
+        className="scroll-mt-28 md:scroll-mt-16"
+      >
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <div className="md:order-2">
             <ImageWithOverlay

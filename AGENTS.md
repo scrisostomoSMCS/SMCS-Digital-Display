@@ -117,3 +117,15 @@ Codex may use only read-only git commands for context, including:
 * Do not modify environment variables unless I explicitly request it.
 * Do not commit credentials, API keys, tokens, or private configuration.
 * Do not expose private repository information outside this project.
+
+## Development Server
+
+The user manages the development server manually.
+
+- Assume the application is already running at `http://localhost:3000`.
+- Never run `npm run dev` or start a development server unless the user explicitly requests it.
+- Never start a second development server on another port (3001, 3002, etc.).
+- If `http://localhost:3000` is unavailable or unreachable, ask the user before attempting to start a server.
+- When verifying UI changes, use the existing application running on `http://localhost:3000` whenever possible.
+- You may run one-time verification commands such as `npm run build` and `npm run lint`, but do not leave any long-running background processes running.
+- If you accidentally start a development server, stop it before completing the task.
