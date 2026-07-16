@@ -12,9 +12,9 @@ import type { InfoContent } from "@/lib/infoContent";
   blue with a big warm Playfair welcome and Poppins supporting copy. A large
   signature leaf sits in the empty space.
 
-  Bilingual: Spanish sits beneath the English throughout (headline inline,
-  message/steps/available-now beneath), a step smaller and lighter. Columns clip
-  so the two languages stay contained.
+  Bilingual: the headline stays inline; longer English and Spanish copy uses
+  paired columns on bulletin-sized screens so both languages fit without being
+  clipped. Smaller screens can scroll the content region when needed.
 */
 export default function NewArrivalsPage({
   content,
@@ -44,25 +44,27 @@ export default function NewArrivalsPage({
             </span>
           )}
         </h1>
-        <p className="font-body mt-2 max-w-4xl text-xl font-medium text-paper/90 md:text-2xl">
-          {content.intro}
-        </p>
-        {content.introEs && (
-          <p className="font-body max-w-4xl text-lg font-medium text-paper/70 md:text-xl">
-            {content.introEs}
+        <div className="mt-2 grid max-w-6xl gap-x-10 gap-y-1 lg:grid-cols-2">
+          <p className="font-body text-xl font-medium text-paper/90 md:text-2xl">
+            {content.intro}
           </p>
-        )}
+          {content.introEs && (
+            <p className="font-body text-lg font-medium text-paper/70 md:text-xl">
+              {content.introEs}
+            </p>
+          )}
+        </div>
       </motion.header>
 
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="relative z-10 mt-5 grid min-h-0 flex-1 grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-12"
+        className="relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto pb-2 lg:grid-cols-5 lg:gap-8"
       >
         <motion.section
           variants={riseItem}
-          className="min-h-0 overflow-hidden lg:col-span-3"
+          className="min-h-0 lg:col-span-3"
         >
           <p className="font-body text-sm font-semibold uppercase tracking-[0.3em] md:text-base">
             {content.stepsLabel}
@@ -72,27 +74,36 @@ export default function NewArrivalsPage({
           </p>
           <ol className="mt-3 space-y-3">
             {content.steps.map((step, i) => (
-              <li key={`${step.title}-${i}`} className="flex items-baseline gap-4">
+              <li key={`${step.title}-${i}`} className="flex items-start gap-4">
                 <span className="font-display text-4xl leading-none text-paper/40 md:text-5xl">
                   {i + 1}
                 </span>
-                <div>
-                  <p className="font-body text-xl font-semibold md:text-2xl">
-                    {step.title}
-                    {step.titleEs && (
-                      <span className="font-medium text-paper/75">
-                        {" "}
-                        / {step.titleEs}
-                      </span>
-                    )}
-                  </p>
-                  <p className="font-body mt-0.5 text-base text-paper/80 md:text-lg">
-                    {step.detail}
-                  </p>
-                  {step.detailEs && (
-                    <p className="font-body text-sm text-paper/60 md:text-base">
-                      {step.detailEs}
+                <div
+                  className={`grid min-w-0 flex-1 gap-x-6 gap-y-1 ${
+                    step.titleEs || step.detailEs ? "lg:grid-cols-2" : ""
+                  }`}
+                >
+                  <div className="min-w-0 break-words">
+                    <p className="font-body text-xl font-semibold md:text-2xl">
+                      {step.title}
                     </p>
+                    <p className="font-body mt-0.5 text-base text-paper/80 md:text-lg">
+                      {step.detail}
+                    </p>
+                  </div>
+                  {(step.titleEs || step.detailEs) && (
+                    <div className="min-w-0 break-words border-l-2 border-paper/25 pl-4">
+                      {step.titleEs && (
+                        <p className="font-body text-lg font-medium text-paper/75 md:text-xl">
+                          {step.titleEs}
+                        </p>
+                      )}
+                      {step.detailEs && (
+                        <p className="font-body mt-0.5 text-sm text-paper/60 md:text-base">
+                          {step.detailEs}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </li>
@@ -102,7 +113,7 @@ export default function NewArrivalsPage({
 
         <motion.section
           variants={riseItem}
-          className="flex min-h-0 flex-col overflow-hidden bg-teal p-6 text-ink lg:col-span-2"
+          className="flex min-h-0 flex-col bg-teal p-5 text-ink lg:col-span-2"
         >
           <p className="font-body text-sm font-semibold uppercase tracking-[0.3em] md:text-base">
             {content.availableLabel}
@@ -110,14 +121,17 @@ export default function NewArrivalsPage({
               <span className="text-ink/60"> · {content.availableLabelEs}</span>
             )}
           </p>
-          <ul className="mt-3 space-y-2.5">
+          <ul className="mt-3 grid grid-cols-1 gap-x-5 gap-y-3 lg:grid-cols-2">
             {content.availableNow.map((item, i) => (
-              <li key={`${item}-${i}`} className="font-body leading-tight">
+              <li
+                key={`${item}-${i}`}
+                className="font-body min-w-0 break-words leading-tight"
+              >
                 <span className="block text-lg font-semibold md:text-xl">
                   {item}
                 </span>
                 {availableEs[i] && (
-                  <span className="block text-base font-medium text-ink/70 md:text-lg">
+                  <span className="mt-0.5 block text-sm font-medium text-ink/70 md:text-base">
                     {availableEs[i]}
                   </span>
                 )}
