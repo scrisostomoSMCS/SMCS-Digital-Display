@@ -37,19 +37,19 @@ export default function NewArrivalsPage({
       >
         <InfoEyebrow tone="white" />
         <h1 className="font-display mt-1 flex flex-wrap items-baseline gap-x-4 leading-[0.95]">
-          <span className="text-5xl md:text-6xl">{content.headline}</span>
+          <span className="text-3xl sm:text-4xl lg:text-6xl">{content.headline}</span>
           {content.headlineEs && (
-            <span className="text-3xl text-paper/75 md:text-4xl">
+            <span className="text-xl text-paper/75 sm:text-2xl lg:text-4xl">
               {content.headlineEs}
             </span>
           )}
         </h1>
         <div className="mt-2 grid max-w-6xl gap-x-10 gap-y-1 lg:grid-cols-2">
-          <p className="font-body text-xl font-medium text-paper/90 md:text-2xl">
+          <p className="font-body text-base font-medium text-paper/90 sm:text-lg lg:text-2xl">
             {content.intro}
           </p>
           {content.introEs && (
-            <p className="font-body text-lg font-medium text-paper/70 md:text-xl">
+            <p className="font-body text-sm font-medium text-paper/70 sm:text-base lg:text-xl">
               {content.introEs}
             </p>
           )}
@@ -66,7 +66,7 @@ export default function NewArrivalsPage({
           variants={riseItem}
           className="min-h-0 lg:col-span-3"
         >
-          <p className="font-body text-sm font-semibold uppercase tracking-[0.3em] md:text-base">
+          <p className="font-body text-sm font-semibold uppercase tracking-[0.3em] lg:text-base">
             {content.stepsLabel}
             {content.stepsLabelEs && (
               <span className="text-paper/70"> · {content.stepsLabelEs}</span>
@@ -75,7 +75,7 @@ export default function NewArrivalsPage({
           <ol className="mt-3 space-y-3">
             {content.steps.map((step, i) => (
               <li key={`${step.title}-${i}`} className="flex items-start gap-4">
-                <span className="font-display text-4xl leading-none text-paper/40 md:text-5xl">
+                <span className="font-display text-4xl leading-none text-paper/40 lg:text-5xl">
                   {i + 1}
                 </span>
                 <div
@@ -84,22 +84,22 @@ export default function NewArrivalsPage({
                   }`}
                 >
                   <div className="min-w-0 break-words">
-                    <p className="font-body text-xl font-semibold md:text-2xl">
+                    <p className="font-body text-lg font-semibold sm:text-xl lg:text-2xl">
                       {step.title}
                     </p>
-                    <p className="font-body mt-0.5 text-base text-paper/80 md:text-lg">
+                    <p className="font-body mt-0.5 text-sm text-paper/80 sm:text-base lg:text-lg">
                       {step.detail}
                     </p>
                   </div>
                   {(step.titleEs || step.detailEs) && (
                     <div className="min-w-0 break-words border-l-2 border-paper/25 pl-4">
                       {step.titleEs && (
-                        <p className="font-body text-lg font-medium text-paper/75 md:text-xl">
+                        <p className="font-body text-base font-medium text-paper/75 sm:text-lg lg:text-xl">
                           {step.titleEs}
                         </p>
                       )}
                       {step.detailEs && (
-                        <p className="font-body mt-0.5 text-sm text-paper/60 md:text-base">
+                        <p className="font-body mt-0.5 text-sm text-paper/60 lg:text-base">
                           {step.detailEs}
                         </p>
                       )}
@@ -115,7 +115,7 @@ export default function NewArrivalsPage({
           variants={riseItem}
           className="flex min-h-0 flex-col bg-teal p-5 text-ink lg:col-span-2"
         >
-          <p className="font-body text-sm font-semibold uppercase tracking-[0.3em] md:text-base">
+          <p className="font-body text-sm font-semibold uppercase tracking-[0.3em] lg:text-base">
             {content.availableLabel}
             {content.availableLabelEs && (
               <span className="text-ink/60"> · {content.availableLabelEs}</span>
@@ -127,11 +127,11 @@ export default function NewArrivalsPage({
                 key={`${item}-${i}`}
                 className="font-body min-w-0 break-words leading-tight"
               >
-                <span className="block text-lg font-semibold md:text-xl">
+                <span className="block text-lg font-semibold lg:text-xl">
                   {item}
                 </span>
                 {availableEs[i] && (
-                  <span className="mt-0.5 block text-sm font-medium text-ink/70 md:text-base">
+                  <span className="mt-0.5 block text-sm font-medium text-ink/70 lg:text-base">
                     {availableEs[i]}
                   </span>
                 )}

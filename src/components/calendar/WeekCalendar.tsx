@@ -72,7 +72,7 @@ function renderEvent(arg: EventContentArg) {
   );
 }
 
-const NARROW_QUERY = "(max-width: 768px)";
+const NARROW_QUERY = "(max-width: 1023px)";
 
 /*
   Presentational week calendar. Role-agnostic: it just renders whatever events
@@ -91,8 +91,8 @@ export default function WeekCalendar({ events }: WeekCalendarProps) {
   // prevents a hydration mismatch from client-only state (viewport, events).
   const [mounted, setMounted] = useState(false);
 
-  // Phone vs. TV: a 7-column time grid is unreadable on a phone, so reflow to
-  // a vertical agenda list when the viewport is narrow.
+  // A 7-column time grid is unreadable on phones and tablets, so reflow to a
+  // vertical agenda list below the site's desktop breakpoint.
   const [narrow, setNarrow] = useState(false);
 
   // The event whose detail popup is open (null = no popup).

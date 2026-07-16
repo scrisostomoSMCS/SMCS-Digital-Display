@@ -38,8 +38,8 @@ function ServiceListEditor({
   return (
     <div className="space-y-4">
       {services.map((s, i) => (
-        <div key={i} className="border-2 border-placeholder p-4">
-          <div className="grid gap-3 md:grid-cols-3">
+        <div key={i} className="border-2 border-placeholder p-3 lg:p-4">
+          <div className="grid gap-3 lg:grid-cols-3">
             <Field
               label="Name"
               value={s.name}
@@ -349,7 +349,7 @@ export default function InfoContentEditor() {
             {na.availableNow.map((item, i) => (
               <div
                 key={i}
-                className="flex flex-col gap-2 border-2 border-placeholder p-2 md:flex-row md:items-center"
+                className="flex flex-col gap-2 border-2 border-placeholder p-2 lg:flex-row lg:items-center"
               >
                 <input
                   className={inputClass}
@@ -449,7 +449,7 @@ export default function InfoContentEditor() {
       </CollapsiblePanel>
 
       {/* --- Save --- */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col items-start gap-4 lg:flex-row lg:items-center">
         <button
           type="button"
           onClick={handleSave}

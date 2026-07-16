@@ -44,7 +44,7 @@ function SlidePanel({
       onDragEnd={onDragEnd}
       className="scroll-mt-8 border-2 border-placeholder bg-paper"
     >
-      <div className="flex items-center gap-2 bg-ink/5 px-3 py-3">
+      <div className="flex flex-wrap items-center gap-2 bg-ink/5 px-3 py-3 lg:flex-nowrap">
         <button
           type="button"
           onPointerDown={(e) => controls.start(e)}
@@ -88,7 +88,7 @@ function SlidePanel({
         </div>
       </div>
       {open && (
-        <div className="p-5">
+        <div className="p-3 lg:p-5">
           <SlideEditor slide={slide} />
         </div>
       )}

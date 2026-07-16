@@ -39,7 +39,7 @@ export default async function ManagePage() {
   if (!profile || !STAFF_ROLES.includes(profile.role)) redirect("/");
 
   return (
-    <div className="mx-auto flex max-w-7xl gap-8 px-4 md:px-6">
+    <div className="mx-auto flex max-w-7xl gap-0 px-0 lg:gap-8 lg:px-6">
       {/* Sticky section navigation (its own component). Hidden on small
           screens, where the page just scrolls. */}
       <ManageSidebar />
@@ -74,7 +74,7 @@ export default async function ManagePage() {
             <QuickEventForm />
           </div>
 
-          <div className="mt-8 h-[80vh] min-h-[560px]">
+          <div className="mt-8 h-[68dvh] min-h-[460px] lg:h-[80vh] lg:min-h-[560px]">
             <ManageCalendar />
           </div>
         </Section>

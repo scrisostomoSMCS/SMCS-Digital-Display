@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { Playfair_Display } from "next/font/google";
+import { Playfair_Display, Poppins } from "next/font/google";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminUserManager from "@/components/admin/AdminUserManager";
+import MobileHeader from "@/components/MobileHeader";
 
 // Playfair for the big title (loaded here since /admin is outside the (site)
 // group, which is where the rest of the site loads its display font).
@@ -10,6 +11,13 @@ const serif = Playfair_Display({
   subsets: ["latin"],
   weight: ["600", "700"],
   variable: "--font-display",
+  display: "swap",
+});
+
+const sans = Poppins({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-body",
   display: "swap",
 });
 
@@ -38,19 +46,20 @@ export default async function AdminPage() {
   if (!profile || profile.role !== "admin") redirect("/");
 
   return (
-    <div className={`${serif.variable} flex min-h-screen`}>
+    <div className={`${serif.variable} ${sans.variable} min-h-screen lg:flex`}>
+      <MobileHeader />
       <AdminSidebar />
-      <main className="min-w-0 flex-1 bg-ink/5 px-6 py-8 md:px-10">
+      <main className="min-w-0 flex-1 bg-ink/5 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
         <p className="text-sm font-semibold text-ink/50">
           Admin Panel (Administrator access)
         </p>
-        <div className="mt-6 text-center">
-          <h1 className="font-display text-4xl font-bold md:text-5xl">
+        <div className="mt-4 text-center lg:mt-6">
+          <h1 className="font-display text-3xl font-bold sm:text-4xl lg:text-5xl">
             Admin Panel
           </h1>
           <span aria-hidden="true" className="mx-auto mt-2 block h-1 w-40 bg-blue" />
         </div>
-        <div className="mx-auto mt-10 max-w-6xl">
+        <div className="mx-auto mt-6 max-w-6xl lg:mt-10">
           <AdminUserManager currentUserId={user.id} />
         </div>
       </main>

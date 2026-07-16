@@ -28,7 +28,7 @@ export default async function SchedulePage() {
     <Section title={t("title")}>
       <p className="mb-6 max-w-2xl text-lg">{t("intro")}</p>
       {/* Give the week grid a tall, fixed-height container to fill. */}
-      <div className="h-[78vh] min-h-[520px]">
+      <div className="h-[68dvh] min-h-[420px] lg:h-[78vh] lg:min-h-[520px]">
         <ScheduleCalendar />
       </div>
     </Section>

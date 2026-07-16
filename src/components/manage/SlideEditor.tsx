@@ -130,7 +130,7 @@ export default function SlideEditor({
       <div className="space-y-5">
         <div>
           <p className={labelClass}>Layout</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-2">
             {SLIDE_TEMPLATES.map((t) => (
               <button
                 key={t.key}
@@ -151,7 +151,7 @@ export default function SlideEditor({
 
         <div>
           <p className={labelClass}>Background color</p>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex flex-wrap gap-2 lg:flex-nowrap">
             {SLIDE_BACKGROUNDS.map((b) => (
               <button
                 key={b.key}
@@ -251,7 +251,7 @@ export default function SlideEditor({
             <p className="text-sm text-ink/60">
               Fitted automatically into the layout&rsquo;s image slot.
             </p>
-            <div className="mt-2 flex items-center gap-3">
+            <div className="mt-2 flex flex-wrap items-center gap-3 lg:flex-nowrap">
               <label className={`${smallBtn} cursor-pointer`}>
                 {uploading ? "Uploading…" : currentImg ? "Replace image" : "Upload image"}
                 <input
@@ -274,7 +274,7 @@ export default function SlideEditor({
           </div>
         )}
 
-        <div className="flex items-center gap-4 pt-1">
+        <div className="flex flex-wrap items-center gap-4 pt-1 lg:flex-nowrap">
           <button
             type="button"
             onClick={save}

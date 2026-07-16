@@ -87,13 +87,13 @@ export default function InformationDisplay() {
   }, [active, pages.length]);
 
   if (pages.length === 0) {
-    return <div className="h-screen w-screen bg-paper" />;
+    return <div className="h-full w-full bg-paper lg:h-screen lg:w-screen" />;
   }
 
   const current = active % pages.length;
 
   return (
-    <div className="font-body relative h-screen w-screen overflow-hidden bg-paper text-ink">
+    <div className="font-body relative h-full w-full overflow-hidden bg-paper text-ink lg:h-screen lg:w-screen">
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -109,13 +109,13 @@ export default function InformationDisplay() {
 
       <Link
         href="/"
-        className="absolute right-8 top-8 z-10 border-2 border-blue bg-paper px-5 py-2 text-lg font-semibold text-blue hover:bg-blue hover:text-paper"
+        className="absolute right-8 top-8 z-10 hidden border-2 border-blue bg-paper px-5 py-2 text-lg font-semibold text-blue hover:bg-blue hover:text-paper lg:inline-block"
       >
         ← Back to home
       </Link>
 
       {/* All dots use the CURRENT page's tone so they stay visible. */}
-      <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-5">
+      <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1 lg:bottom-8 lg:gap-5">
         {pages.map((_, i) => {
           const c = DOT_CLASS[dotTones[current] ?? "blue"];
           return (
@@ -125,7 +125,7 @@ export default function InformationDisplay() {
               onClick={() => setActive(i)}
               aria-label={`Show page ${i + 1}`}
               aria-current={i === current}
-              className={`h-5 w-5 rounded-full border-2 transition-colors ${c.border} ${
+              className={`h-11 w-11 rounded-full border-2 transition-colors lg:h-5 lg:w-5 ${c.border} ${
                 i === current ? c.on : c.off
               }`}
             />

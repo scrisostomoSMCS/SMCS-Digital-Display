@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import AuthNav from "@/components/auth/AuthNav";
+import DesktopHeaderContent from "@/components/DesktopHeaderContent";
 import MobileHeader from "@/components/MobileHeader";
 import LanguageChooser from "@/components/LanguageChooser";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/siteConfig";
@@ -19,7 +20,7 @@ export default async function Header() {
     <header className="bg-teal text-paper">
       <MobileHeader />
 
-      <div className="hidden items-stretch justify-between md:flex">
+      <DesktopHeaderContent>
         {/* Logo placeholder, white text on the teal bar (no box) */}
         <Link
           href="/"
@@ -53,7 +54,7 @@ export default async function Header() {
         <ul className="flex items-stretch">
           <AuthNav />
         </ul>
-      </div>
+      </DesktopHeaderContent>
     </header>
   );
 }

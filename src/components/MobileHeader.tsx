@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Mail, Menu, Phone, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -14,6 +15,7 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export default function MobileHeader() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -80,7 +82,7 @@ export default function MobileHeader() {
   const panelHidden = reduceMotion ? { opacity: 0 } : { opacity: 1, x: "-100%" };
 
   return (
-    <div className="font-body md:hidden">
+    <div className={`font-body ${pathname === "/" ? "md:hidden" : "lg:hidden"}`}>
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 bg-teal px-3 py-2 text-sm font-medium text-paper">
         <a href={telHref} className="flex min-h-8 items-center gap-1.5 hover:underline">
           <Phone size={15} strokeWidth={2} aria-hidden="true" />

@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { SITE_NAV_LINKS } from "@/lib/siteNavigation";
@@ -16,6 +17,7 @@ type StickySubNavProps = {
   left the viewport. IntersectionObserver avoids running work on every scroll.
 */
 export default function StickySubNav({ mainNavRef }: StickySubNavProps) {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const reduceMotion = useReducedMotion();
   const t = useTranslations("nav");
@@ -41,7 +43,9 @@ export default function StickySubNav({ mainNavRef }: StickySubNavProps) {
       {visible && (
         <motion.nav
           aria-label="Sticky primary navigation"
-          className="font-body fixed inset-x-0 top-0 z-50 hidden border-b-2 border-teal bg-blue text-paper md:block"
+          className={`font-body fixed inset-x-0 top-0 z-50 hidden border-b-2 border-teal bg-blue text-paper ${
+            pathname === "/" ? "md:block" : "lg:block"
+          }`}
           initial={hiddenState}
           animate={{ opacity: 1, y: 0 }}
           exit={hiddenState}

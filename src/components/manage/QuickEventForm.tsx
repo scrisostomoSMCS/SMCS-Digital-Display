@@ -63,7 +63,7 @@ export default function QuickEventForm() {
 
   return (
     <form onSubmit={submit} className="max-w-3xl space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Field label="Event name" value={name} onChange={setName} />
         <Field label="Location" value={location} onChange={setLocation} />
       </div>
@@ -74,7 +74,7 @@ export default function QuickEventForm() {
         textarea
         rows={2}
       />
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <label className="block">
           <span className={labelClass}>Date</span>
           <input

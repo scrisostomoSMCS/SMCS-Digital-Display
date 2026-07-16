@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -28,11 +28,11 @@ import { DEFAULT_EVENT_COLOR } from "@/lib/eventColors";
   the view-only Live Calendar component on purpose: editing controls must never
   appear on the public/TV display. All writes go to the one Supabase `events`
   table; the dashboard and app pick up changes through their existing realtime
-  subscriptions. This is a desktop tool, so it scrolls and is laid out for a
-  computer (no TV-legibility constraints).
+  subscriptions. Desktop keeps the full week; smaller screens use a day view.
 */
 
 const pad = (n: number) => String(n).padStart(2, "0");
+const COMPACT_QUERY = "(max-width: 1023px)";
 
 // Times are UTC wall-clock. FullCalendar runs in timeZone="UTC", so a Date's
 // UTC fields equal the slot the employee sees. Convert to/from the
@@ -53,7 +53,9 @@ type OpenForm = {
 };
 
 export default function ManageCalendar() {
+  const calendarRef = useRef<FullCalendar>(null);
   const [mounted, setMounted] = useState(false);
+  const [compact, setCompact] = useState(false);
   const [events, setEvents] = useState<ManageEvent[]>([]);
   const [form, setForm] = useState<OpenForm | null>(null);
   const [saving, setSaving] = useState(false);
@@ -80,6 +82,23 @@ export default function ManageCalendar() {
       supabase.removeChannel(channel);
     };
   }, [load]);
+
+  useEffect(() => {
+    const mq = window.matchMedia(COMPACT_QUERY);
+    const sync = () => setCompact(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  // Keep the full week editor on desktop and use one readable day at a time
+  // on smaller screens. FullCalendar requires an imperative view change after
+  // it has mounted when the media query changes.
+  useEffect(() => {
+    calendarRef.current
+      ?.getApi()
+      .changeView(compact ? "timeGridDay" : "timeGridWeek");
+  }, [compact]);
 
   // Each event renders in its chosen color (the same tint it shows on the Live
   // Calendar). Off-dashboard events are dimmed (see .evt-off-board) so staff can
@@ -199,13 +218,18 @@ export default function ManageCalendar() {
   return (
     <div className="manage-calendar h-full">
       <FullCalendar
+        ref={calendarRef}
         plugins={[timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "timeGridWeek,timeGridDay",
-        }}
+        initialView={compact ? "timeGridDay" : "timeGridWeek"}
+        headerToolbar={
+          compact
+            ? { left: "prev,next", center: "title", right: "today" }
+            : {
+                left: "prev,next today",
+                center: "title",
+                right: "timeGridWeek,timeGridDay",
+              }
+        }
         timeZone="UTC"
         nowIndicator
         // Full interactive mode, click-to-create, drag, resize.

@@ -1,5 +1,6 @@
 import { Playfair_Display, Poppins } from "next/font/google";
 import InformationDisplay from "@/components/information/InformationDisplay";
+import MobileHeader from "@/components/MobileHeader";
 
 export const metadata = {
   title: "Digital Bulletin | SMCS",
@@ -28,8 +29,13 @@ const poppins = Poppins({
 */
 export default function InformationPage() {
   return (
-    <div className={`${playfair.variable} ${poppins.variable}`}>
-      <InformationDisplay />
+    <div
+      className={`${playfair.variable} ${poppins.variable} flex h-dvh flex-col lg:block lg:h-auto`}
+    >
+      <MobileHeader />
+      <div className="min-h-0 flex-1 lg:h-screen">
+        <InformationDisplay />
+      </div>
     </div>
   );
 }

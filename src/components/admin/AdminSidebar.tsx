@@ -14,7 +14,7 @@ const NAV = [
 
 export default function AdminSidebar() {
   return (
-    <aside className="w-56 shrink-0 bg-blue text-paper">
+    <aside className="hidden w-56 shrink-0 bg-blue text-paper lg:block">
       <div className="sticky top-0 flex h-screen flex-col">
         {/* White logo block flush to the top and side edges of the sidebar */}
         <Link

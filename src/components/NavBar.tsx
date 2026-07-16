@@ -27,7 +27,7 @@ export default function NavBar() {
         className={
           overlay
             ? "absolute inset-x-0 top-0 z-20 hidden text-paper md:block"
-            : "hidden bg-blue text-paper md:block"
+            : "hidden bg-blue text-paper lg:block"
         }
       >
         <ul className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-1 px-4 py-1.5">
