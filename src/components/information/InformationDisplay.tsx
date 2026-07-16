@@ -19,9 +19,30 @@ import EventsTodayPage from "./EventsTodayPage";
 import CustomSlidePage from "./CustomSlidePage";
 
 const DOT_CLASS = {
-  blue: { border: "border-blue", on: "bg-blue", off: "bg-paper hover:bg-blue/30" },
-  white: { border: "border-paper", on: "bg-paper", off: "hover:bg-paper/30" },
-  ink: { border: "border-ink", on: "bg-ink", off: "hover:bg-ink/30" },
+  blue: {
+    border: "border-blue",
+    on: "bg-blue",
+    off: "bg-paper",
+    desktopBorder: "lg:border-blue",
+    desktopOn: "lg:bg-blue",
+    desktopOff: "lg:bg-paper lg:hover:bg-blue/30",
+  },
+  white: {
+    border: "border-paper",
+    on: "bg-paper",
+    off: "bg-transparent",
+    desktopBorder: "lg:border-paper",
+    desktopOn: "lg:bg-paper",
+    desktopOff: "lg:bg-transparent lg:hover:bg-paper/30",
+  },
+  ink: {
+    border: "border-ink",
+    on: "bg-ink",
+    off: "bg-transparent",
+    desktopBorder: "lg:border-ink",
+    desktopOn: "lg:bg-ink",
+    desktopOff: "lg:bg-transparent lg:hover:bg-ink/30",
+  },
 } as const;
 type Tone = keyof typeof DOT_CLASS;
 
@@ -40,6 +61,15 @@ export default function InformationDisplay() {
   const [content, setContent] = useState<InfoContent>(defaultInfoContent);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const sync = () => setCompact(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     const loadContent = async () => setContent(await fetchInfoContent());
@@ -78,13 +108,15 @@ export default function InformationDisplay() {
   const dotTones = all.map((p) => p.tone);
 
   useEffect(() => {
-    if (pages.length === 0) return;
+    // Phones and tablets are interactive: keep the selected page in place so
+    // expanded cards do not disappear while someone is reading them.
+    if (pages.length === 0 || compact) return;
     const id = setTimeout(
       () => setActive((a) => (a + 1) % pages.length),
       PAGE_DURATION,
     );
     return () => clearTimeout(id);
-  }, [active, pages.length]);
+  }, [active, compact, pages.length]);
 
   if (pages.length === 0) {
     return <div className="h-full w-full bg-paper lg:h-screen lg:w-screen" />;
@@ -115,22 +147,31 @@ export default function InformationDisplay() {
       </Link>
 
       {/* All dots use the CURRENT page's tone so they stay visible. */}
-      <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1 lg:bottom-8 lg:gap-5">
-        {pages.map((_, i) => {
-          const c = DOT_CLASS[dotTones[current] ?? "blue"];
-          return (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setActive(i)}
-              aria-label={`Show page ${i + 1}`}
-              aria-current={i === current}
-              className={`h-11 w-11 rounded-full border-2 transition-colors lg:h-5 lg:w-5 ${c.border} ${
-                i === current ? c.on : c.off
-              }`}
-            />
-          );
-        })}
+      <div className="absolute inset-x-0 bottom-1 z-10 overflow-x-auto lg:inset-x-auto lg:bottom-8 lg:left-1/2 lg:-translate-x-1/2 lg:overflow-visible">
+        <div className="mx-auto flex w-max gap-0 lg:gap-5">
+          {pages.map((_, i) => {
+            const c = DOT_CLASS[dotTones[current] ?? "blue"];
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setActive(i)}
+                aria-label={`Show page ${i + 1}`}
+                aria-current={i === current}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center transition-colors lg:h-5 lg:w-5 lg:rounded-full lg:border-2 ${c.desktopBorder} ${
+                  i === current ? c.desktopOn : c.desktopOff
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`h-3 w-3 rounded-full border-2 lg:hidden ${c.border} ${
+                    i === current ? c.on : c.off
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
