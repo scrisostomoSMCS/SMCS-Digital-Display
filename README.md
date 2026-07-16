@@ -1,8 +1,8 @@
-# Saint Mary's Care Services Website and App
+# St. Mary's Care Services Website and App
 
 ![SMCS Live Calendar](docs/dashboardss.png)
 
-Saint Mary's Care Services (SMCS) is a community care organization. This is its
+St. Mary's Care Services (SMCS) is a community care organization. This is its
 public website and scheduling app. Built to make SMCS's services and schedules
 clear, accessible, and always up to date.
 
