@@ -84,7 +84,7 @@ export default function EventsTodayPage() {
           <p className="font-display text-3xl text-blue/70 md:text-4xl">
             No hay eventos programados hoy.
           </p>
-          <p className="font-body mt-3 max-w-3xl text-2xl font-medium md:text-3xl">
+          <p className="font-body mt-8 max-w-3xl text-2xl font-medium md:mt-10 md:text-3xl">
             Our everyday services are still open, see the services list for
             what&rsquo;s always available.
           </p>
