@@ -18,7 +18,7 @@ export default function InfoEyebrow({ tone = "blue" }: { tone?: Tone }) {
       <p
         className={`font-body text-base font-semibold uppercase tracking-[0.35em] md:text-xl ${t.text}`}
       >
-        Saint Mary&rsquo;s Community Services
+        St. Mary&rsquo;s Community Services
       </p>
     </div>
   );

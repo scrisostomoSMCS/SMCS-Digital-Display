@@ -23,7 +23,7 @@ export default function Home() {
             Difference.
           </h1>
           <p className="mt-6 max-w-2xl text-xl text-paper/90 md:text-2xl">
-            Saint Mary&rsquo;s Community Services, connecting our community to
+            St. Mary&rsquo;s Community Services, connecting our community to
             the care and services they need.
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
