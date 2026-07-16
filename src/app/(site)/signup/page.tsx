@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { STAFF_EMAIL_DOMAIN } from "@/lib/staffSignup";
@@ -12,13 +13,16 @@ export const metadata = {
   an administrator grants employee/admin, the domain gates registration, not
   access. This is separate from the client eligibility path.
 */
-export default function SignUpPage() {
+export default async function SignUpPage() {
+  const t = await getTranslations("signup");
+
   return (
-    <Section title="Staff sign up">
+    <Section title={t("title")}>
       <p className="max-w-md text-lg">
-        Create an SMCS staff account using your{" "}
-        <strong>@{STAFF_EMAIL_DOMAIN}</strong> email. You&rsquo;ll confirm it by
-        email before signing in.
+        {t.rich("intro", {
+          domain: STAFF_EMAIL_DOMAIN,
+          strong: (chunks) => <strong>{chunks}</strong>,
+        })}
       </p>
       <SignUpForm />
     </Section>

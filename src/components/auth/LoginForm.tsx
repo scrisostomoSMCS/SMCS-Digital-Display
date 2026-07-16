@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { supabase } from "@/lib/supabase";
 
 /*
@@ -12,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 */
 export default function LoginForm() {
   const router = useRouter();
+  const t = useTranslations("login");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +43,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-md" noValidate>
       <label className="mt-4 block text-lg font-semibold" htmlFor="email">
-        Email
+        {t("email")}
       </label>
       <input
         id="email"
@@ -54,7 +56,7 @@ export default function LoginForm() {
       />
 
       <label className="mt-6 block text-lg font-semibold" htmlFor="password">
-        Password
+        {t("password")}
       </label>
       <input
         id="password"
@@ -77,7 +79,7 @@ export default function LoginForm() {
         disabled={submitting}
         className="mt-8 inline-block border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60"
       >
-        {submitting ? "Signing in…" : "Sign in"}
+        {submitting ? t("signingIn") : t("signIn")}
       </button>
     </form>
   );

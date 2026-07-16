@@ -9,10 +9,14 @@ import { slideImageUrl, type Slide } from "@/lib/slides";
 
 /*
   Renders a custom slide in one of the on-brand layout templates. This SAME
-  component draws the live /information display AND the editor's preview, driven
-  by the same slide data, so the preview always matches the wall screen.
-  Styling is fixed here (Playfair title, Poppins body, brand backgrounds, fitted
-  image slots); the employee supplies content, template, and one brand color.
+  component draws the live /information (Digital Bulletin) display AND the
+  editor's preview, driven by the same slide data, so the preview always matches
+  the wall screen.
+
+  BILINGUAL: the bulletin is unattended (no language chooser), so each text field
+  shows English with its Spanish translation directly beneath, styled a step
+  smaller and lighter so the two are easy to tell apart but both readable from a
+  distance. Spanish lines only appear when a Spanish value exists.
 */
 
 function ImageSlot({ src, tone }: { src: string | null; tone: string }) {
@@ -56,9 +60,14 @@ export default function SlideTemplateView({
       className="shrink-0"
     >
       <InfoEyebrow tone={eyebrowTone} />
-      <h1 className="font-display mt-2 text-5xl leading-none md:text-7xl">
+      <h1 className="font-display mt-2 text-4xl leading-none md:text-6xl">
         {slide.title}
       </h1>
+      {slide.titleEs && (
+        <p className="font-display mt-1 text-2xl leading-tight opacity-80 md:text-4xl">
+          {slide.titleEs}
+        </p>
+      )}
     </motion.header>
   );
 
@@ -77,9 +86,16 @@ export default function SlideTemplateView({
             <ImageSlot src={img} tone={placeholderTone} />
           </div>
           {slide.caption && (
-            <p className="font-display mt-4 shrink-0 text-4xl leading-tight md:text-5xl">
-              {slide.caption}
-            </p>
+            <div className="mt-4 shrink-0">
+              <p className="font-display text-4xl leading-tight md:text-5xl">
+                {slide.caption}
+              </p>
+              {slide.captionEs && (
+                <p className="font-display mt-1 text-2xl leading-tight opacity-80 md:text-3xl">
+                  {slide.captionEs}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </InfoPageShell>
@@ -94,9 +110,16 @@ export default function SlideTemplateView({
           <div className="h-full min-h-0">
             <ImageSlot src={img} tone={placeholderTone} />
           </div>
-          <p className="font-body text-2xl font-medium md:text-3xl">
-            {slide.body}
-          </p>
+          <div>
+            <p className="font-body text-2xl font-medium md:text-3xl">
+              {slide.body}
+            </p>
+            {slide.bodyEs && (
+              <p className="font-body mt-3 text-xl font-medium opacity-80 md:text-2xl">
+                {slide.bodyEs}
+              </p>
+            )}
+          </div>
         </div>
       </InfoPageShell>
     );
@@ -117,10 +140,20 @@ export default function SlideTemplateView({
             <motion.div
               key={i}
               variants={riseItem}
-              className="font-body flex items-center gap-4 text-2xl font-semibold md:text-3xl"
+              className="font-body flex items-start gap-4"
             >
-              <span className={`h-4 w-4 shrink-0 ${marker}`} aria-hidden="true" />
-              {item}
+              <span
+                className={`mt-2 h-4 w-4 shrink-0 ${marker}`}
+                aria-hidden="true"
+              />
+              <div>
+                <div className="text-2xl font-semibold md:text-3xl">{item}</div>
+                {slide.itemsEs[i] && (
+                  <div className="text-lg font-medium opacity-80 md:text-xl">
+                    {slide.itemsEs[i]}
+                  </div>
+                )}
+              </div>
             </motion.div>
           ))}
         </motion.div>
@@ -133,14 +166,21 @@ export default function SlideTemplateView({
     <InfoPageShell bg={bg}>
       {Leaf}
       {Header}
-      <motion.p
+      <motion.div
         variants={riseItem}
         initial={init}
         animate="show"
-        className="font-body relative z-10 mt-6 max-w-5xl text-2xl font-medium md:text-3xl"
+        className="relative z-10 mt-6 max-w-5xl"
       >
-        {slide.body}
-      </motion.p>
+        <p className="font-body text-2xl font-medium md:text-3xl">
+          {slide.body}
+        </p>
+        {slide.bodyEs && (
+          <p className="font-body mt-3 text-xl font-medium opacity-80 md:text-2xl">
+            {slide.bodyEs}
+          </p>
+        )}
+      </motion.div>
     </InfoPageShell>
   );
 }

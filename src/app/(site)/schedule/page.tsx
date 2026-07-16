@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Section from "@/components/Section";
 import ScheduleCalendar from "@/components/schedule/ScheduleCalendar";
@@ -21,11 +22,11 @@ export default async function SchedulePage() {
 
   if (!user) redirect("/login?redirectTo=/schedule");
 
+  const t = await getTranslations("schedule");
+
   return (
-    <Section title="My Schedule">
-      <p className="mb-6 max-w-2xl text-lg">
-        The services and appointments you&rsquo;re signed up for this week.
-      </p>
+    <Section title={t("title")}>
+      <p className="mb-6 max-w-2xl text-lg">{t("intro")}</p>
       {/* Give the week grid a tall, fixed-height container to fill. */}
       <div className="h-[78vh] min-h-[520px]">
         <ScheduleCalendar />

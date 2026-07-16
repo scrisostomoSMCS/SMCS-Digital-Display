@@ -38,14 +38,23 @@ export const SLIDE_BACKGROUNDS: { key: SlideBackground; label: string }[] = [
   { key: "paper", label: "White" },
 ];
 
+/*
+  Every text field has an English value and a Spanish counterpart (…Es). The
+  Digital Bulletin renders both together; the editor collects both. Spanish
+  fields may be empty (the display then just shows English).
+*/
 export type Slide = {
   id: string;
   template: SlideTemplate;
   background: SlideBackground;
   title: string;
+  titleEs: string;
   body: string;
+  bodyEs: string;
   items: string[];
+  itemsEs: string[];
   caption: string;
+  captionEs: string;
   imagePath: string | null;
   position: number;
   hidden: boolean; // soft-deleted (recoverable), not shown on the display
@@ -55,9 +64,13 @@ export type SlideInput = {
   template: SlideTemplate;
   background: SlideBackground;
   title: string;
+  titleEs: string;
   body: string;
+  bodyEs: string;
   items: string[];
+  itemsEs: string[];
   caption: string;
+  captionEs: string;
   imagePath: string | null;
 };
 
@@ -66,13 +79,20 @@ type SlideRow = {
   template: string | null;
   background: string | null;
   title: string;
+  title_es: string | null;
   body: string | null;
+  body_es: string | null;
   items: unknown;
+  items_es: unknown;
   caption: string | null;
+  caption_es: string | null;
   image_path: string | null;
   position: number;
   hidden: boolean | null;
 };
+
+const asStringArray = (v: unknown): string[] =>
+  Array.isArray(v) ? (v as string[]) : [];
 
 function fromRow(r: SlideRow): Slide {
   return {
@@ -80,9 +100,13 @@ function fromRow(r: SlideRow): Slide {
     template: (r.template as SlideTemplate) ?? "title-body",
     background: (r.background as SlideBackground) ?? "blue",
     title: r.title,
+    titleEs: r.title_es ?? "",
     body: r.body ?? "",
-    items: Array.isArray(r.items) ? (r.items as string[]) : [],
+    bodyEs: r.body_es ?? "",
+    items: asStringArray(r.items),
+    itemsEs: asStringArray(r.items_es),
     caption: r.caption ?? "",
+    captionEs: r.caption_es ?? "",
     imagePath: r.image_path,
     position: r.position,
     hidden: r.hidden ?? false,
@@ -90,7 +114,7 @@ function fromRow(r: SlideRow): Slide {
 }
 
 const COLUMNS =
-  "id, template, background, title, body, items, caption, image_path, position, hidden";
+  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, position, hidden";
 
 // Visible slides (shown on the display and as normal sidebar entries).
 export async function fetchSlides(): Promise<Slide[]> {
@@ -131,9 +155,13 @@ function toRow(input: SlideInput) {
     template: input.template,
     background: input.background,
     title: input.title,
+    title_es: input.titleEs,
     body: input.body,
+    body_es: input.bodyEs,
     items: input.items,
+    items_es: input.itemsEs,
     caption: input.caption,
+    caption_es: input.captionEs,
     image_path: input.imagePath,
   };
 }

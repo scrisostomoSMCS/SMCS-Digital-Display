@@ -19,7 +19,7 @@ import SlideMenu from "./SlideMenu";
 
 /*
   Sticky manage-page navigation, grouped to mirror the page's three sections:
-  Calendar, Digital Schedule Pages, and Custom Slides. Every slide in the
+  Calendar, Digital Bulletin Pages, and Custom Slides. Every slide in the
   rotation gets a three-dots Edit/Delete menu. Built-in Edit jumps to that
   page's existing editor; custom Edit opens the structured template editor.
 
@@ -148,9 +148,13 @@ export default function ManageSidebar() {
       template: "title-body",
       background: "blue",
       title: "New slide",
+      titleEs: "",
       body: "",
+      bodyEs: "",
       items: [],
+      itemsEs: [],
       caption: "",
+      captionEs: "",
       imagePath: null,
     });
   }
@@ -218,13 +222,13 @@ export default function ManageSidebar() {
           </li>
         </ul>
 
-        {/* Digital Schedule Pages */}
+        {/* Digital Bulletin Pages */}
         <div className="mt-6">
           <GroupTitle
             onClick={() => jump("digital-schedule")}
             active={dspActive}
           >
-            Digital Schedule Pages
+            Digital Bulletin Pages
           </GroupTitle>
           <ul className="space-y-1">
             {visibleBuiltins.map((b) => {

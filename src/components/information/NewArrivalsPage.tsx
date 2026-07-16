@@ -10,13 +10,16 @@ import type { InfoContent } from "@/lib/infoContent";
 /*
   Page 2, New arrivals. Content-driven (edited on the manage page). Full-bleed
   blue with a big warm Playfair welcome and Poppins supporting copy. A large
-  signature leaf sits in the empty space.
+  signature leaf sits in the empty space. Bilingual: Spanish sits beneath the
+  English throughout (headline, message, steps, and the "available now" list).
 */
 export default function NewArrivalsPage({
   content,
 }: {
   content: InfoContent["newArrivals"];
 }) {
+  const availableEs = content.availableNowEs ?? [];
+
   return (
     <InfoPageShell bg="blue">
       <div className="pointer-events-none absolute bottom-8 right-12 hidden lg:block">
@@ -30,12 +33,22 @@ export default function NewArrivalsPage({
         className="shrink-0"
       >
         <InfoEyebrow tone="white" />
-        <h1 className="font-display mt-2 text-6xl leading-[0.95] md:text-7xl">
+        <h1 className="font-display mt-2 text-5xl leading-[0.95] md:text-7xl">
           {content.headline}
         </h1>
+        {content.headlineEs && (
+          <p className="font-display mt-1 text-4xl leading-[0.95] text-paper/80 md:text-5xl">
+            {content.headlineEs}
+          </p>
+        )}
         <p className="font-body mt-3 max-w-4xl text-2xl font-medium text-paper/90 md:text-3xl">
           {content.intro}
         </p>
+        {content.introEs && (
+          <p className="font-body mt-1 max-w-4xl text-xl font-medium text-paper/70 md:text-2xl">
+            {content.introEs}
+          </p>
+        )}
       </motion.header>
 
       <motion.div
@@ -47,6 +60,9 @@ export default function NewArrivalsPage({
         <motion.section variants={riseItem} className="min-h-0 lg:col-span-3">
           <p className="font-body text-base font-semibold uppercase tracking-[0.3em] md:text-lg">
             {content.stepsLabel}
+            {content.stepsLabelEs && (
+              <span className="text-paper/70"> · {content.stepsLabelEs}</span>
+            )}
           </p>
           <ol className="mt-4 space-y-4">
             {content.steps.map((step, i) => (
@@ -58,9 +74,19 @@ export default function NewArrivalsPage({
                   <p className="font-body text-2xl font-semibold md:text-3xl">
                     {step.title}
                   </p>
+                  {step.titleEs && (
+                    <p className="font-body text-xl font-semibold text-paper/75 md:text-2xl">
+                      {step.titleEs}
+                    </p>
+                  )}
                   <p className="font-body mt-1 text-lg text-paper/80 md:text-xl">
                     {step.detail}
                   </p>
+                  {step.detailEs && (
+                    <p className="font-body text-base text-paper/60 md:text-lg">
+                      {step.detailEs}
+                    </p>
+                  )}
                 </div>
               </li>
             ))}
@@ -73,14 +99,21 @@ export default function NewArrivalsPage({
         >
           <p className="font-body text-base font-semibold uppercase tracking-[0.3em] md:text-lg">
             {content.availableLabel}
+            {content.availableLabelEs && (
+              <span className="text-ink/60"> · {content.availableLabelEs}</span>
+            )}
           </p>
           <ul className="mt-4 space-y-3">
             {content.availableNow.map((item, i) => (
-              <li
-                key={`${item}-${i}`}
-                className="font-body text-xl font-semibold leading-tight md:text-2xl"
-              >
-                {item}
+              <li key={`${item}-${i}`} className="font-body leading-tight">
+                <span className="block text-xl font-semibold md:text-2xl">
+                  {item}
+                </span>
+                {availableEs[i] && (
+                  <span className="block text-lg font-medium text-ink/70 md:text-xl">
+                    {availableEs[i]}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

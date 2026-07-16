@@ -1,0 +1,83 @@
+{
+  "_note": "IMPORTANT / IMPORTANTE: These Spanish translations are an initial machine-assisted draft and MUST be reviewed by a fluent Spanish speaker before being relied upon for critical information. Estas traducciones al español son un borrador inicial y DEBEN ser revisadas por un hablante nativo antes de usarse para información importante.",
+  "language": {
+    "label": "Idioma",
+    "english": "English",
+    "spanish": "Español"
+  },
+  "nav": {
+    "home": "Inicio",
+    "about": "Nosotros",
+    "services": "Servicios",
+    "liveCalendar": "Calendario en Vivo",
+    "bulletin": "Boletín Digital"
+  },
+  "header": {
+    "logo": "SMCS LOGO",
+    "homeAria": "Inicio de SMCS",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú"
+  },
+  "auth": {
+    "logIn": "Iniciar Sesión",
+    "logOut": "Cerrar Sesión",
+    "mySchedule": "Mi Horario",
+    "manage": "Administrar",
+    "adminPanel": "Panel de Administrador"
+  },
+  "footer": {
+    "rights": "© {year} SMCS. Todos los derechos reservados.",
+    "notice": "Este es un sitio de información pública."
+  },
+  "home": {
+    "heroLine1": "Haz La",
+    "heroLine2": "Diferencia.",
+    "heroSubtitle": "St. Mary's Community Services, conectando a nuestra comunidad con el cuidado y los servicios que necesita.",
+    "liveCalendar": "Calendario en Vivo",
+    "learnMore": "Conoce Más",
+    "about": {
+      "title": "Sobre Nosotros",
+      "imageOverlay": "Sirviendo a Nuestra Comunidad",
+      "p1": "Las personas y familias que viven en la pobreza o sin hogar necesitan provisiones para salir adelante hoy, servicios que abran las puertas a un mañana estable, y un apoyo solidario que les dé esperanza de un futuro mejor.",
+      "p2": "Durante casi siete décadas, la comunidad de Stockton ha apoyado a St. Mary's Community Services con donaciones económicas, alianzas, horas de voluntariado y donativos, sosteniendo nuestros esfuerzos para ayudar a las personas en circunstancias vulnerables a enfrentar sus desafíos diarios y reconstruir sus vidas."
+    },
+    "services": {
+      "title": "Nuestros Servicios",
+      "imageOverlay": "Lo Que Ofrecemos",
+      "intro": "Hay tantas razones por las que las personas se quedan sin hogar como personas sin hogar existen. Nuestro personal solidario brinda atención individualizada a cada huésped, no solo para asegurar que tengan provisiones diarias, sino también para apoyarlos y conectarlos con servicios que conduzcan a vidas más saludables y a una vivienda permanente.",
+      "essential": "Servicios Esenciales",
+      "social": "Servicios Sociales",
+      "health": "Servicios de Salud",
+      "fullListBefore": "Conoce más sobre nuestra lista completa de servicios",
+      "fullListLink": "aquí"
+    }
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "intro": "Inicia sesión para ver tu calendario personal, los servicios y las citas en los que te has inscrito.",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "signIn": "Iniciar sesión",
+    "signingIn": "Iniciando sesión…",
+    "staffPrompt": "¿Eres personal de SMCS?",
+    "createAccount": "Crear una cuenta"
+  },
+  "signup": {
+    "title": "Registro de Personal",
+    "intro": "Crea una cuenta de personal de SMCS con tu correo <strong>@{domain}</strong>. Deberás confirmarlo por correo electrónico antes de iniciar sesión.",
+    "emailLabel": "Correo de SMCS",
+    "password": "Contraseña",
+    "createAccount": "Crear cuenta",
+    "creating": "Creando cuenta…",
+    "haveAccount": "¿Ya tienes una cuenta?",
+    "signIn": "Iniciar sesión",
+    "errorDomain": "El registro solo está disponible para los correos del personal de SMCS (@{domain}).",
+    "errorPassword": "Usa una contraseña de al menos 6 caracteres.",
+    "success": "Cuenta creada. Enviamos un enlace de confirmación a <strong>{email}</strong>. Haz clic en él para activar tu cuenta y luego inicia sesión.",
+    "goToSignIn": "Ir a iniciar sesión"
+  },
+  "schedule": {
+    "title": "Mi Horario",
+    "intro": "Los servicios y las citas en los que te has inscrito esta semana."
+  }
+}

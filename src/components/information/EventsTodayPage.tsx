@@ -68,9 +68,14 @@ export default function EventsTodayPage() {
         className="shrink-0"
       >
         <InfoEyebrow tone="blue" />
+        {/* Fixed labels are shown bilingually (this page isn't content-edited);
+            event names/times come from the calendar as staff entered them. */}
         <h1 className="font-display mt-2 text-5xl leading-none md:text-7xl">
           Happening Today
         </h1>
+        <p className="font-display mt-1 text-3xl leading-tight text-ink/70 md:text-5xl">
+          Eventos de Hoy
+        </p>
       </motion.header>
 
       {loaded && events.length === 0 ? (
@@ -78,9 +83,16 @@ export default function EventsTodayPage() {
           <p className="font-display text-4xl text-blue md:text-5xl">
             No events scheduled today.
           </p>
+          <p className="font-display text-3xl text-blue/70 md:text-4xl">
+            No hay eventos programados hoy.
+          </p>
           <p className="font-body mt-3 max-w-3xl text-2xl font-medium md:text-3xl">
             Our everyday services are still open, see the services list for
             what&rsquo;s always available.
+          </p>
+          <p className="font-body mt-1 max-w-3xl text-xl font-medium text-ink/70 md:text-2xl">
+            Nuestros servicios diarios siguen abiertos; consulte la lista de
+            servicios para ver lo que siempre está disponible.
           </p>
         </div>
       ) : (

@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { SITE_NAV_LINKS } from "@/lib/siteNavigation";
 
 type StickySubNavProps = {
@@ -17,6 +18,7 @@ type StickySubNavProps = {
 export default function StickySubNav({ mainNavRef }: StickySubNavProps) {
   const [visible, setVisible] = useState(false);
   const reduceMotion = useReducedMotion();
+  const t = useTranslations("nav");
 
   useEffect(() => {
     const mainNav = mainNavRef.current;
@@ -60,7 +62,7 @@ export default function StickySubNav({ mainNavRef }: StickySubNavProps) {
                     href={link.href}
                     className="flex min-h-11 items-center px-3 py-2 text-sm font-semibold text-paper hover:underline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-paper sm:text-base md:px-4"
                   >
-                    {link.label}
+                    {t(link.key)}
                   </Link>
                 </li>
               ))}

@@ -103,9 +103,13 @@ export default function SlideEditor({
       template: draft.template,
       background: draft.background,
       title: draft.title.trim(),
+      titleEs: draft.titleEs.trim(),
       body: draft.body.trim(),
+      bodyEs: draft.bodyEs.trim(),
       items: draft.items.map((s) => s.trim()).filter(Boolean),
+      itemsEs: draft.itemsEs.map((s) => s.trim()).filter(Boolean),
       caption: draft.caption.trim(),
+      captionEs: draft.captionEs.trim(),
       imagePath: draft.imagePath,
     });
     setSaving(false);
@@ -169,33 +173,75 @@ export default function SlideEditor({
         </div>
 
         {uses.title && (
-          <Field label="Title" value={draft.title} onChange={(v) => set("title", v)} />
+          <div className="space-y-2">
+            <Field
+              label="Title"
+              value={draft.title}
+              onChange={(v) => set("title", v)}
+            />
+            <Field
+              label="Title (Español)"
+              value={draft.titleEs}
+              onChange={(v) => set("titleEs", v)}
+            />
+          </div>
         )}
         {uses.body && (
-          <Field
-            label="Body text"
-            value={draft.body}
-            onChange={(v) => set("body", v)}
-            textarea
-            rows={4}
-          />
+          <div className="space-y-2">
+            <Field
+              label="Body text"
+              value={draft.body}
+              onChange={(v) => set("body", v)}
+              textarea
+              rows={4}
+            />
+            <Field
+              label="Body text (Español)"
+              value={draft.bodyEs}
+              onChange={(v) => set("bodyEs", v)}
+              textarea
+              rows={4}
+            />
+          </div>
         )}
         {uses.caption && (
-          <Field
-            label="Caption"
-            hint="Short line shown under the image."
-            value={draft.caption}
-            onChange={(v) => set("caption", v)}
-          />
+          <div className="space-y-2">
+            <Field
+              label="Caption"
+              hint="Short line shown under the image."
+              value={draft.caption}
+              onChange={(v) => set("caption", v)}
+            />
+            <Field
+              label="Caption (Español)"
+              value={draft.captionEs}
+              onChange={(v) => set("captionEs", v)}
+            />
+          </div>
         )}
         {uses.items && (
-          <div>
-            <p className={labelClass}>List items</p>
-            <div className="mt-2">
-              <StringListEditor
-                items={draft.items}
-                onChange={(items) => set("items", items)}
-              />
+          <div className="space-y-3">
+            <div>
+              <p className={labelClass}>List items</p>
+              <div className="mt-2">
+                <StringListEditor
+                  items={draft.items}
+                  onChange={(items) => set("items", items)}
+                />
+              </div>
+            </div>
+            <div>
+              <p className={labelClass}>List items (Español)</p>
+              <p className="text-sm text-ink/60">
+                Same order as English; each line pairs with the English item
+                above it.
+              </p>
+              <div className="mt-2">
+                <StringListEditor
+                  items={draft.itemsEs}
+                  onChange={(items) => set("itemsEs", items)}
+                />
+              </div>
             </div>
           </div>
         )}

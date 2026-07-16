@@ -81,11 +81,11 @@ export default async function ManagePage() {
 
         <Section
           id="digital-schedule"
-          title="Digital Schedule pages"
+          title="Digital Bulletin pages"
           className="scroll-mt-6"
         >
           <p className="max-w-3xl text-lg">
-            The built-in pages that rotate on the public Digital Schedule screens.
+            The built-in pages that rotate on the public Digital Bulletin screens.
             Edit their text below, changes show on the display right away.
           </p>
           <div className="mt-6">

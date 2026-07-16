@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { supabase } from "@/lib/supabase";
 import { STAFF_EMAIL_DOMAIN, isStaffEmail } from "@/lib/staffSignup";
 
@@ -16,6 +17,7 @@ const inputClass =
   "mt-2 w-full border-2 border-ink/30 px-4 py-3 text-lg focus:border-blue focus:outline-none";
 
 export default function SignUpForm() {
+  const t = useTranslations("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,13 +29,11 @@ export default function SignUpForm() {
     setError(null);
 
     if (!isStaffEmail(email)) {
-      setError(
-        `Sign up is only available for SMCS staff email addresses (@${STAFF_EMAIL_DOMAIN}).`,
-      );
+      setError(t("errorDomain", { domain: STAFF_EMAIL_DOMAIN }));
       return;
     }
     if (password.length < 6) {
-      setError("Please use a password of at least 6 characters.");
+      setError(t("errorPassword"));
       return;
     }
 
@@ -56,15 +56,16 @@ export default function SignUpForm() {
     return (
       <div className="max-w-md">
         <p className="border-l-4 border-teal bg-teal/10 py-3 pl-4 text-lg">
-          Account created. We&rsquo;ve sent a confirmation link to{" "}
-          <strong>{email}</strong>. Click it to activate your account, then sign
-          in.
+          {t.rich("success", {
+            email,
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </p>
         <Link
           href="/login"
           className="mt-6 inline-block border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue"
         >
-          Go to sign in
+          {t("goToSignIn")}
         </Link>
       </div>
     );
@@ -73,7 +74,7 @@ export default function SignUpForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-md" noValidate>
       <label className="mt-4 block text-lg font-semibold" htmlFor="email">
-        SMCS email
+        {t("emailLabel")}
       </label>
       <input
         id="email"
@@ -87,7 +88,7 @@ export default function SignUpForm() {
       />
 
       <label className="mt-6 block text-lg font-semibold" htmlFor="password">
-        Password
+        {t("password")}
       </label>
       <input
         id="password"
@@ -110,13 +111,13 @@ export default function SignUpForm() {
         disabled={submitting}
         className="mt-8 inline-block border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60"
       >
-        {submitting ? "Creating account…" : "Create account"}
+        {submitting ? t("creating") : t("createAccount")}
       </button>
 
       <p className="mt-6 text-base text-ink/70">
-        Already have an account?{" "}
+        {t("haveAccount")}{" "}
         <Link href="/login" className="font-semibold text-blue hover:underline">
-          Sign in
+          {t("signIn")}
         </Link>
         .
       </p>

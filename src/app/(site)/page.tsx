@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import ImageWithOverlay from "@/components/ImageWithOverlay";
 
-export default function Home() {
+// User-facing text comes from messages/<locale>.json ("home" section).
+export default async function Home() {
+  const t = await getTranslations("home");
+
   return (
     <>
       {/* Hero, background photo (public/hero.avif) + big serif headline.
@@ -18,65 +22,56 @@ export default function Home() {
         <div className="absolute inset-0 bg-ink/70" aria-hidden="true" />
         <div className="relative mx-auto w-full max-w-6xl px-6 py-20">
           <h1 className="font-display text-6xl font-bold leading-[0.9] md:text-8xl lg:text-9xl">
-            Make A
+            {t("heroLine1")}
             <br />
-            Difference.
+            {t("heroLine2")}
           </h1>
           <p className="mt-6 max-w-2xl text-xl text-paper/90 md:text-2xl">
-            St. Mary&rsquo;s Community Services, connecting our community to
-            the care and services they need.
+            {t("heroSubtitle")}
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/dashboard"
               className="inline-block border-2 border-paper bg-paper px-7 py-3 text-lg font-semibold text-blue hover:bg-blue hover:text-paper"
             >
-              Live Calendar
+              {t("liveCalendar")}
             </Link>
             <Link
               href="/#about"
               className="inline-block border-2 border-paper px-7 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-ink"
             >
-              Learn More
+              {t("learnMore")}
             </Link>
           </div>
         </div>
       </section>
 
-      {/* About, image-with-overlay demo */}
+      {/* About */}
       <Section
         id="about"
-        title="About Us"
+        title={t("about.title")}
         className="scroll-mt-28 md:scroll-mt-16"
       >
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <ImageWithOverlay
             frame="teal"
             src="/cafeteria.webp"
-            alt="SMCS cafeteria serving the community"
+            alt={t("about.imageOverlay")}
             scrimClassName="bg-black/60"
           >
-            <h3 className="text-2xl font-bold">Serving Our Community</h3>
+            <h3 className="text-2xl font-bold">{t("about.imageOverlay")}</h3>
           </ImageWithOverlay>
           <div>
-            <p className="text-xl">
-              Individuals and families who are living in poverty or experiencing homelessness
-              need provisions to get through today, services that open doors for a stable tomorrow,
-              and caring support that gives them hope for a brighter future.
-            </p>
-            <p className="mt-4 text-xl">
-              For nearly seven decades the Stockton community has supported St. Mary’s Community Services
-              through financial gifts, partnerships, volunteer hours and donations–sustaining our efforts
-              to help individuals in vulnerable circumstances meet their daily challenges and rebuild their lives.
-            </p>
+            <p className="text-xl">{t("about.p1")}</p>
+            <p className="mt-4 text-xl">{t("about.p2")}</p>
           </div>
         </div>
       </Section>
 
-      {/* Services, image-with-overlay demo */}
+      {/* Services */}
       <Section
         id="services"
-        title="Our Services"
+        title={t("services.title")}
         className="scroll-mt-28 md:scroll-mt-16"
       >
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
@@ -84,19 +79,16 @@ export default function Home() {
             <ImageWithOverlay
               frame="blue"
               src="/dog.jpg"
-              alt="Service dog at SMCS"
+              alt={t("services.imageOverlay")}
               scrimClassName="bg-black/60"
             >
-              <h3 className="text-2xl font-bold">What We Offer</h3>
+              <h3 className="text-2xl font-bold">
+                {t("services.imageOverlay")}
+              </h3>
             </ImageWithOverlay>
           </div>
           <div className="md:order-1">
-            <p className="text-xl">
-              There are as many reasons why people experience homelessness as there are people
-              who are homeless. Our caring staff provides individualized attention to guests to
-              not only ensure that they have daily provisions, but to also support and connect them
-              with services that can lead to healthier lives and permanent housing.
-            </p>
+            <p className="text-xl">{t("services.intro")}</p>
             <ul className="mt-4 space-y-2 text-xl">
               <li className="border-l-4 border-teal pl-4">
                 <a
@@ -105,7 +97,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                   className="font-semibold text-blue hover:underline"
                 >
-                  Essential Services
+                  {t("services.essential")}
                 </a>
               </li>
               <li className="border-l-4 border-blue pl-4">
@@ -115,7 +107,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                   className="font-semibold text-blue hover:underline"
                 >
-                  Social Services
+                  {t("services.social")}
                 </a>
               </li>
               <li className="border-l-4 border-teal pl-4">
@@ -125,19 +117,19 @@ export default function Home() {
                   rel="noopener noreferrer"
                   className="font-semibold text-blue hover:underline"
                 >
-                  Health Services
+                  {t("services.health")}
                 </a>
               </li>
             </ul>
             <p className="mt-6 text-xl">
-              Learn more about our full list of services{" "}
+              {t("services.fullListBefore")}{" "}
               <a
                 href="https://smcares.org/programs/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-blue hover:underline"
               >
-                here
+                {t("services.fullListLink")}
               </a>
               .
             </p>
