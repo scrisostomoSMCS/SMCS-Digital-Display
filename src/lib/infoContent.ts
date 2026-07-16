@@ -145,6 +145,10 @@ const SERVICE_ES: Record<string, { nameEs: string; descriptionEs?: string }> = {
     nameEs: "Duchas e Higiene",
     descriptionEs: "Duchas, artículos de aseo y toallas limpias.",
   },
+  "Showers & Clothing Center": {
+    nameEs: "Centro de Duchas y Ropa",
+    descriptionEs: "Duchas, artículos de aseo y toallas limpias.",
+  },
   "Medical Clinic": {
     nameEs: "Clínica Médica",
     descriptionEs: "Atención sin cita de enfermeras en el lugar.",
@@ -198,6 +202,30 @@ const STEP_ES = [
   },
 ];
 
+const DEFAULT_AVAILABLE_NOW_ES = [
+  "Baños, duchas y ropa limpia",
+  "Un lugar seguro y cálido para descansar",
+  "Agua y una comida caliente",
+  "Alguien con quien hablar",
+];
+
+/*
+  English-keyed Spanish lookups, built from the defaults. Used to backfill
+  Spanish onto known content that was saved before the bilingual fields existed
+  (see backfillSpanish) so the display and editor show Spanish without staff
+  having to retype it. Edited/custom names simply won't match and stay as-is.
+*/
+const STEP_ES_BY_TITLE: Record<string, { titleEs: string; detailEs: string }> =
+  {};
+newArrivals.steps.forEach((s, i) => {
+  if (STEP_ES[i]) STEP_ES_BY_TITLE[s.title] = STEP_ES[i];
+});
+
+const AVAILABLE_ES_BY_TEXT: Record<string, string> = {};
+newArrivals.availableNow.forEach((t, i) => {
+  if (DEFAULT_AVAILABLE_NOW_ES[i]) AVAILABLE_ES_BY_TEXT[t] = DEFAULT_AVAILABLE_NOW_ES[i];
+});
+
 export const defaultInfoContent: InfoContent = {
   services: {
     title: servicesPage.title,
@@ -221,12 +249,7 @@ export const defaultInfoContent: InfoContent = {
     availableLabel: newArrivals.availableLabel,
     availableLabelEs: "Disponible ahora",
     availableNow: [...newArrivals.availableNow],
-    availableNowEs: [
-      "Baños, duchas y ropa limpia",
-      "Un lugar seguro y cálido para descansar",
-      "Agua y una comida caliente",
-      "Alguien con quien hablar",
-    ],
+    availableNowEs: [...DEFAULT_AVAILABLE_NOW_ES],
   },
   demographic: {
     heading: featuredDemographic.heading,
@@ -258,6 +281,52 @@ function mergeWithDefaults(saved: Partial<InfoContent> | null): InfoContent {
   };
 }
 
+// Fill a service's Spanish from the known-name lookup when it's missing.
+function fillServiceEs(s: InfoService): InfoService {
+  const es = SERVICE_ES[s.name];
+  if (!es) return s;
+  return {
+    ...s,
+    nameEs: s.nameEs || es.nameEs,
+    descriptionEs: s.descriptionEs || es.descriptionEs,
+  };
+}
+
+/*
+  Backfill Spanish onto content that predates the bilingual fields, matching by
+  English text. Anything already translated (or with an edited/custom name)
+  keeps its own value. This runs on read, so the display and the editor both see
+  the Spanish, and saving from the editor persists it.
+*/
+function backfillSpanish(c: InfoContent): InfoContent {
+  return {
+    ...c,
+    services: { ...c.services, items: c.services.items.map(fillServiceEs) },
+    newArrivals: {
+      ...c.newArrivals,
+      steps: c.newArrivals.steps.map((step) => {
+        const es = STEP_ES_BY_TITLE[step.title];
+        if (!es) return step;
+        return {
+          ...step,
+          titleEs: step.titleEs || es.titleEs,
+          detailEs: step.detailEs || es.detailEs,
+        };
+      }),
+      availableNowEs: c.newArrivals.availableNow.map(
+        (item, i) =>
+          (c.newArrivals.availableNowEs ?? [])[i] ||
+          AVAILABLE_ES_BY_TEXT[item] ||
+          "",
+      ),
+    },
+    demographic: {
+      ...c.demographic,
+      services: c.demographic.services.map(fillServiceEs),
+    },
+  };
+}
+
 // Read the editable content (falls back to defaults when nothing is saved yet).
 export async function fetchInfoContent(): Promise<InfoContent> {
   const { data, error } = await supabase
@@ -270,7 +339,9 @@ export async function fetchInfoContent(): Promise<InfoContent> {
     console.warn("Info content unavailable, using defaults:", error.message);
     return defaultInfoContent;
   }
-  return mergeWithDefaults((data?.content ?? null) as Partial<InfoContent> | null);
+  return backfillSpanish(
+    mergeWithDefaults((data?.content ?? null) as Partial<InfoContent> | null),
+  );
 }
 
 // Save the editable content (staff only, enforced by RLS).
