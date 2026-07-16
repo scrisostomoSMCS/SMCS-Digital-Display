@@ -60,11 +60,11 @@ export default function SlideTemplateView({
       className="shrink-0"
     >
       <InfoEyebrow tone={eyebrowTone} />
-      <h1 className="font-display mt-2 text-4xl leading-none md:text-6xl">
+      <h1 className="font-display mt-2 text-3xl leading-none sm:text-4xl lg:text-6xl">
         {slide.title}
       </h1>
       {slide.titleEs && (
-        <p className="font-display mt-1 text-2xl leading-tight opacity-80 md:text-4xl">
+        <p className="font-display mt-1 text-xl leading-tight opacity-80 sm:text-2xl lg:text-4xl">
           {slide.titleEs}
         </p>
       )}
@@ -87,11 +87,11 @@ export default function SlideTemplateView({
           </div>
           {slide.caption && (
             <div className="mt-4 shrink-0">
-              <p className="font-display text-4xl leading-tight md:text-5xl">
+              <p className="font-display text-2xl leading-tight sm:text-3xl lg:text-5xl">
                 {slide.caption}
               </p>
               {slide.captionEs && (
-                <p className="font-display mt-1 text-2xl leading-tight opacity-80 md:text-3xl">
+                <p className="font-display mt-1 text-lg leading-tight opacity-80 sm:text-xl lg:text-3xl">
                   {slide.captionEs}
                 </p>
               )}
@@ -106,16 +106,16 @@ export default function SlideTemplateView({
     return (
       <InfoPageShell bg={bg}>
         {Header}
-        <div className="relative z-10 mt-6 grid min-h-0 flex-1 grid-cols-1 items-center gap-8 lg:grid-cols-2">
-          <div className="h-full min-h-0">
+        <div className="relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto pb-2 lg:mt-6 lg:items-center lg:gap-8 lg:overflow-visible lg:pb-0 lg:grid-cols-2">
+          <div className="min-h-48 lg:h-full lg:min-h-0">
             <ImageSlot src={img} tone={placeholderTone} />
           </div>
           <div>
-            <p className="font-body text-2xl font-medium md:text-3xl">
+            <p className="font-body text-lg font-medium sm:text-xl lg:text-3xl">
               {slide.body}
             </p>
             {slide.bodyEs && (
-              <p className="font-body mt-3 text-xl font-medium opacity-80 md:text-2xl">
+              <p className="font-body mt-2 text-base font-medium opacity-80 sm:text-lg lg:mt-3 lg:text-2xl">
                 {slide.bodyEs}
               </p>
             )}
@@ -134,7 +134,7 @@ export default function SlideTemplateView({
           variants={staggerContainer}
           initial={init}
           animate="show"
-          className="relative z-10 mt-7 grid grid-cols-1 gap-4 md:grid-cols-2"
+          className="relative z-10 mt-4 grid min-h-0 grid-cols-1 gap-3 overflow-y-auto pb-2 sm:grid-cols-2 lg:mt-7 lg:gap-4 lg:overflow-visible lg:pb-0"
         >
           {slide.items.map((item, i) => (
             <motion.div
@@ -147,9 +147,9 @@ export default function SlideTemplateView({
                 aria-hidden="true"
               />
               <div>
-                <div className="text-2xl font-semibold md:text-3xl">{item}</div>
+                <div className="text-lg font-semibold sm:text-xl lg:text-3xl">{item}</div>
                 {slide.itemsEs[i] && (
-                  <div className="text-lg font-medium opacity-80 md:text-xl">
+                  <div className="text-sm font-medium opacity-80 sm:text-base lg:text-xl">
                     {slide.itemsEs[i]}
                   </div>
                 )}
@@ -170,13 +170,13 @@ export default function SlideTemplateView({
         variants={riseItem}
         initial={init}
         animate="show"
-        className="relative z-10 mt-6 max-w-5xl"
+        className="relative z-10 mt-4 max-w-5xl min-h-0 overflow-y-auto pb-2 lg:mt-6 lg:overflow-visible lg:pb-0"
       >
-        <p className="font-body text-2xl font-medium md:text-3xl">
+        <p className="font-body text-lg font-medium sm:text-xl lg:text-3xl">
           {slide.body}
         </p>
         {slide.bodyEs && (
-          <p className="font-body mt-3 text-xl font-medium opacity-80 md:text-2xl">
+          <p className="font-body mt-2 text-base font-medium opacity-80 sm:text-lg lg:mt-3 lg:text-2xl">
             {slide.bodyEs}
           </p>
         )}

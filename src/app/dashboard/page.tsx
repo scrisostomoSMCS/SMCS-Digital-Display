@@ -1,11 +1,20 @@
 import Link from "next/link";
+import { Poppins } from "next/font/google";
 import InfoBar from "@/components/dashboard/InfoBar";
 import DashboardCalendar from "@/components/dashboard/DashboardCalendar";
 import QrPlaceholder from "@/components/dashboard/QrPlaceholder";
+import MobileHeader from "@/components/MobileHeader";
 
 export const metadata = {
   title: "Live Calendar | SMCS",
 };
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-body",
+  display: "swap",
+});
 
 /*
   Phase 2 Live Calendar: a public, view-only, full-screen display for
@@ -18,27 +27,28 @@ export const metadata = {
 */
 export default function DashboardPage() {
   return (
-    <div className="flex h-screen flex-col bg-paper">
-      <InfoBar />
+    <div className={`${poppins.variable} flex min-h-dvh flex-col lg:block`}>
+      <MobileHeader />
+      <div className="flex min-h-0 flex-1 flex-col bg-paper lg:h-screen">
+        <InfoBar />
 
-      {/* Compact control row, kept short so the calendar starts high and uses
-          the most vertical space possible. */}
-      <div className="flex items-center justify-between gap-4 px-3 py-1.5 md:px-4">
-        <Link
-          href="/"
-          className="inline-block border-2 border-blue px-4 py-1.5 text-base font-semibold text-blue hover:bg-blue hover:text-paper md:text-lg"
-        >
-          ← Home
-        </Link>
+        {/* Desktop display controls; mobile navigation already provides Home. */}
+        <div className="hidden items-center justify-between gap-4 px-4 py-1.5 lg:flex">
+          <Link
+            href="/"
+            className="inline-block border-2 border-blue px-4 py-1.5 text-lg font-semibold text-blue hover:bg-blue hover:text-paper"
+          >
+            ← Home
+          </Link>
 
-        {/* Reserved top-right slot for a future QR code. */}
-        <QrPlaceholder />
-      </div>
+          {/* Reserved top-right slot for a future QR code. */}
+          <QrPlaceholder />
+        </div>
 
-      {/* min-h-0 lets the calendar shrink within the flex column so its
-          height:100% fills all remaining space instead of overflowing. */}
-      <div className="min-h-0 flex-1 px-2 pb-2 md:px-4">
-        <DashboardCalendar />
+        {/* min-h-0 lets the calendar fill the remaining viewport height. */}
+        <div className="min-h-0 flex-1 px-2 pb-2 lg:px-4">
+          <DashboardCalendar />
+        </div>
       </div>
     </div>
   );

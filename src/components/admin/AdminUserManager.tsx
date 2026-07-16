@@ -110,7 +110,7 @@ function AddPanel({
               <button
                 type="button"
                 onClick={() => onPick(u)}
-                className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left text-sm hover:bg-blue/10"
+                className="flex min-h-11 w-full items-center justify-between gap-2 px-2 py-1.5 text-left text-sm hover:bg-blue/10 lg:min-h-0"
               >
                 <span className="min-w-0 truncate">
                   {displayName(u)}{" "}
@@ -127,9 +127,9 @@ function AddPanel({
 }
 
 const grantBtn =
-  "shrink-0 border-2 border-green-600 bg-green-600 px-4 py-1.5 text-sm font-semibold text-paper hover:bg-paper hover:text-green-600 disabled:opacity-60";
+  "min-h-11 shrink-0 border-2 border-green-600 bg-green-600 px-4 py-1.5 text-sm font-semibold text-paper hover:bg-paper hover:text-green-600 disabled:opacity-60 lg:min-h-0";
 const removeBtn =
-  "shrink-0 border-2 border-red-600 bg-red-600 px-4 py-1.5 text-sm font-semibold text-paper hover:bg-paper hover:text-red-600 disabled:opacity-60";
+  "min-h-11 shrink-0 border-2 border-red-600 bg-red-600 px-4 py-1.5 text-sm font-semibold text-paper hover:bg-paper hover:text-red-600 disabled:opacity-60 lg:min-h-0";
 
 export default function AdminUserManager({
   currentUserId,
@@ -221,12 +221,12 @@ export default function AdminUserManager({
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Staff / employees */}
         <section className="border-2 border-placeholder bg-paper">
-          <div className="flex items-center justify-between gap-3 border-b border-placeholder px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-placeholder px-4 py-3 lg:flex-nowrap">
             <h2 className="text-xl font-bold">Staff – employee</h2>
             <button
               type="button"
               onClick={() => setAddingStaff((v) => !v)}
-              className="border-2 border-teal px-3 py-1.5 text-sm font-semibold text-teal hover:bg-teal hover:text-paper"
+              className="min-h-11 border-2 border-teal px-3 py-1.5 text-sm font-semibold text-teal hover:bg-teal hover:text-paper lg:min-h-0"
             >
               + Add
             </button>
@@ -259,10 +259,10 @@ export default function AdminUserManager({
                 return (
                   <li
                     key={u.id}
-                    className="flex items-center gap-3 border border-placeholder px-3 py-2"
+                    className="flex flex-wrap items-center gap-3 border border-placeholder px-3 py-2 sm:flex-nowrap"
                   >
                     <Avatar />
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 basis-[calc(100%-3.25rem)] sm:flex-1 sm:basis-0">
                       <p className="truncate font-semibold">{displayName(u)}</p>
                       <p className="truncate text-sm text-ink/60">{u.email}</p>
                       {needsReview && (
@@ -307,12 +307,12 @@ export default function AdminUserManager({
 
         {/* Administrators */}
         <section className="border-2 border-placeholder bg-paper">
-          <div className="flex items-center justify-between gap-3 border-b border-placeholder px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-placeholder px-4 py-3 lg:flex-nowrap">
             <h2 className="text-xl font-bold">Administrators</h2>
             <button
               type="button"
               onClick={() => setAddingAdmin((v) => !v)}
-              className="border-2 border-teal px-3 py-1.5 text-sm font-semibold text-teal hover:bg-teal hover:text-paper"
+              className="min-h-11 border-2 border-teal px-3 py-1.5 text-sm font-semibold text-teal hover:bg-teal hover:text-paper lg:min-h-0"
             >
               + Add
             </button>
@@ -341,10 +341,10 @@ export default function AdminUserManager({
                 return (
                   <li
                     key={u.id}
-                    className="flex items-center gap-3 border border-placeholder px-3 py-2"
+                    className="flex flex-wrap items-center gap-3 border border-placeholder px-3 py-2 sm:flex-nowrap"
                   >
                     <Avatar />
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 basis-[calc(100%-3.25rem)] sm:flex-1 sm:basis-0">
                       <p className="truncate font-semibold">
                         {displayName(u)}
                         {isSelf && (

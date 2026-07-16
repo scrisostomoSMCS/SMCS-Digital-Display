@@ -22,7 +22,7 @@ export default function InfoPageShell({
 }) {
   return (
     <div
-      className={`font-body relative flex h-full flex-col overflow-hidden px-10 pt-6 pb-16 md:px-16 md:pt-8 md:pb-16 ${BG[bg]}`}
+      className={`font-body relative flex h-full flex-col overflow-hidden px-4 pt-4 pb-12 sm:px-6 sm:pt-5 lg:px-16 lg:pt-8 lg:pb-16 ${BG[bg]}`}
     >
       {children}
     </div>

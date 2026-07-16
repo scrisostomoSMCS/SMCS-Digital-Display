@@ -34,9 +34,9 @@ export default function ServicesOverviewPage({
       >
         <InfoEyebrow tone="blue" />
         <h1 className="font-display mt-1 flex flex-wrap items-baseline gap-x-4 leading-none">
-          <span className="text-4xl md:text-5xl">{content.title}</span>
+          <span className="text-3xl sm:text-4xl lg:text-5xl">{content.title}</span>
           {content.titleEs && (
-            <span className="text-2xl text-ink/60 md:text-3xl">
+            <span className="text-xl text-ink/60 sm:text-2xl lg:text-3xl">
               {content.titleEs}
             </span>
           )}
@@ -47,7 +47,7 @@ export default function ServicesOverviewPage({
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="mt-4 grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-3"
+        className="mt-4 grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pb-2 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 lg:overflow-visible lg:pb-0"
       >
         {content.items.map((s, i) => {
           const blue = i % 2 === 0;
@@ -58,7 +58,7 @@ export default function ServicesOverviewPage({
             <motion.div
               key={`${s.name}-${i}`}
               variants={riseItem}
-              className={`flex min-h-0 flex-col overflow-hidden px-5 py-3 ${
+              className={`flex min-h-0 flex-col overflow-visible p-4 lg:overflow-hidden lg:px-5 lg:py-3 ${
                 blue ? "bg-blue text-paper" : "bg-teal text-ink"
               }`}
             >
@@ -71,7 +71,7 @@ export default function ServicesOverviewPage({
                     className="mt-1 shrink-0"
                   />
                 )}
-                <h2 className="font-body text-xl font-semibold leading-tight md:text-2xl">
+                <h2 className="font-body text-xl font-semibold leading-tight lg:text-2xl">
                   {s.name}
                   {s.nameEs && (
                     <span
@@ -86,7 +86,7 @@ export default function ServicesOverviewPage({
                 </h2>
               </div>
               {s.time && (
-                <div className="font-body mt-1.5 space-y-0.5 text-lg font-semibold md:text-xl">
+                <div className="font-body mt-1.5 space-y-0.5 text-lg font-semibold lg:text-xl">
                   {s.time.split("\n").map((line) => (
                     <p key={line}>{line}</p>
                   ))}
@@ -94,7 +94,7 @@ export default function ServicesOverviewPage({
               )}
               {s.description && (
                 <p
-                  className={`font-body mt-1 text-sm md:text-base ${
+                  className={`font-body mt-1 text-sm lg:text-base ${
                     blue ? "text-paper/90" : "text-ink/90"
                   }`}
                 >
@@ -103,7 +103,7 @@ export default function ServicesOverviewPage({
               )}
               {s.descriptionEs && (
                 <p
-                  className={`font-body text-xs md:text-sm ${
+                  className={`font-body text-xs lg:text-sm ${
                     blue ? "text-paper/70" : "text-ink/70"
                   }`}
                 >
@@ -112,7 +112,7 @@ export default function ServicesOverviewPage({
               )}
               {s.location && (
                 <p
-                  className={`font-body mt-auto pt-1.5 text-xs font-semibold uppercase tracking-widest md:text-sm ${
+                  className={`font-body mt-auto pt-1.5 text-xs font-semibold uppercase tracking-widest lg:text-sm ${
                     blue ? "text-paper/80" : "text-ink/70"
                   }`}
                 >

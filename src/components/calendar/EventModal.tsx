@@ -57,7 +57,7 @@ export default function EventModal({ event, onClose }: EventModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-3 lg:p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -65,11 +65,11 @@ export default function EventModal({ event, onClose }: EventModalProps) {
     >
       {/* Stop propagation so clicks inside the panel don't dismiss it. */}
       <div
-        className="w-full max-w-lg border-4 border-blue bg-paper p-6 md:p-8"
+        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto border-4 border-blue bg-paper p-4 sm:p-6 lg:max-h-none lg:overflow-visible lg:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
-          <h2 className="text-2xl font-bold text-blue md:text-3xl">
+          <h2 className="text-xl font-bold text-blue sm:text-2xl lg:text-3xl">
             {event.name}
           </h2>
           <button

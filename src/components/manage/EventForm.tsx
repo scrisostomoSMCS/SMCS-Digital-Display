@@ -62,7 +62,7 @@ export default function EventForm({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-3 lg:p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -74,7 +74,7 @@ export default function EventForm({
           e.preventDefault();
           if (!invalid) onSave(state);
         }}
-        className="w-full max-w-lg border-4 border-blue bg-paper p-6"
+        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto border-4 border-blue bg-paper p-4 lg:max-h-none lg:overflow-visible lg:p-6"
       >
         <h2 className="text-2xl font-bold text-blue">
           {mode === "create" ? "New event" : "Edit event"}
@@ -111,7 +111,7 @@ export default function EventForm({
           />
         </label>
 
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-2">
           <label className="block text-base font-semibold">
             Start
             <input
@@ -157,8 +157,8 @@ export default function EventForm({
           </p>
         )}
 
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <div className="flex gap-3">
+        <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap gap-3">
             <button
               type="submit"
               disabled={saving || invalid}

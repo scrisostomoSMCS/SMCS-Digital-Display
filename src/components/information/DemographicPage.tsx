@@ -39,18 +39,18 @@ export default function DemographicPage({
       >
         <InfoEyebrow tone="ink" />
         <h1 className="font-display mt-1 flex flex-wrap items-baseline gap-x-4 leading-none">
-          <span className="text-4xl md:text-5xl">{content.heading}</span>
+          <span className="text-3xl sm:text-4xl lg:text-5xl">{content.heading}</span>
           {content.headingEs && (
-            <span className="text-2xl text-ink/60 md:text-3xl">
+            <span className="text-xl text-ink/60 sm:text-2xl lg:text-3xl">
               {content.headingEs}
             </span>
           )}
         </h1>
-        <p className="font-body mt-2 max-w-5xl text-lg font-medium md:text-xl">
+        <p className="font-body mt-2 max-w-5xl text-base font-medium sm:text-lg lg:text-xl">
           {content.intro}
         </p>
         {content.introEs && (
-          <p className="font-body max-w-5xl text-base font-medium text-ink/70 md:text-lg">
+          <p className="font-body max-w-5xl text-sm font-medium text-ink/70 sm:text-base lg:text-lg">
             {content.introEs}
           </p>
         )}
@@ -60,7 +60,7 @@ export default function DemographicPage({
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-3"
+        className="relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pb-2 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 lg:overflow-visible lg:pb-0"
       >
         {content.services.map((s, i) => {
           const Icon = iconFromKey(s.icon) ?? serviceIconFor(s.name);
@@ -68,7 +68,7 @@ export default function DemographicPage({
             <motion.div
               key={`${s.name}-${i}`}
               variants={riseItem}
-              className="flex min-h-0 flex-col overflow-hidden bg-paper px-5 py-3 text-ink"
+              className="flex min-h-0 flex-col overflow-visible bg-paper p-4 text-ink lg:overflow-hidden lg:px-5 lg:py-3"
             >
               <div className="flex items-start gap-3 text-blue">
                 {Icon && (
@@ -79,7 +79,7 @@ export default function DemographicPage({
                     className="mt-1 shrink-0"
                   />
                 )}
-                <h2 className="font-body text-xl font-semibold leading-tight md:text-2xl">
+                <h2 className="font-body text-xl font-semibold leading-tight lg:text-2xl">
                   {s.name}
                   {s.nameEs && (
                     <span className="font-medium text-blue/65"> / {s.nameEs}</span>
@@ -87,24 +87,24 @@ export default function DemographicPage({
                 </h2>
               </div>
               {s.time && (
-                <div className="font-body mt-1.5 space-y-0.5 text-lg font-semibold md:text-xl">
+                <div className="font-body mt-1.5 space-y-0.5 text-lg font-semibold lg:text-xl">
                   {s.time.split("\n").map((line) => (
                     <p key={line}>{line}</p>
                   ))}
                 </div>
               )}
               {s.description && (
-                <p className="font-body mt-1 text-sm md:text-base">
+                <p className="font-body mt-1 text-sm lg:text-base">
                   {s.description}
                 </p>
               )}
               {s.descriptionEs && (
-                <p className="font-body text-xs text-ink/70 md:text-sm">
+                <p className="font-body text-xs text-ink/70 lg:text-sm">
                   {s.descriptionEs}
                 </p>
               )}
               {s.location && (
-                <p className="font-body mt-auto pt-1.5 text-xs font-semibold uppercase tracking-widest text-ink/60 md:text-sm">
+                <p className="font-body mt-auto pt-1.5 text-xs font-semibold uppercase tracking-widest text-ink/60 lg:text-sm">
                   {s.location}
                 </p>
               )}
