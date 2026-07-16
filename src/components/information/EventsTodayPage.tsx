@@ -70,12 +70,10 @@ export default function EventsTodayPage() {
         <InfoEyebrow tone="blue" />
         {/* Fixed labels are shown bilingually (this page isn't content-edited);
             event names/times come from the calendar as staff entered them. */}
-        <h1 className="font-display mt-2 text-5xl leading-none md:text-7xl">
-          Happening Today
+        <h1 className="font-display mt-1 flex flex-wrap items-baseline gap-x-4 leading-none">
+          <span className="text-5xl md:text-6xl">Happening Today</span>
+          <span className="text-3xl text-ink/60 md:text-4xl">Eventos de Hoy</span>
         </h1>
-        <p className="font-display mt-1 text-3xl leading-tight text-ink/70 md:text-5xl">
-          Eventos de Hoy
-        </p>
       </motion.header>
 
       {loaded && events.length === 0 ? (

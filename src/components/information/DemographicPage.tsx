@@ -14,8 +14,11 @@ import {
 /*
   Page 3, demographic focus (currently expecting mothers). Content-driven
   (edited on the manage page). Full-bleed teal, white icon cards, large corner
-  leaf. Fixed 3×2 grid so nothing is cut off. Bilingual: Spanish sits beneath
-  the English (heading, intro, and each card's name/description).
+  leaf. Fixed 3×2 grid so nothing is cut off.
+
+  Bilingual: Spanish heading sits inline beside the English heading; the Spanish
+  intro and each card's Spanish name/description sit beneath, smaller and
+  lighter. Cards clip so content can never spill past their edges.
 */
 export default function DemographicPage({
   content,
@@ -35,19 +38,19 @@ export default function DemographicPage({
         className="shrink-0"
       >
         <InfoEyebrow tone="ink" />
-        <h1 className="font-display mt-2 text-4xl leading-none md:text-6xl">
-          {content.heading}
+        <h1 className="font-display mt-1 flex flex-wrap items-baseline gap-x-4 leading-none">
+          <span className="text-4xl md:text-5xl">{content.heading}</span>
+          {content.headingEs && (
+            <span className="text-2xl text-ink/60 md:text-3xl">
+              {content.headingEs}
+            </span>
+          )}
         </h1>
-        {content.headingEs && (
-          <p className="font-display mt-1 text-3xl leading-tight text-ink/70 md:text-4xl">
-            {content.headingEs}
-          </p>
-        )}
-        <p className="font-body mt-3 max-w-4xl text-xl font-medium md:text-2xl">
+        <p className="font-body mt-2 max-w-5xl text-lg font-medium md:text-xl">
           {content.intro}
         </p>
         {content.introEs && (
-          <p className="font-body mt-1 max-w-4xl text-lg font-medium text-ink/70 md:text-xl">
+          <p className="font-body max-w-5xl text-base font-medium text-ink/70 md:text-lg">
             {content.introEs}
           </p>
         )}
@@ -57,7 +60,7 @@ export default function DemographicPage({
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="relative z-10 mt-5 grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-4"
+        className="relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-3"
       >
         {content.services.map((s, i) => {
           const Icon = iconFromKey(s.icon) ?? serviceIconFor(s.name);
@@ -65,40 +68,43 @@ export default function DemographicPage({
             <motion.div
               key={`${s.name}-${i}`}
               variants={riseItem}
-              className="flex min-h-0 flex-col bg-paper px-6 py-4 text-ink"
+              className="flex min-h-0 flex-col overflow-hidden bg-paper px-5 py-3 text-ink"
             >
-              <div className="flex items-center gap-3 text-blue">
-                {Icon && <Icon size={30} strokeWidth={2} aria-hidden="true" />}
-                <div>
-                  <h2 className="font-body text-xl font-semibold leading-tight md:text-2xl">
-                    {s.name}
-                  </h2>
+              <div className="flex items-start gap-3 text-blue">
+                {Icon && (
+                  <Icon
+                    size={28}
+                    strokeWidth={2}
+                    aria-hidden="true"
+                    className="mt-1 shrink-0"
+                  />
+                )}
+                <h2 className="font-body text-xl font-semibold leading-tight md:text-2xl">
+                  {s.name}
                   {s.nameEs && (
-                    <p className="font-body text-base font-semibold leading-tight text-blue/70 md:text-lg">
-                      {s.nameEs}
-                    </p>
+                    <span className="font-medium text-blue/65"> / {s.nameEs}</span>
                   )}
-                </div>
+                </h2>
               </div>
               {s.time && (
-                <div className="font-body mt-2 space-y-0.5 text-lg font-semibold md:text-xl">
+                <div className="font-body mt-1.5 space-y-0.5 text-lg font-semibold md:text-xl">
                   {s.time.split("\n").map((line) => (
                     <p key={line}>{line}</p>
                   ))}
                 </div>
               )}
               {s.description && (
-                <p className="font-body mt-1 text-base md:text-lg">
+                <p className="font-body mt-1 text-sm md:text-base">
                   {s.description}
                 </p>
               )}
               {s.descriptionEs && (
-                <p className="font-body mt-0.5 text-sm text-ink/70 md:text-base">
+                <p className="font-body text-xs text-ink/70 md:text-sm">
                   {s.descriptionEs}
                 </p>
               )}
               {s.location && (
-                <p className="font-body mt-auto pt-2 text-sm font-semibold uppercase tracking-widest text-ink/60 md:text-base">
+                <p className="font-body mt-auto pt-1.5 text-xs font-semibold uppercase tracking-widest text-ink/60 md:text-sm">
                   {s.location}
                 </p>
               )}

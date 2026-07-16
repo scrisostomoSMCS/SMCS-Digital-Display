@@ -14,8 +14,10 @@ import {
   Page 1, Services overview. Content-driven (edited on the manage page). A
   service's `time` may hold several lines (e.g. meal times), split on newlines.
   Icons are looked up by name. Fixed 3×2 grid so all cards fit on screen.
-  Bilingual: Spanish name/description sit beneath their English counterparts,
-  smaller and lighter, and only when a Spanish value exists.
+
+  Bilingual: the Spanish name sits inline beside the English name (saves height),
+  and the Spanish description sits beneath the English one, smaller and lighter.
+  Cards clip (overflow-hidden) so content can never spill past their edges.
 */
 export default function ServicesOverviewPage({
   content,
@@ -31,21 +33,21 @@ export default function ServicesOverviewPage({
         className="shrink-0"
       >
         <InfoEyebrow tone="blue" />
-        <h1 className="font-display mt-2 text-5xl leading-none md:text-6xl">
-          {content.title}
+        <h1 className="font-display mt-1 flex flex-wrap items-baseline gap-x-4 leading-none">
+          <span className="text-4xl md:text-5xl">{content.title}</span>
+          {content.titleEs && (
+            <span className="text-2xl text-ink/60 md:text-3xl">
+              {content.titleEs}
+            </span>
+          )}
         </h1>
-        {content.titleEs && (
-          <p className="font-display mt-1 text-3xl leading-tight text-ink/70 md:text-4xl">
-            {content.titleEs}
-          </p>
-        )}
       </motion.header>
 
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="mt-5 grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-4"
+        className="mt-4 grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-3"
       >
         {content.items.map((s, i) => {
           const blue = i % 2 === 0;
@@ -56,29 +58,35 @@ export default function ServicesOverviewPage({
             <motion.div
               key={`${s.name}-${i}`}
               variants={riseItem}
-              className={`flex min-h-0 flex-col px-6 py-4 ${
+              className={`flex min-h-0 flex-col overflow-hidden px-5 py-3 ${
                 blue ? "bg-blue text-paper" : "bg-teal text-ink"
               }`}
             >
-              <div className="flex items-center gap-3">
-                {Icon && <Icon size={34} strokeWidth={2} aria-hidden="true" />}
-                <div>
-                  <h2 className="font-body text-2xl font-semibold leading-tight md:text-3xl">
-                    {s.name}
-                  </h2>
+              <div className="flex items-start gap-3">
+                {Icon && (
+                  <Icon
+                    size={30}
+                    strokeWidth={2}
+                    aria-hidden="true"
+                    className="mt-1 shrink-0"
+                  />
+                )}
+                <h2 className="font-body text-xl font-semibold leading-tight md:text-2xl">
+                  {s.name}
                   {s.nameEs && (
-                    <p
-                      className={`font-body text-lg font-semibold leading-tight md:text-xl ${
-                        blue ? "text-paper/80" : "text-ink/70"
+                    <span
+                      className={`font-medium ${
+                        blue ? "text-paper/75" : "text-ink/65"
                       }`}
                     >
-                      {s.nameEs}
-                    </p>
+                      {" "}
+                      / {s.nameEs}
+                    </span>
                   )}
-                </div>
+                </h2>
               </div>
               {s.time && (
-                <div className="font-body mt-2 space-y-0.5 text-xl font-semibold md:text-2xl">
+                <div className="font-body mt-1.5 space-y-0.5 text-lg font-semibold md:text-xl">
                   {s.time.split("\n").map((line) => (
                     <p key={line}>{line}</p>
                   ))}
@@ -86,7 +94,7 @@ export default function ServicesOverviewPage({
               )}
               {s.description && (
                 <p
-                  className={`font-body mt-1 text-base md:text-lg ${
+                  className={`font-body mt-1 text-sm md:text-base ${
                     blue ? "text-paper/90" : "text-ink/90"
                   }`}
                 >
@@ -95,7 +103,7 @@ export default function ServicesOverviewPage({
               )}
               {s.descriptionEs && (
                 <p
-                  className={`font-body mt-0.5 text-sm md:text-base ${
+                  className={`font-body text-xs md:text-sm ${
                     blue ? "text-paper/70" : "text-ink/70"
                   }`}
                 >
@@ -104,7 +112,7 @@ export default function ServicesOverviewPage({
               )}
               {s.location && (
                 <p
-                  className={`font-body mt-auto pt-2 text-sm font-semibold uppercase tracking-widest md:text-base ${
+                  className={`font-body mt-auto pt-1.5 text-xs font-semibold uppercase tracking-widest md:text-sm ${
                     blue ? "text-paper/80" : "text-ink/70"
                   }`}
                 >
