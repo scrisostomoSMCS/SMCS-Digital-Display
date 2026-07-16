@@ -68,8 +68,15 @@ function ServiceListEditor({
           </div>
           <div className="mt-3">
             <Field
+              label="Name (Español)"
+              value={s.nameEs ?? ""}
+              onChange={(v) => patch(i, { nameEs: v })}
+            />
+          </div>
+          <div className="mt-3">
+            <Field
               label="Time"
-              hint="Put each time on its own line for multiple (e.g. meal times)."
+              hint="Put each time on its own line for multiple (e.g. meal times). Shown once (language-neutral)."
               value={s.time ?? ""}
               onChange={(v) => patch(i, { time: v })}
               textarea
@@ -81,6 +88,13 @@ function ServiceListEditor({
               label="Short description"
               value={s.description ?? ""}
               onChange={(v) => patch(i, { description: v })}
+            />
+          </div>
+          <div className="mt-3">
+            <Field
+              label="Short description (Español)"
+              value={s.descriptionEs ?? ""}
+              onChange={(v) => patch(i, { descriptionEs: v })}
             />
           </div>
           <button
@@ -179,7 +193,7 @@ export default function InfoContentEditor() {
   return (
     <div className="space-y-6">
       <p className="max-w-3xl text-lg">
-        Edit the text shown on the public Digital Schedule screens. Changes save
+        Edit the text shown on the public Digital Bulletin screens. Changes save
         to the display right away.
       </p>
       <p className="max-w-3xl border-l-4 border-teal bg-teal/10 py-2 pl-4 text-base">
@@ -198,6 +212,11 @@ export default function InfoContentEditor() {
           label="Services page: title"
           value={content.services.title}
           onChange={(v) => setServices({ title: v })}
+        />
+        <Field
+          label="Services page: title (Español)"
+          value={content.services.titleEs ?? ""}
+          onChange={(v) => setServices({ titleEs: v })}
         />
         <div>
           <p className={labelClass}>Services page: service list</p>
@@ -223,6 +242,11 @@ export default function InfoContentEditor() {
           onChange={(v) => setArrivals({ headline: v })}
         />
         <Field
+          label="New arrivals page: headline (Español)"
+          value={na.headlineEs ?? ""}
+          onChange={(v) => setArrivals({ headlineEs: v })}
+        />
+        <Field
           label="New arrivals page: message"
           value={na.intro}
           onChange={(v) => setArrivals({ intro: v })}
@@ -230,9 +254,21 @@ export default function InfoContentEditor() {
           rows={3}
         />
         <Field
+          label="New arrivals page: message (Español)"
+          value={na.introEs ?? ""}
+          onChange={(v) => setArrivals({ introEs: v })}
+          textarea
+          rows={3}
+        />
+        <Field
           label="“Where to start” heading"
           value={na.stepsLabel}
           onChange={(v) => setArrivals({ stepsLabel: v })}
+        />
+        <Field
+          label="“Where to start” heading (Español)"
+          value={na.stepsLabelEs ?? ""}
+          onChange={(v) => setArrivals({ stepsLabelEs: v })}
         />
         <div>
           <p className={labelClass}>Steps</p>
@@ -253,9 +289,23 @@ export default function InfoContentEditor() {
                   />
                   <div className="mt-3">
                     <Field
+                      label={`Step ${i + 1}: title (Español)`}
+                      value={step.titleEs ?? ""}
+                      onChange={(v) => patch({ titleEs: v })}
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <Field
                       label={`Step ${i + 1}: detail`}
                       value={step.detail}
                       onChange={(v) => patch({ detail: v })}
+                    />
+                  </div>
+                  <div className="mt-3">
+                    <Field
+                      label={`Step ${i + 1}: detail (Español)`}
+                      value={step.detailEs ?? ""}
+                      onChange={(v) => patch({ detailEs: v })}
                     />
                   </div>
                   <button
@@ -288,13 +338,22 @@ export default function InfoContentEditor() {
           value={na.availableLabel}
           onChange={(v) => setArrivals({ availableLabel: v })}
         />
+        <Field
+          label="“Available now” heading (Español)"
+          value={na.availableLabelEs ?? ""}
+          onChange={(v) => setArrivals({ availableLabelEs: v })}
+        />
         <div>
-          <p className={labelClass}>“Available now” items</p>
+          <p className={labelClass}>“Available now” items (English + Español)</p>
           <div className="mt-2 space-y-2">
             {na.availableNow.map((item, i) => (
-              <div key={i} className="flex gap-2">
+              <div
+                key={i}
+                className="flex flex-col gap-2 border-2 border-placeholder p-2 md:flex-row md:items-center"
+              >
                 <input
                   className={inputClass}
+                  placeholder="English"
                   value={item}
                   onChange={(e) =>
                     setArrivals({
@@ -304,12 +363,26 @@ export default function InfoContentEditor() {
                     })
                   }
                 />
+                <input
+                  className={inputClass}
+                  placeholder="Español"
+                  value={(na.availableNowEs ?? [])[i] ?? ""}
+                  onChange={(e) => {
+                    const next = [...(na.availableNowEs ?? [])];
+                    while (next.length < na.availableNow.length) next.push("");
+                    next[i] = e.target.value;
+                    setArrivals({ availableNowEs: next });
+                  }}
+                />
                 <button
                   type="button"
                   className={smallBtn}
                   onClick={() =>
                     setArrivals({
                       availableNow: na.availableNow.filter((_, idx) => idx !== i),
+                      availableNowEs: (na.availableNowEs ?? []).filter(
+                        (_, idx) => idx !== i,
+                      ),
                     })
                   }
                 >
@@ -321,7 +394,10 @@ export default function InfoContentEditor() {
               type="button"
               className={smallBtn}
               onClick={() =>
-                setArrivals({ availableNow: [...na.availableNow, ""] })
+                setArrivals({
+                  availableNow: [...na.availableNow, ""],
+                  availableNowEs: [...(na.availableNowEs ?? []), ""],
+                })
               }
             >
               + Add item
@@ -343,9 +419,21 @@ export default function InfoContentEditor() {
           onChange={(v) => setDemographic({ heading: v })}
         />
         <Field
+          label="Featured group page: title (Español)"
+          value={content.demographic.headingEs ?? ""}
+          onChange={(v) => setDemographic({ headingEs: v })}
+        />
+        <Field
           label="Featured group page: message"
           value={content.demographic.intro}
           onChange={(v) => setDemographic({ intro: v })}
+          textarea
+          rows={3}
+        />
+        <Field
+          label="Featured group page: message (Español)"
+          value={content.demographic.introEs ?? ""}
+          onChange={(v) => setDemographic({ introEs: v })}
           textarea
           rows={3}
         />

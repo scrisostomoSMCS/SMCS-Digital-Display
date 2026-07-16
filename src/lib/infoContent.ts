@@ -33,11 +33,19 @@ import {
   display looks them up by service name via serviceIconFor().
 */
 
+/*
+  Bilingual note: text fields have optional Spanish counterparts (…Es). The
+  Digital Bulletin shows English + Spanish together. `time` (numbers) and
+  `location` (place names) are language-neutral, so they're shown once. Spanish
+  fields are optional, so existing saved content and the defaults keep working.
+*/
 export type InfoService = {
   name: string;
-  time?: string; // may be multi-line
+  nameEs?: string;
+  time?: string; // may be multi-line (language-neutral, shown once)
   description?: string;
-  location?: string;
+  descriptionEs?: string;
+  location?: string; // language-neutral (place name), shown once
   icon?: string; // icon key (see SERVICE_ICONS); "" / undefined = no icon
 };
 
@@ -80,21 +88,33 @@ const DEFAULT_ICON_KEY: Record<string, string> = {
   "Program Referrals": "people",
 };
 
-export type InfoStep = { title: string; detail: string };
+export type InfoStep = {
+  title: string;
+  titleEs?: string;
+  detail: string;
+  detailEs?: string;
+};
 
 export type InfoContent = {
-  services: { title: string; items: InfoService[] };
+  services: { title: string; titleEs?: string; items: InfoService[] };
   newArrivals: {
     headline: string;
+    headlineEs?: string;
     intro: string;
+    introEs?: string;
     stepsLabel: string;
+    stepsLabelEs?: string;
     steps: InfoStep[];
     availableLabel: string;
+    availableLabelEs?: string;
     availableNow: string[];
+    availableNowEs?: string[];
   };
   demographic: {
     heading: string;
+    headingEs?: string;
     intro: string;
+    introEs?: string;
     services: InfoService[];
   };
 };
@@ -110,23 +130,111 @@ function toInfoService(s: Service): InfoService {
   };
 }
 
+/*
+  Initial Spanish for the default built-in content, so the Digital Bulletin is
+  bilingual out of the box. Staff edit any of it (English or Spanish) on the
+  manage page. DRAFT translation, should be reviewed by a fluent speaker.
+*/
+const SERVICE_ES: Record<string, { nameEs: string; descriptionEs?: string }> = {
+  "Hot Meals": { nameEs: "Comidas Calientes" },
+  "Overnight Shelter": {
+    nameEs: "Refugio Nocturno",
+    descriptionEs: "Una cama segura y cálida para pasar la noche.",
+  },
+  "Showers & Hygiene": {
+    nameEs: "Duchas e Higiene",
+    descriptionEs: "Duchas, artículos de aseo y toallas limpias.",
+  },
+  "Medical Clinic": {
+    nameEs: "Clínica Médica",
+    descriptionEs: "Atención sin cita de enfermeras en el lugar.",
+  },
+  "Caseworker Support": {
+    nameEs: "Apoyo de Trabajador Social",
+    descriptionEs: "Ayuda con vivienda, beneficios y próximos pasos.",
+  },
+  "Clothing Closet": {
+    nameEs: "Ropero Comunitario",
+    descriptionEs: "Ropa, zapatos y artículos de temporada gratis.",
+  },
+  "Prenatal Check-ups": {
+    nameEs: "Chequeos Prenatales",
+    descriptionEs: "Atención médica en el lugar durante todo el embarazo.",
+  },
+  "Nutritious Meals": {
+    nameEs: "Comidas Nutritivas",
+    descriptionEs: "Acceso prioritario a comidas y refrigerios saludables.",
+  },
+  "Maternity & Baby Supplies": {
+    nameEs: "Artículos de Maternidad y Bebé",
+    descriptionEs: "Ropa de maternidad, pañales y artículos para recién nacidos.",
+  },
+  "Private Rest Area": {
+    nameEs: "Área de Descanso Privada",
+    descriptionEs: "Un espacio tranquilo y cómodo para descansar.",
+  },
+  "Program Referrals": {
+    nameEs: "Referencias a Programas",
+    descriptionEs: "Conexiones con programas prenatales y de crianza.",
+  },
+};
+
+const withEs = (s: InfoService): InfoService => ({ ...s, ...SERVICE_ES[s.name] });
+
+const STEP_ES = [
+  {
+    titleEs: "Regístrate en la Recepción",
+    detailEs:
+      "Justo dentro del Edificio Principal. Alguien te dará la bienvenida y te ayudará de inmediato.",
+  },
+  {
+    titleEs: "Toma una comida caliente",
+    detailEs: "El comedor está abierto ahora, sin costo y sin preguntas.",
+  },
+  {
+    titleEs: "Habla con un trabajador social",
+    detailEs:
+      "Ayuda gratuita y privada con refugio, beneficios y tus próximos pasos.",
+  },
+];
+
 export const defaultInfoContent: InfoContent = {
   services: {
     title: servicesPage.title,
-    items: weeklyServices.map(toInfoService),
+    titleEs: "Servicios de Esta Semana",
+    items: weeklyServices.map(toInfoService).map(withEs),
   },
   newArrivals: {
     headline: newArrivals.headline,
+    headlineEs: "Bienvenido.",
     intro: newArrivals.intro,
+    introEs:
+      "Si acabas de llegar, estás en el lugar correcto. Aquí te explicamos cómo empezar y lo que tienes disponible ahora mismo.",
     stepsLabel: newArrivals.stepsLabel,
-    steps: newArrivals.steps.map((s) => ({ title: s.title, detail: s.detail })),
+    stepsLabelEs: "Por dónde empezar",
+    steps: newArrivals.steps.map((s, i) => ({
+      title: s.title,
+      titleEs: STEP_ES[i]?.titleEs,
+      detail: s.detail,
+      detailEs: STEP_ES[i]?.detailEs,
+    })),
     availableLabel: newArrivals.availableLabel,
+    availableLabelEs: "Disponible ahora",
     availableNow: [...newArrivals.availableNow],
+    availableNowEs: [
+      "Baños, duchas y ropa limpia",
+      "Un lugar seguro y cálido para descansar",
+      "Agua y una comida caliente",
+      "Alguien con quien hablar",
+    ],
   },
   demographic: {
     heading: featuredDemographic.heading,
+    headingEs: "Apoyo para Futuras Madres",
     intro: featuredDemographic.intro,
-    services: featuredDemographic.services.map(toInfoService),
+    introEs:
+      "Si estás embarazada, tenemos cuidado reservado para ti y tu bebé. Eres bienvenida aquí.",
+    services: featuredDemographic.services.map(toInfoService).map(withEs),
   },
 };
 

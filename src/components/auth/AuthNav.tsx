@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { supabase } from "@/lib/supabase";
 
 /*
@@ -35,6 +36,7 @@ export default function AuthNav({
   onNavigate,
 }: AuthNavProps) {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -85,7 +87,7 @@ export default function AuthNav({
           onClick={onNavigate}
           className={variant === "mobile" ? mobileAuthBtnClass : authBtnClass}
         >
-          Log In
+          {t("logIn")}
         </Link>
       </li>
     );
@@ -99,7 +101,7 @@ export default function AuthNav({
           onClick={onNavigate}
           className={variant === "mobile" ? mobileLinkClass : linkClass}
         >
-          My Schedule
+          {t("mySchedule")}
         </Link>
       </li>
       {isStaff && (
@@ -109,7 +111,7 @@ export default function AuthNav({
             onClick={onNavigate}
             className={variant === "mobile" ? mobileLinkClass : linkClass}
           >
-            Manage
+            {t("manage")}
           </Link>
         </li>
       )}
@@ -120,7 +122,7 @@ export default function AuthNav({
             onClick={onNavigate}
             className={variant === "mobile" ? mobileLinkClass : linkClass}
           >
-            Admin Panel
+            {t("adminPanel")}
           </Link>
         </li>
       )}
@@ -130,7 +132,7 @@ export default function AuthNav({
           onClick={handleLogout}
           className={variant === "mobile" ? mobileAuthBtnClass : authBtnClass}
         >
-          Log out
+          {t("logOut")}
         </button>
       </li>
     </>

@@ -14,6 +14,8 @@ import {
   Page 1, Services overview. Content-driven (edited on the manage page). A
   service's `time` may hold several lines (e.g. meal times), split on newlines.
   Icons are looked up by name. Fixed 3×2 grid so all cards fit on screen.
+  Bilingual: Spanish name/description sit beneath their English counterparts,
+  smaller and lighter, and only when a Spanish value exists.
 */
 export default function ServicesOverviewPage({
   content,
@@ -32,6 +34,11 @@ export default function ServicesOverviewPage({
         <h1 className="font-display mt-2 text-5xl leading-none md:text-6xl">
           {content.title}
         </h1>
+        {content.titleEs && (
+          <p className="font-display mt-1 text-3xl leading-tight text-ink/70 md:text-4xl">
+            {content.titleEs}
+          </p>
+        )}
       </motion.header>
 
       <motion.div
@@ -55,9 +62,20 @@ export default function ServicesOverviewPage({
             >
               <div className="flex items-center gap-3">
                 {Icon && <Icon size={34} strokeWidth={2} aria-hidden="true" />}
-                <h2 className="font-body text-2xl font-semibold leading-tight md:text-3xl">
-                  {s.name}
-                </h2>
+                <div>
+                  <h2 className="font-body text-2xl font-semibold leading-tight md:text-3xl">
+                    {s.name}
+                  </h2>
+                  {s.nameEs && (
+                    <p
+                      className={`font-body text-lg font-semibold leading-tight md:text-xl ${
+                        blue ? "text-paper/80" : "text-ink/70"
+                      }`}
+                    >
+                      {s.nameEs}
+                    </p>
+                  )}
+                </div>
               </div>
               {s.time && (
                 <div className="font-body mt-2 space-y-0.5 text-xl font-semibold md:text-2xl">
@@ -73,6 +91,15 @@ export default function ServicesOverviewPage({
                   }`}
                 >
                   {s.description}
+                </p>
+              )}
+              {s.descriptionEs && (
+                <p
+                  className={`font-body mt-0.5 text-sm md:text-base ${
+                    blue ? "text-paper/70" : "text-ink/70"
+                  }`}
+                >
+                  {s.descriptionEs}
                 </p>
               )}
               {s.location && (

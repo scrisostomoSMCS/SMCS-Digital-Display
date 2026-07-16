@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { SITE_NAV_LINKS } from "@/lib/siteNavigation";
 import StickySubNav from "@/components/StickySubNav";
 
@@ -16,6 +17,7 @@ export default function NavBar() {
   const pathname = usePathname();
   const overlay = pathname === "/";
   const mainNavRef = useRef<HTMLElement>(null);
+  const t = useTranslations("nav");
 
   return (
     <>
@@ -35,7 +37,7 @@ export default function NavBar() {
                 href={link.href}
                 className="inline-block px-4 py-2 text-lg font-semibold text-paper hover:underline"
               >
-                {link.label}
+                {t(link.key)}
               </Link>
             </li>
           ))}

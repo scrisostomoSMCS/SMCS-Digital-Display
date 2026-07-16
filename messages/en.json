@@ -1,0 +1,82 @@
+{
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "spanish": "Español"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "liveCalendar": "Live Calendar",
+    "bulletin": "Digital Bulletin"
+  },
+  "header": {
+    "logo": "SMCS LOGO",
+    "homeAria": "SMCS home",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "auth": {
+    "logIn": "Log In",
+    "logOut": "Log out",
+    "mySchedule": "My Schedule",
+    "manage": "Manage",
+    "adminPanel": "Admin Panel"
+  },
+  "footer": {
+    "rights": "© {year} SMCS. All rights reserved.",
+    "notice": "This is a public information site."
+  },
+  "home": {
+    "heroLine1": "Make A",
+    "heroLine2": "Difference.",
+    "heroSubtitle": "St. Mary's Community Services, connecting our community to the care and services they need.",
+    "liveCalendar": "Live Calendar",
+    "learnMore": "Learn More",
+    "about": {
+      "title": "About Us",
+      "imageOverlay": "Serving Our Community",
+      "p1": "Individuals and families who are living in poverty or experiencing homelessness need provisions to get through today, services that open doors for a stable tomorrow, and caring support that gives them hope for a brighter future.",
+      "p2": "For nearly seven decades the Stockton community has supported St. Mary's Community Services through financial gifts, partnerships, volunteer hours and donations, sustaining our efforts to help individuals in vulnerable circumstances meet their daily challenges and rebuild their lives."
+    },
+    "services": {
+      "title": "Our Services",
+      "imageOverlay": "What We Offer",
+      "intro": "There are as many reasons why people experience homelessness as there are people who are homeless. Our caring staff provides individualized attention to guests to not only ensure that they have daily provisions, but to also support and connect them with services that can lead to healthier lives and permanent housing.",
+      "essential": "Essential Services",
+      "social": "Social Services",
+      "health": "Health Services",
+      "fullListBefore": "Learn more about our full list of services",
+      "fullListLink": "here"
+    }
+  },
+  "login": {
+    "title": "Sign in",
+    "intro": "Sign in to view your personal calendar, the services and appointments you're signed up for.",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "staffPrompt": "SMCS staff member?",
+    "createAccount": "Create an account"
+  },
+  "signup": {
+    "title": "Staff sign up",
+    "intro": "Create an SMCS staff account using your <strong>@{domain}</strong> email. You'll confirm it by email before signing in.",
+    "emailLabel": "SMCS email",
+    "password": "Password",
+    "createAccount": "Create account",
+    "creating": "Creating account…",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "errorDomain": "Sign up is only available for SMCS staff email addresses (@{domain}).",
+    "errorPassword": "Please use a password of at least 6 characters.",
+    "success": "Account created. We've sent a confirmation link to <strong>{email}</strong>. Click it to activate your account, then sign in.",
+    "goToSignIn": "Go to sign in"
+  },
+  "schedule": {
+    "title": "My Schedule",
+    "intro": "The services and appointments you're signed up for this week."
+  }
+}

@@ -4,7 +4,9 @@ import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Mail, Menu, Phone, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import AuthNav from "@/components/auth/AuthNav";
+import LanguageChooser from "@/components/LanguageChooser";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/siteConfig";
 import { SITE_NAV_LINKS } from "@/lib/siteNavigation";
 
@@ -19,6 +21,8 @@ export default function MobileHeader() {
   const panelId = useId();
   const titleId = useId();
   const reduceMotion = useReducedMotion();
+  const tNav = useTranslations("nav");
+  const tHeader = useTranslations("header");
   const telHref = `tel:${CONTACT_PHONE.replace(/[^0-9+]/g, "")}`;
 
   function openMenu() {
@@ -96,7 +100,7 @@ export default function MobileHeader() {
           ref={triggerRef}
           type="button"
           onClick={openMenu}
-          aria-label="Open navigation menu"
+          aria-label={tHeader("openMenu")}
           aria-expanded={open}
           aria-controls={panelId}
           className="flex h-11 w-11 items-center justify-center text-blue hover:bg-blue/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
@@ -105,7 +109,7 @@ export default function MobileHeader() {
         </button>
         <Link
           href="/"
-          aria-label="SMCS home"
+          aria-label={tHeader("homeAria")}
           className="absolute left-1/2 -translate-x-1/2 text-xl font-semibold text-blue"
         >
           SMCS
@@ -117,7 +121,7 @@ export default function MobileHeader() {
           <>
             <motion.button
               type="button"
-              aria-label="Close navigation menu"
+              aria-label={tHeader("closeMenu")}
               className="fixed inset-0 z-50 bg-ink/60"
               onClick={() => closeMenu()}
               initial={{ opacity: 0 }}
@@ -144,7 +148,7 @@ export default function MobileHeader() {
                 <button
                   type="button"
                   onClick={() => closeMenu()}
-                  aria-label="Close navigation menu"
+                  aria-label={tHeader("closeMenu")}
                   className="flex h-11 w-11 items-center justify-center text-blue hover:bg-blue/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
                 >
                   <X size={28} strokeWidth={2.25} aria-hidden="true" />
@@ -160,7 +164,7 @@ export default function MobileHeader() {
                         onClick={() => closeMenu(false)}
                         className="flex min-h-12 items-center border-l-4 border-transparent px-5 py-3 text-base font-semibold text-ink hover:border-teal hover:bg-blue/5 hover:text-blue"
                       >
-                        {link.label}
+                        {tNav(link.key)}
                       </Link>
                     </li>
                   ))}
@@ -171,6 +175,10 @@ export default function MobileHeader() {
                     onNavigate={() => closeMenu(false)}
                   />
                 </ul>
+                {/* Language chooser (dark text on the white menu) */}
+                <div className="mt-3 border-t border-placeholder px-5 pt-4 text-ink">
+                  <LanguageChooser />
+                </div>
               </nav>
             </motion.aside>
           </>

@@ -2,7 +2,7 @@ import { Playfair_Display, Poppins } from "next/font/google";
 import InformationDisplay from "@/components/information/InformationDisplay";
 
 export const metadata = {
-  title: "Digital Schedule | SMCS",
+  title: "Digital Bulletin | SMCS",
 };
 
 // Titles: Playfair Display SemiBold (600). Body/labels/service text: Poppins
