@@ -89,6 +89,24 @@ select:disabled,
   font-size: 0.95rem;
 }
 
+@media (max-width: 1023px) {
+  .manage-calendar .fc .fc-header-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .manage-calendar .fc .fc-toolbar-chunk:nth-child(2) {
+    order: -1;
+    width: 100%;
+    text-align: center;
+  }
+  .manage-calendar .fc .fc-toolbar-title {
+    font-size: 1.15rem;
+  }
+  .manage-calendar .fc .fc-button {
+    padding: 0.35rem 0.55rem;
+  }
+}
+
 /* ===========================================================================
    Information wall display (auto-rotating), fonts.
    Motion is handled by Framer Motion in the components; only type is set here.
@@ -206,6 +224,13 @@ select:disabled,
 */
 .tv-calendar .fc .fc-scroller {
   overflow: hidden !important;
+}
+
+/* The compact agenda must scroll independently on phones and tablets. */
+@media (max-width: 1023px) {
+  .tv-calendar .fc-list .fc-scroller {
+    overflow-y: auto !important;
+  }
 }
 
 /* Agenda (phone) list rows. */
