@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
   fetchInfoContent,
   saveInfoContent,
   SERVICE_ICONS,
+  MAX_SERVICES_PER_PAGE,
+  newServicePage,
   type InfoContent,
   type InfoService,
+  type InfoServicePage,
   type InfoStep,
 } from "@/lib/infoContent";
 import {
@@ -29,16 +33,59 @@ import {
 function ServiceListEditor({
   services,
   onChange,
+  maxItems,
+  allowReorder = false,
+  longDescriptions = false,
 }: {
   services: InfoService[];
   onChange: (next: InfoService[]) => void;
+  maxItems?: number;
+  allowReorder?: boolean;
+  longDescriptions?: boolean;
 }) {
   const patch = (i: number, p: Partial<InfoService>) =>
     onChange(services.map((s, idx) => (idx === i ? { ...s, ...p } : s)));
+  const atLimit = maxItems !== undefined && services.length >= maxItems;
+
+  function move(i: number, direction: -1 | 1) {
+    const target = i + direction;
+    if (target < 0 || target >= services.length) return;
+    const next = [...services];
+    [next[i], next[target]] = [next[target], next[i]];
+    onChange(next);
+  }
+
   return (
     <div className="space-y-4">
       {services.map((s, i) => (
         <div key={i} className="border-2 border-placeholder p-3 lg:p-4">
+          {allowReorder && (
+            <div className="mb-4 flex items-center justify-between gap-3 border-b border-placeholder pb-3">
+              <p className="font-semibold text-blue">Service {i + 1}</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  aria-label={`Move service ${i + 1} up`}
+                  title="Move up"
+                  className="flex h-11 w-11 items-center justify-center border-2 border-blue text-blue hover:bg-blue hover:text-paper disabled:opacity-35 lg:h-9 lg:w-9"
+                >
+                  <ArrowUp size={18} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === services.length - 1}
+                  aria-label={`Move service ${i + 1} down`}
+                  title="Move down"
+                  className="flex h-11 w-11 items-center justify-center border-2 border-blue text-blue hover:bg-blue hover:text-paper disabled:opacity-35 lg:h-9 lg:w-9"
+                >
+                  <ArrowDown size={18} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          )}
           <div className="grid gap-3 lg:grid-cols-3">
             <Field
               label="Name"
@@ -88,6 +135,8 @@ function ServiceListEditor({
               label="Short description"
               value={s.description ?? ""}
               onChange={(v) => patch(i, { description: v })}
+              textarea={longDescriptions}
+              rows={4}
             />
           </div>
           <div className="mt-3">
@@ -95,26 +144,43 @@ function ServiceListEditor({
               label="Short description (Español)"
               value={s.descriptionEs ?? ""}
               onChange={(v) => patch(i, { descriptionEs: v })}
+              textarea={longDescriptions}
+              rows={4}
             />
           </div>
-          <button
-            type="button"
-            className={`mt-3 ${smallBtn}`}
-            onClick={() => onChange(services.filter((_, idx) => idx !== i))}
-          >
-            Remove service
-          </button>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`${smallBtn} flex items-center gap-2`}
+              onClick={() => onChange(services.filter((_, idx) => idx !== i))}
+            >
+              {allowReorder && <Trash2 size={16} aria-hidden="true" />}
+              Remove service
+            </button>
+          </div>
         </div>
       ))}
-      <button
-        type="button"
-        className={smallBtn}
-        onClick={() =>
-          onChange([...services, { name: "", time: "", description: "", location: "" }])
-        }
-      >
-        + Add service
-      </button>
+      <div>
+        <button
+          type="button"
+          className={`${smallBtn} flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-45`}
+          disabled={atLimit}
+          onClick={() =>
+            onChange([
+              ...services,
+              { name: "", time: "", description: "", location: "" },
+            ])
+          }
+        >
+          {maxItems !== undefined && <Plus size={16} aria-hidden="true" />}
+          Add service
+        </button>
+        {atLimit && (
+          <p className="mt-2 text-sm font-semibold text-ink/60">
+            Maximum of {maxItems} services reached for this page.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -138,12 +204,16 @@ export default function InfoContentEditor() {
     fetchInfoContent().then(setContent);
   }, []);
 
-  // Open + scroll to a page when the sidebar links to it via the hash.
+  // Open + scroll to a panel when the sidebar links to it via the hash. Each
+  // services page is its own panel ("services-page-N").
   useEffect(() => {
-    const ids = ["services", "new-arrivals", "demographic"];
     const onHash = () => {
       const id = location.hash.slice(1);
-      if (!ids.includes(id)) return;
+      const isPanel =
+        id === "new-arrivals" ||
+        id === "demographic" ||
+        id.startsWith("services-page-");
+      if (!isPanel) return;
       setOpen((p) => new Set(p).add(id));
       setTimeout(
         () =>
@@ -190,6 +260,26 @@ export default function InfoContentEditor() {
 
   const na = content.newArrivals;
 
+  // Repeatable "This Week's Services" pages (each up to MAX_SERVICES_PER_PAGE).
+  // Every page carries its own title/titleEs plus its list of services.
+  const servicesPages = content.services.pages;
+  const patchServicesPage = (idx: number, partial: Partial<InfoServicePage>) =>
+    setServices({
+      pages: servicesPages.map((p, i) => (i === idx ? { ...p, ...partial } : p)),
+    });
+  const addServicesPage = () =>
+    setServices({ pages: [...servicesPages, newServicePage()] });
+  const removeServicesPage = (idx: number) => {
+    if (servicesPages.length <= 1) return;
+    if (
+      !window.confirm(
+        `Remove "This Week's Services — Page ${idx + 1}"? Its services will be deleted.`,
+      )
+    )
+      return;
+    setServices({ pages: servicesPages.filter((_, i) => i !== idx) });
+  };
+
   return (
     <div className="space-y-6">
       <p className="max-w-3xl text-lg">
@@ -201,33 +291,71 @@ export default function InfoContentEditor() {
         updates itself automatically from the calendar.
       </p>
 
-      {/* --- Services overview page --- */}
-      <CollapsiblePanel
-        id="services"
-        title="Services page"
-        open={open.has("services")}
-        onToggle={() => toggle("services")}
-      >
-        <Field
-          label="Services page: title"
-          value={content.services.title}
-          onChange={(v) => setServices({ title: v })}
-        />
-        <Field
-          label="Services page: title (Español)"
-          value={content.services.titleEs ?? ""}
-          onChange={(v) => setServices({ titleEs: v })}
-        />
-        <div>
-          <p className={labelClass}>Services page: service list</p>
-          <div className="mt-2">
-            <ServiceListEditor
-              services={content.services.items}
-              onChange={(items) => setServices({ items })}
+      {/* --- Services pages (one panel per numbered page) --- */}
+      {/* Each services page is its own collapsible panel, matching the sidebar
+          links ("This Week's Services — Page N"). The heading shown on that
+          page is editable per page, right inside the panel. */}
+      {servicesPages.map((page, idx) => (
+        <CollapsiblePanel
+          key={idx}
+          id={`services-page-${idx + 1}`}
+          title={`This Week's Services — Page ${idx + 1}`}
+          open={open.has(`services-page-${idx + 1}`)}
+          onToggle={() => toggle(`services-page-${idx + 1}`)}
+        >
+          <div className="mb-4 border-b-2 border-blue/20 pb-4">
+            <p className="mb-3 text-sm text-ink/60">
+              The heading shown at the top of this services page.
+            </p>
+            <Field
+              label="Page title"
+              value={page.title}
+              onChange={(v) => patchServicesPage(idx, { title: v })}
             />
+            <div className="mt-3">
+              <Field
+                label="Page title (Español)"
+                value={page.titleEs ?? ""}
+                onChange={(v) => patchServicesPage(idx, { titleEs: v })}
+              />
+            </div>
           </div>
-        </div>
-      </CollapsiblePanel>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-sm font-semibold text-ink/60">
+              {page.services.length} of {MAX_SERVICES_PER_PAGE} services
+            </span>
+            {servicesPages.length > 1 && (
+              <button
+                type="button"
+                className={`${smallBtn} flex items-center gap-2`}
+                onClick={() => removeServicesPage(idx)}
+              >
+                <Trash2 size={16} aria-hidden="true" />
+                Remove this page
+              </button>
+            )}
+          </div>
+          <ServiceListEditor
+            services={page.services}
+            onChange={(next) => patchServicesPage(idx, { services: next })}
+            maxItems={MAX_SERVICES_PER_PAGE}
+            allowReorder
+            longDescriptions
+          />
+        </CollapsiblePanel>
+      ))}
+
+      {/* Green so it clearly stands out from the other (neutral) buttons. */}
+      <div>
+        <button
+          type="button"
+          onClick={addServicesPage}
+          className="flex items-center gap-2 border-2 border-green-600 bg-green-600 px-5 py-2.5 text-base font-semibold text-paper hover:bg-paper hover:text-green-600"
+        >
+          <Plus size={18} aria-hidden="true" />
+          Add service page
+        </button>
+      </div>
 
       {/* --- New arrivals page --- */}
       <CollapsiblePanel

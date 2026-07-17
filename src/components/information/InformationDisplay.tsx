@@ -46,8 +46,8 @@ const toneForBg = (bg: "blue" | "teal" | "paper"): Tone =>
 
 /*
   Rotation controller: auto-advances on a continuous loop, each page shown for
-  PAGE_DURATION. Order: the built-in pages (services, new arrivals, demographic,
-  events today) minus any an employee hid, then employee-created custom slides.
+  PAGE_DURATION. Order: the two services pages, new arrivals, demographic,
+  events today (minus hidden built-ins), then employee-created custom slides.
   Content, slides, and hidden-settings load from Supabase and stay live.
 */
 export default function InformationDisplay() {
@@ -83,9 +83,28 @@ export default function InformationDisplay() {
     };
   }, []);
 
+  // "This Week's Services" is a repeatable, numbered page type: one bulletin
+  // page per non-empty services page, shown consecutively (Page 1, 2, …).
+  const servicesPages = content.services.pages.filter(
+    (p) => p.services.length > 0,
+  );
+  const servicesDefs = servicesPages.map((page, i) => ({
+    key: "services" as BuiltinKey,
+    node: (
+      <ServicesOverviewPage
+        title={page.title}
+        titleEs={page.titleEs}
+        services={page.services}
+        pageNumber={i + 1}
+        totalPages={servicesPages.length}
+      />
+    ),
+    tone: "blue" as Tone,
+  }));
+
   // Built-in pages, each tagged with a key (for hiding) and a dot tone.
   const builtinDefs: { key: BuiltinKey; node: React.ReactNode; tone: Tone }[] = [
-    { key: "services", node: <ServicesOverviewPage content={content.services} />, tone: "blue" },
+    ...servicesDefs,
     { key: "new-arrivals", node: <NewArrivalsPage content={content.newArrivals} />, tone: "white" },
     { key: "demographic", node: <DemographicPage content={content.demographic} />, tone: "ink" },
     { key: "events-today", node: <EventsTodayPage />, tone: "blue" },
