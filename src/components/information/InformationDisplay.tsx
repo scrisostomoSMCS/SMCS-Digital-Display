@@ -22,26 +22,20 @@ const DOT_CLASS = {
   blue: {
     border: "border-blue",
     on: "bg-blue",
-    off: "bg-paper",
-    desktopBorder: "lg:border-blue",
-    desktopOn: "lg:bg-blue",
-    desktopOff: "lg:bg-paper lg:hover:bg-blue/30",
+    off: "bg-paper hover:bg-blue/30",
+    ring: "ring-paper",
   },
   white: {
     border: "border-paper",
     on: "bg-paper",
-    off: "bg-transparent",
-    desktopBorder: "lg:border-paper",
-    desktopOn: "lg:bg-paper",
-    desktopOff: "lg:bg-transparent lg:hover:bg-paper/30",
+    off: "hover:bg-paper/30",
+    ring: "ring-ink/50",
   },
   ink: {
     border: "border-ink",
     on: "bg-ink",
-    off: "bg-transparent",
-    desktopBorder: "lg:border-ink",
-    desktopOn: "lg:bg-ink",
-    desktopOff: "lg:bg-transparent lg:hover:bg-ink/30",
+    off: "hover:bg-ink/30",
+    ring: "ring-paper",
   },
 } as const;
 type Tone = keyof typeof DOT_CLASS;
@@ -158,32 +152,24 @@ export default function InformationDisplay() {
         ← Back to home
       </Link>
 
-      {/* All dots use the CURRENT page's tone so they stay visible. */}
-      <div className="absolute inset-x-0 bottom-1 z-10 overflow-x-auto lg:inset-x-auto lg:bottom-8 lg:left-1/2 lg:-translate-x-1/2 lg:overflow-visible">
-        <div className="mx-auto flex w-max gap-0 lg:gap-5">
-          {pages.map((_, i) => {
-            const c = DOT_CLASS[dotTones[current] ?? "blue"];
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setActive(i)}
-                aria-label={`Show page ${i + 1}`}
-                aria-current={i === current}
-                className={`flex h-11 w-11 shrink-0 items-center justify-center transition-colors lg:h-5 lg:w-5 lg:rounded-full lg:border-2 ${c.desktopBorder} ${
-                  i === current ? c.desktopOn : c.desktopOff
-                }`}
-              >
-                <span
-                  aria-hidden="true"
-                  className={`h-3 w-3 rounded-full border-2 lg:hidden ${c.border} ${
-                    i === current ? c.on : c.off
-                  }`}
-                />
-              </button>
-            );
-          })}
-        </div>
+      {/* Each compact dot gets its own contrast ring so it remains visible over
+          any card color without adding a panel over the slide content. */}
+      <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-5">
+        {pages.map((_, i) => {
+          const c = DOT_CLASS[dotTones[current] ?? "blue"];
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setActive(i)}
+              aria-label={`Show page ${i + 1}`}
+              aria-current={i === current}
+              className={`h-5 w-5 rounded-full border-2 ring-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 ${c.border} ${c.ring} ${
+                i === current ? c.on : c.off
+              }`}
+            />
+          );
+        })}
       </div>
     </div>
   );
