@@ -31,7 +31,10 @@ export default function LoginForm() {
     });
 
     if (error) {
-      setError(error.message);
+      const invalidCredentials =
+        error.code === "invalid_credentials" ||
+        error.message === "Invalid login credentials";
+      setError(invalidCredentials ? t("invalidCredentials") : error.message);
       setSubmitting(false);
       return;
     }
