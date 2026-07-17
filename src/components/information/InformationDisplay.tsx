@@ -122,6 +122,18 @@ export default function InformationDisplay() {
     return <div className="h-full w-full bg-paper lg:h-screen lg:w-screen" />;
   }
 
+  // Mobile / tablet: no kiosk rotation. Render every page stacked so the whole
+  // bulletin is one long scrollable document with all content fully readable.
+  if (compact) {
+    return (
+      <div className="font-body bg-paper text-ink">
+        {pages.map((node, i) => (
+          <section key={i}>{node}</section>
+        ))}
+      </div>
+    );
+  }
+
   const current = active % pages.length;
 
   return (
