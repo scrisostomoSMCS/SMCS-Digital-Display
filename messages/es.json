@@ -59,6 +59,7 @@
     "password": "Contraseña",
     "signIn": "Iniciar sesión",
     "signingIn": "Iniciando sesión…",
+    "invalidCredentials": "El correo electrónico o la contraseña son incorrectos.",
     "staffPrompt": "¿Eres personal de SMCS?",
     "createAccount": "Crear una cuenta"
   },

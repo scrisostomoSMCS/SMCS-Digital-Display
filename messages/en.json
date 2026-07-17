@@ -58,6 +58,7 @@
     "password": "Password",
     "signIn": "Sign in",
     "signingIn": "Signing in…",
+    "invalidCredentials": "Invalid login credentials",
     "staffPrompt": "SMCS staff member?",
     "createAccount": "Create an account"
   },
