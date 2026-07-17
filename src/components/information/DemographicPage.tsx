@@ -57,7 +57,7 @@ export default function DemographicPage({
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto pb-2 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 lg:overflow-visible lg:pb-0"
+        className="relative z-10 mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:min-h-0 lg:flex-1 lg:grid-cols-3 lg:grid-rows-2"
       >
         {content.services.map((s, i) => {
           return (

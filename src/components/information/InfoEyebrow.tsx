@@ -13,10 +13,10 @@ const TONE: Record<Tone, { text: string; leaf: string }> = {
 export default function InfoEyebrow({ tone = "blue" }: { tone?: Tone }) {
   const t = TONE[tone];
   return (
-    <div className="flex items-center gap-3">
-      <RotatingLeaf size={30} className={t.leaf} />
+    <div className="flex items-center gap-2 sm:gap-3">
+      <RotatingLeaf size={30} className={`${t.leaf} shrink-0`} />
       <p
-        className={`font-body text-base font-semibold uppercase tracking-[0.35em] md:text-xl ${t.text}`}
+        className={`font-body min-w-0 break-words text-xs font-semibold uppercase tracking-[0.15em] sm:text-base sm:tracking-[0.3em] md:text-xl md:tracking-[0.35em] ${t.text}`}
       >
         St. Mary&rsquo;s Community Services
       </p>

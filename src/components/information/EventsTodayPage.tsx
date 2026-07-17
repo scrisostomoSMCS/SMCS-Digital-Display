@@ -77,7 +77,7 @@ export default function EventsTodayPage() {
       </motion.header>
 
       {loaded && events.length === 0 ? (
-        <div className="flex min-h-0 flex-1 flex-col items-start justify-center overflow-y-auto py-4 lg:overflow-visible lg:py-0">
+        <div className="flex flex-col items-start justify-center py-4 lg:min-h-0 lg:flex-1 lg:py-0">
           <p className="font-display text-2xl text-blue sm:text-3xl lg:text-5xl">
             No events scheduled today.
           </p>
@@ -98,7 +98,7 @@ export default function EventsTodayPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="show"
-          className="relative z-10 mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2 lg:mt-6 lg:gap-4 lg:overflow-hidden lg:pb-0"
+          className="relative z-10 mt-4 flex flex-col gap-3 lg:mt-6 lg:min-h-0 lg:flex-1 lg:gap-4 lg:overflow-hidden"
         >
           {events.map((e, i) => (
             <motion.li

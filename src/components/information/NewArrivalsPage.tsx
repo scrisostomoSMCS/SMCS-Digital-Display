@@ -60,7 +60,7 @@ export default function NewArrivalsPage({
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto pb-2 lg:grid-cols-5 lg:gap-8"
+        className="relative z-10 mt-4 grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-5 lg:gap-8"
       >
         <motion.section
           variants={riseItem}

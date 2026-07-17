@@ -29,11 +29,11 @@ const poppins = Poppins({
 */
 export default function InformationPage() {
   return (
-    <div
-      className={`${playfair.variable} ${poppins.variable} flex h-dvh flex-col lg:block lg:h-auto`}
-    >
+    <div className={`${playfair.variable} ${poppins.variable} lg:h-auto`}>
+      {/* Mobile: header on top, then the bulletin scrolls as one long page.
+          Desktop (lg): the header hides and the display fills the screen. */}
       <MobileHeader />
-      <div className="min-h-0 flex-1 lg:h-screen">
+      <div className="lg:h-screen">
         <InformationDisplay />
       </div>
     </div>

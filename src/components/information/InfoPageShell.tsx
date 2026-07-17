@@ -1,9 +1,15 @@
 import type { ReactNode } from "react";
 
 /*
-  Full-screen frame for a signage page. Each page picks a bold full-bleed
-  background so the three feel distinct as they rotate: white, blue, or teal.
-  Text color is set for contrast (white on blue, black on teal/white).
+  Frame for a signage page. Each page picks a bold full-bleed background so the
+  sections feel distinct: white, blue, or teal. Text color is set for contrast.
+
+  Responsive height:
+  - Desktop / wall display (lg+): fixed to the viewport (h-full, clipped) so the
+    rotating kiosk shows exactly one screen at a time.
+  - Mobile / tablet (<lg): at least one screen tall but free to grow, and it does
+    NOT clip, so the whole bulletin reads as one long scrollable page with every
+    card fully visible (see InformationDisplay's stacked mobile layout).
 */
 type Bg = "paper" | "blue" | "teal";
 
@@ -22,7 +28,7 @@ export default function InfoPageShell({
 }) {
   return (
     <div
-      className={`font-body relative flex h-full flex-col overflow-hidden px-4 pt-4 pb-12 sm:px-6 sm:pt-5 lg:px-16 lg:pt-8 lg:pb-16 ${BG[bg]}`}
+      className={`font-body relative flex min-h-dvh flex-col overflow-x-hidden px-4 py-8 sm:px-6 lg:h-full lg:min-h-0 lg:overflow-hidden lg:px-16 lg:py-8 ${BG[bg]}`}
     >
       {children}
     </div>
