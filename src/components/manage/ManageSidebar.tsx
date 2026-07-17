@@ -15,6 +15,7 @@ import {
   setHiddenBuiltins,
   type BuiltinKey,
 } from "@/lib/displaySettings";
+import { fetchInfoContent } from "@/lib/infoContent";
 import SlideMenu from "./SlideMenu";
 
 /*
@@ -30,7 +31,7 @@ import SlideMenu from "./SlideMenu";
   a Restore action, so nothing is lost by accident.
 */
 const BUILTINS: { key: BuiltinKey; label: string; anchor: string | null }[] = [
-  { key: "services", label: "Services page", anchor: "services" },
+  { key: "services", label: "Services pages", anchor: "services" },
   { key: "new-arrivals", label: "New arrivals page", anchor: "new-arrivals" },
   { key: "demographic", label: "Pregnant women page", anchor: "demographic" },
   { key: "events-today", label: "Events today", anchor: null },
@@ -79,6 +80,7 @@ export default function ManageSidebar() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [deleted, setDeleted] = useState<Slide[]>([]);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
+  const [servicesPageCount, setServicesPageCount] = useState(1);
   const [active, setActive] = useState("calendar");
 
   useEffect(() => {
@@ -87,8 +89,14 @@ export default function ManageSidebar() {
       setDeleted(await fetchDeletedSlides());
     };
     const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
+    const loadServices = async () => {
+      const c = await fetchInfoContent();
+      const n = c.services.pages.filter((p) => p.services.length > 0).length;
+      setServicesPageCount(Math.max(1, n));
+    };
     loadSlides();
     loadHidden();
+    loadServices();
     const channel = supabase
       .channel("sidebar-slides")
       .on("postgres_changes", { event: "*", schema: "public", table: "slides" }, loadSlides)
@@ -96,6 +104,11 @@ export default function ManageSidebar() {
         "postgres_changes",
         { event: "*", schema: "public", table: "display_settings" },
         loadHidden,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "info_content" },
+        loadServices,
       )
       .subscribe();
     return () => {
@@ -107,7 +120,22 @@ export default function ManageSidebar() {
   const hiddenBuiltins = BUILTINS.filter((b) => hidden.includes(b.key));
   const totalVisible = visibleBuiltins.length + slides.length;
 
-  const spyIds = ["calendar", ...visibleBuiltins.map((b) => b.anchor).filter(Boolean)];
+  // The single "services" builtin expands into one link per numbered page.
+  const serviceLinks = Array.from({ length: servicesPageCount }, (_, i) => ({
+    anchor: `services-page-${i + 1}`,
+    label: `This Week's Services — Page ${i + 1}`,
+  }));
+
+  const spyIds = [
+    "calendar",
+    ...visibleBuiltins.flatMap((b) =>
+      b.key === "services"
+        ? serviceLinks.map((l) => l.anchor)
+        : b.anchor
+          ? [b.anchor]
+          : [],
+    ),
+  ];
   const spyKey = spyIds.join("|");
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -126,6 +154,14 @@ export default function ManageSidebar() {
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spyKey]);
+
+  // Services-page links target a section inside a collapsible panel, so set the
+  // hash to open it (InfoContentEditor reacts to the hash) before scrolling.
+  function jumpToServicesPage(anchor: string) {
+    window.location.hash = anchor;
+    document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActive(anchor);
+  }
 
   function jump(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -231,7 +267,27 @@ export default function ManageSidebar() {
             Digital Bulletin Pages
           </GroupTitle>
           <ul className="space-y-1">
-            {visibleBuiltins.map((b) => {
+            {visibleBuiltins.flatMap((b) => {
+              // The repeatable services type shows one numbered link per page.
+              if (b.key === "services") {
+                return serviceLinks.map((link) => (
+                  <li key={link.anchor} className="flex items-center pr-1">
+                    <button
+                      type="button"
+                      onClick={() => jumpToServicesPage(link.anchor)}
+                      // Not truncated (unlike other links) so the page number
+                      // is always visible; wraps to a second line if needed.
+                      className={`flex-1 border-l-4 px-4 py-2 text-left text-base font-semibold leading-snug ${
+                        active === link.anchor
+                          ? "border-blue bg-blue/5 text-blue"
+                          : "border-transparent text-ink hover:bg-ink/5 hover:text-blue"
+                      }`}
+                    >
+                      {link.label}
+                    </button>
+                  </li>
+                ));
+              }
               const deletable = !PROTECTED.includes(b.key);
               return (
                 <li key={b.key} className="flex items-center pr-1">

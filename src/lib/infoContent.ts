@@ -95,8 +95,33 @@ export type InfoStep = {
   detailEs?: string;
 };
 
+// Max services shown on one "This Week's Services" page (kept to 4 tall cards).
+export const MAX_SERVICES_PER_PAGE = 4;
+
+export const DEFAULT_SERVICES_TITLE = servicesPage.title;
+export const DEFAULT_SERVICES_TITLE_ES = "Servicios de Esta Semana";
+
+// One numbered "This Week's Services" page: its OWN title (each page can differ)
+// plus up to MAX_SERVICES_PER_PAGE services.
+export type InfoServicePage = {
+  title: string;
+  titleEs?: string;
+  services: InfoService[];
+};
+
+export const newServicePage = (): InfoServicePage => ({
+  title: DEFAULT_SERVICES_TITLE,
+  titleEs: DEFAULT_SERVICES_TITLE_ES,
+  services: [],
+});
+
+export type InfoServicesContent = {
+  // One or more numbered pages, shown consecutively in the rotation.
+  pages: InfoServicePage[];
+};
+
 export type InfoContent = {
-  services: { title: string; titleEs?: string; items: InfoService[] };
+  services: InfoServicesContent;
   newArrivals: {
     headline: string;
     headlineEs?: string;
@@ -226,11 +251,22 @@ newArrivals.availableNow.forEach((t, i) => {
   if (DEFAULT_AVAILABLE_NOW_ES[i]) AVAILABLE_ES_BY_TEXT[t] = DEFAULT_AVAILABLE_NOW_ES[i];
 });
 
+// Split a flat list into pages of at most `size` (always at least one page).
+function chunk<T>(list: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
+  return out.length ? out : [[]];
+}
+
+const defaultWeeklyServices = weeklyServices.map(toInfoService).map(withEs);
+
 export const defaultInfoContent: InfoContent = {
   services: {
-    title: servicesPage.title,
-    titleEs: "Servicios de Esta Semana",
-    items: weeklyServices.map(toInfoService).map(withEs),
+    pages: chunk(defaultWeeklyServices, MAX_SERVICES_PER_PAGE).map((s) => ({
+      title: DEFAULT_SERVICES_TITLE,
+      titleEs: DEFAULT_SERVICES_TITLE_ES,
+      services: s,
+    })),
   },
   newArrivals: {
     headline: newArrivals.headline,
@@ -269,13 +305,74 @@ for (const s of [...weeklyServices, ...featuredDemographic.services]) {
 export const serviceIconFor = (name: string): LucideIcon | undefined =>
   ICON_BY_NAME[name];
 
+type SavedServicePage = {
+  title?: string;
+  titleEs?: string;
+  services?: InfoService[];
+};
+type SavedServicesContent = {
+  title?: string; // legacy SHARED title (migrated onto each page)
+  titleEs?: string;
+  pages?: (SavedServicePage | InfoService[])[]; // page objects OR legacy arrays
+  page1?: InfoService[]; // legacy fixed two-page shape
+  page2?: InfoService[];
+  items?: InfoService[]; // oldest single-list shape
+};
+
+type SavedInfoContent = Omit<Partial<InfoContent>, "services"> & {
+  services?: SavedServicesContent;
+};
+
+/*
+  Normalize saved services into per-page objects, reading any past shape: the
+  current page objects, the recent array-of-arrays, the legacy fixed
+  `page1`/`page2`, or the oldest single `items` list. A previously-shared title
+  migrates onto each page. Service objects are preserved as-is; each page is
+  capped at MAX_SERVICES_PER_PAGE and there is always ≥1 page.
+*/
+function normalizeServices(saved?: SavedServicesContent): InfoServicesContent {
+  const d = defaultInfoContent.services;
+  if (!saved) return d;
+
+  const fallbackTitle = saved.title ?? DEFAULT_SERVICES_TITLE;
+  const fallbackTitleEs = saved.titleEs ?? DEFAULT_SERVICES_TITLE_ES;
+  const toPage = (
+    services: InfoService[] | undefined,
+    title?: string,
+    titleEs?: string,
+  ): InfoServicePage => ({
+    title: title ?? fallbackTitle,
+    titleEs: titleEs ?? fallbackTitleEs,
+    services: (Array.isArray(services) ? services : []).slice(
+      0,
+      MAX_SERVICES_PER_PAGE,
+    ),
+  });
+
+  let pages: InfoServicePage[];
+  if (Array.isArray(saved.pages)) {
+    pages = saved.pages.map((p) =>
+      Array.isArray(p) ? toPage(p) : toPage(p.services, p.title, p.titleEs),
+    );
+  } else if (Array.isArray(saved.page1) || Array.isArray(saved.page2)) {
+    pages = [toPage(saved.page1), toPage(saved.page2)];
+  } else if (Array.isArray(saved.items)) {
+    pages = chunk(saved.items, MAX_SERVICES_PER_PAGE).map((s) => toPage(s));
+  } else {
+    pages = d.pages;
+  }
+
+  if (pages.length === 0) pages = [toPage([])];
+  return { pages };
+}
+
 // Merge a saved (possibly partial) blob over the defaults so missing keys fall
 // back gracefully.
-function mergeWithDefaults(saved: Partial<InfoContent> | null): InfoContent {
+function mergeWithDefaults(saved: SavedInfoContent | null): InfoContent {
   const d = defaultInfoContent;
   if (!saved) return d;
   return {
-    services: { ...d.services, ...(saved.services ?? {}) },
+    services: normalizeServices(saved.services),
     newArrivals: { ...d.newArrivals, ...(saved.newArrivals ?? {}) },
     demographic: { ...d.demographic, ...(saved.demographic ?? {}) },
   };
@@ -301,7 +398,13 @@ function fillServiceEs(s: InfoService): InfoService {
 function backfillSpanish(c: InfoContent): InfoContent {
   return {
     ...c,
-    services: { ...c.services, items: c.services.items.map(fillServiceEs) },
+    services: {
+      ...c.services,
+      pages: c.services.pages.map((page) => ({
+        ...page,
+        services: page.services.map(fillServiceEs),
+      })),
+    },
     newArrivals: {
       ...c.newArrivals,
       steps: c.newArrivals.steps.map((step) => {
@@ -340,7 +443,7 @@ export async function fetchInfoContent(): Promise<InfoContent> {
     return defaultInfoContent;
   }
   return backfillSpanish(
-    mergeWithDefaults((data?.content ?? null) as Partial<InfoContent> | null),
+    mergeWithDefaults((data?.content ?? null) as SavedInfoContent | null),
   );
 }
 
@@ -348,8 +451,18 @@ export async function fetchInfoContent(): Promise<InfoContent> {
 export async function saveInfoContent(
   content: InfoContent,
 ): Promise<string | null> {
+  const normalized: InfoContent = {
+    ...content,
+    services: {
+      ...content.services,
+      pages: content.services.pages.map((p) => ({
+        ...p,
+        services: p.services.slice(0, MAX_SERVICES_PER_PAGE),
+      })),
+    },
+  };
   const { error } = await supabase
     .from("info_content")
-    .upsert({ id: 1, content, updated_at: new Date().toISOString() });
+    .upsert({ id: 1, content: normalized, updated_at: new Date().toISOString() });
   return error ? error.message : null;
 }
