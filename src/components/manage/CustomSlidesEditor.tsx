@@ -5,7 +5,9 @@ import { Reorder, useDragControls } from "framer-motion";
 import { GripVertical } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fetchSlides, persistSlideOrder, type Slide } from "@/lib/slides";
+import type { BulletinLocation } from "@/lib/bulletinLocations";
 import SlideEditor from "./SlideEditor";
+import LocationBadges, { useBulletinLocations } from "./LocationBadges";
 import { smallBtn } from "./editorFields";
 
 /*
@@ -18,6 +20,7 @@ import { smallBtn } from "./editorFields";
 
 function SlidePanel({
   slide,
+  locations,
   index,
   count,
   open,
@@ -26,6 +29,7 @@ function SlidePanel({
   onDragEnd,
 }: {
   slide: Slide;
+  locations: BulletinLocation[];
   index: number;
   count: number;
   open: boolean;
@@ -57,7 +61,7 @@ function SlidePanel({
           type="button"
           onClick={onToggle}
           aria-expanded={open}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-left"
         >
           <span aria-hidden="true" className="text-lg text-ink/50">
             {open ? "▾" : "▸"}
@@ -65,6 +69,11 @@ function SlidePanel({
           <span className="truncate text-xl font-bold text-blue">
             {slide.title.trim() || "Untitled slide"}
           </span>
+          <LocationBadges
+            locationIds={slide.locationIds}
+            locations={locations}
+            expanded={open}
+          />
         </button>
         <div className="flex shrink-0 gap-2">
           <button
@@ -104,6 +113,7 @@ export default function CustomSlidesEditor() {
   const firstLoadDone = useRef(false);
   const slidesRef = useRef<Slide[]>([]);
   slidesRef.current = slides;
+  const locations = useBulletinLocations("custom-slides-editor");
 
   const expand = (id: string) => setOpen((p) => new Set(p).add(id));
   const toggle = (id: string) =>
@@ -144,6 +154,12 @@ export default function CustomSlidesEditor() {
     const channel = supabase
       .channel("custom-slides-editor")
       .on("postgres_changes", { event: "*", schema: "public", table: "slides" }, load)
+      // Targeting lives in its own table, so header badges need its changes too.
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "slide_locations" },
+        load,
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -203,6 +219,7 @@ export default function CustomSlidesEditor() {
         <SlidePanel
           key={s.id}
           slide={s}
+          locations={locations}
           index={i}
           count={slides.length}
           open={open.has(s.id)}

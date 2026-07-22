@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import {
   fetchInfoContent,
   saveInfoContent,
@@ -20,6 +21,15 @@ import {
   labelClass,
   smallBtn,
 } from "./editorFields";
+import {
+  deleteBulletinPageLocations,
+  fetchBulletinPageLocations,
+  FIXED_BULLETIN_PAGE_KEYS,
+  servicePageKey,
+  type BulletinPageLocationMap,
+} from "@/lib/bulletinLocations";
+import BulletinPageLocationSelector from "./BulletinPageLocationSelector";
+import LocationBadges, { useBulletinLocations } from "./LocationBadges";
 
 /*
   Employee/admin editor for the /information display's three messaging pages.
@@ -190,6 +200,7 @@ export default function InfoContentEditor() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [removedServicePageKeys, setRemovedServicePageKeys] = useState<string[]>([]);
 
   const [open, setOpen] = useState<Set<string>>(new Set());
   const toggle = (id: string) =>
@@ -200,9 +211,33 @@ export default function InfoContentEditor() {
       return n;
     });
 
+  // Location targeting for the header badges. The per-panel selectors write to
+  // builtin_page_locations, so realtime keeps the badges in step with them.
+  const locations = useBulletinLocations("info-content-editor");
+  const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
+
+  const loadPageLocations = useCallback(async () => {
+    setPageLocations(await fetchBulletinPageLocations());
+  }, []);
+
   useEffect(() => {
     fetchInfoContent().then(setContent);
   }, []);
+
+  useEffect(() => {
+    loadPageLocations();
+    const channel = supabase
+      .channel("info-content-page-locations")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "builtin_page_locations" },
+        loadPageLocations,
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadPageLocations]);
 
   // Open + scroll to a panel when the sidebar links to it via the hash. Each
   // services page is its own panel ("services-page-N").
@@ -212,6 +247,7 @@ export default function InfoContentEditor() {
       const isPanel =
         id === "new-arrivals" ||
         id === "demographic" ||
+        id === "events-today" ||
         id.startsWith("services-page-");
       if (!isPanel) return;
       setOpen((p) => new Set(p).add(id));
@@ -249,10 +285,27 @@ export default function InfoContentEditor() {
     setSaving(false);
     if (err) setError(err);
     else {
+      const cleanupErrors = await Promise.all(
+        removedServicePageKeys.map(deleteBulletinPageLocations),
+      );
+      const cleanupError = cleanupErrors.find(Boolean);
+      if (cleanupError) {
+        setError(`Page changes saved, but old location settings could not be removed: ${cleanupError}`);
+        return;
+      }
+      setRemovedServicePageKeys([]);
       setSaved(true);
       setTimeout(() => setSaved(false), 4000);
     }
   }
+
+  const locationBadge = (pageKey: string, panelId: string) => (
+    <LocationBadges
+      locationIds={pageLocations[pageKey] ?? []}
+      locations={locations}
+      expanded={open.has(panelId)}
+    />
+  );
 
   if (!content) {
     return <p className="text-lg text-ink/70">Loading editor…</p>;
@@ -277,6 +330,10 @@ export default function InfoContentEditor() {
       )
     )
       return;
+    setRemovedServicePageKeys((keys) => [
+      ...keys,
+      servicePageKey(servicesPages[idx].id),
+    ]);
     setServices({ pages: servicesPages.filter((_, i) => i !== idx) });
   };
 
@@ -287,8 +344,9 @@ export default function InfoContentEditor() {
         to the display right away.
       </p>
       <p className="max-w-3xl border-l-4 border-teal bg-teal/10 py-2 pl-4 text-base">
-        The <strong>“Happening today”</strong> screen is not listed here, it
-        updates itself automatically from the calendar.
+        The content on the <strong>“Happening today”</strong> screen updates
+        automatically from the calendar. Its display locations can still be
+        selected below.
       </p>
 
       {/* --- Services pages (one panel per numbered page) --- */}
@@ -297,12 +355,17 @@ export default function InfoContentEditor() {
           page is editable per page, right inside the panel. */}
       {servicesPages.map((page, idx) => (
         <CollapsiblePanel
-          key={idx}
+          key={page.id}
           id={`services-page-${idx + 1}`}
           title={`This Week's Services — Page ${idx + 1}`}
+          badge={locationBadge(
+            servicePageKey(page.id),
+            `services-page-${idx + 1}`,
+          )}
           open={open.has(`services-page-${idx + 1}`)}
           onToggle={() => toggle(`services-page-${idx + 1}`)}
         >
+          <BulletinPageLocationSelector pageKey={servicePageKey(page.id)} />
           <div className="mb-4 border-b-2 border-blue/20 pb-4">
             <p className="mb-3 text-sm text-ink/60">
               The heading shown at the top of this services page.
@@ -361,9 +424,16 @@ export default function InfoContentEditor() {
       <CollapsiblePanel
         id="new-arrivals"
         title="New arrivals page"
+        badge={locationBadge(
+          FIXED_BULLETIN_PAGE_KEYS.newArrivals,
+          "new-arrivals",
+        )}
         open={open.has("new-arrivals")}
         onToggle={() => toggle("new-arrivals")}
       >
+        <BulletinPageLocationSelector
+          pageKey={FIXED_BULLETIN_PAGE_KEYS.newArrivals}
+        />
         <Field
           label="New arrivals page: headline"
           value={na.headline}
@@ -538,9 +608,16 @@ export default function InfoContentEditor() {
       <CollapsiblePanel
         id="demographic"
         title="Featured group page (currently expecting mothers)"
+        badge={locationBadge(
+          FIXED_BULLETIN_PAGE_KEYS.demographic,
+          "demographic",
+        )}
         open={open.has("demographic")}
         onToggle={() => toggle("demographic")}
       >
+        <BulletinPageLocationSelector
+          pageKey={FIXED_BULLETIN_PAGE_KEYS.demographic}
+        />
         <Field
           label="Featured group page: title"
           value={content.demographic.heading}
@@ -574,6 +651,26 @@ export default function InfoContentEditor() {
             />
           </div>
         </div>
+      </CollapsiblePanel>
+
+      {/* --- Events today page (content comes from the calendar) --- */}
+      <CollapsiblePanel
+        id="events-today"
+        title="Events happening today"
+        badge={locationBadge(
+          FIXED_BULLETIN_PAGE_KEYS.eventsToday,
+          "events-today",
+        )}
+        open={open.has("events-today")}
+        onToggle={() => toggle("events-today")}
+      >
+        <BulletinPageLocationSelector
+          pageKey={FIXED_BULLETIN_PAGE_KEYS.eventsToday}
+        />
+        <p className="text-base text-ink/70">
+          This page’s events come from the calendar automatically. Use the
+          location setting above to choose which bulletin screens include it.
+        </p>
       </CollapsiblePanel>
 
       {/* --- Save --- */}

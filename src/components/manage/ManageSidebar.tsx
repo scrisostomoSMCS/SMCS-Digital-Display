@@ -34,7 +34,7 @@ const BUILTINS: { key: BuiltinKey; label: string; anchor: string | null }[] = [
   { key: "services", label: "Services pages", anchor: "services" },
   { key: "new-arrivals", label: "New arrivals page", anchor: "new-arrivals" },
   { key: "demographic", label: "Pregnant women page", anchor: "demographic" },
-  { key: "events-today", label: "Events today", anchor: null },
+  { key: "events-today", label: "Events today", anchor: "events-today" },
 ];
 
 // Default pages that can never be deleted from the rotation.
@@ -128,6 +128,7 @@ export default function ManageSidebar() {
 
   const spyIds = [
     "calendar",
+    "display-locations",
     ...visibleBuiltins.flatMap((b) =>
       b.key === "services"
         ? serviceLinks.map((l) => l.anchor)
@@ -163,6 +164,14 @@ export default function ManageSidebar() {
     setActive(anchor);
   }
 
+  function jumpToBulletinPage(anchor: string) {
+    window.location.hash = anchor;
+    document
+      .getElementById(anchor)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActive(anchor);
+  }
+
   function jump(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
     setActive(id);
@@ -192,6 +201,7 @@ export default function ManageSidebar() {
       caption: "",
       captionEs: "",
       imagePath: null,
+      locationIds: [],
     });
   }
 
@@ -236,7 +246,15 @@ export default function ManageSidebar() {
 
   // Highlight a section title when the reader is inside that section.
   const calendarActive = active === "calendar";
-  const dspActive = ["services", "new-arrivals", "demographic"].includes(active);
+  const dspActive =
+    active.startsWith("services-page-") ||
+    [
+      "display-locations",
+      "services",
+      "new-arrivals",
+      "demographic",
+      "events-today",
+    ].includes(active);
   const customActive = active.startsWith("slide-");
 
   return (
@@ -267,6 +285,15 @@ export default function ManageSidebar() {
             Digital Bulletin Pages
           </GroupTitle>
           <ul className="space-y-1">
+            <li className="flex items-center pr-1">
+              <button
+                type="button"
+                onClick={() => jump("display-locations")}
+                className={linkClass(active === "display-locations")}
+              >
+                Display locations
+              </button>
+            </li>
             {visibleBuiltins.flatMap((b) => {
               // The repeatable services type shows one numbered link per page.
               if (b.key === "services") {
@@ -293,13 +320,17 @@ export default function ManageSidebar() {
                 <li key={b.key} className="flex items-center pr-1">
                   <button
                     type="button"
-                    onClick={() => b.anchor && jump(b.anchor)}
+                    onClick={() => b.anchor && jumpToBulletinPage(b.anchor)}
                     className={linkClass(!!b.anchor && active === b.anchor)}
                   >
                     {b.label}
                   </button>
                   <SlideMenu
-                    onEdit={b.anchor ? () => jump(b.anchor as string) : undefined}
+                    onEdit={
+                      b.anchor
+                        ? () => jumpToBulletinPage(b.anchor as string)
+                        : undefined
+                    }
                     editNote="Auto-updates from calendar"
                     onDelete={
                       deletable ? () => hideBuiltin(b.key, b.label) : undefined

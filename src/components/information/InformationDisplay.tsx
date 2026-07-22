@@ -11,6 +11,13 @@ import {
 } from "@/lib/infoContent";
 import { fetchSlides, type Slide } from "@/lib/slides";
 import { fetchHiddenBuiltins, type BuiltinKey } from "@/lib/displaySettings";
+import {
+  fetchBulletinLocationId,
+  fetchBulletinPageLocations,
+  FIXED_BULLETIN_PAGE_KEYS,
+  servicePageKey,
+  type BulletinPageLocationMap,
+} from "@/lib/bulletinLocations";
 import { supabase } from "@/lib/supabase";
 import ServicesOverviewPage from "./ServicesOverviewPage";
 import NewArrivalsPage from "./NewArrivalsPage";
@@ -50,11 +57,15 @@ const toneForBg = (bg: "blue" | "teal" | "paper"): Tone =>
   events today (minus hidden built-ins), then employee-created custom slides.
   Content, slides, and hidden-settings load from Supabase and stay live.
 */
-export default function InformationDisplay() {
+export default function InformationDisplay({ locationSlug }: { locationSlug?: string }) {
   const [active, setActive] = useState(0);
   const [content, setContent] = useState<InfoContent>(defaultInfoContent);
+  const [contentLoaded, setContentLoaded] = useState(false);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
+  const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
+  const [locationId, setLocationId] = useState<string | null>(null);
+  const [targetingLoaded, setTargetingLoaded] = useState(!locationSlug);
   const [compact, setCompact] = useState(false);
 
   useEffect(() => {
@@ -66,30 +77,63 @@ export default function InformationDisplay() {
   }, []);
 
   useEffect(() => {
-    const loadContent = async () => setContent(await fetchInfoContent());
-    const loadSlides = async () => setSlides(await fetchSlides());
+    const loadContent = async () => {
+      setContent(await fetchInfoContent());
+      setContentLoaded(true);
+    };
+    const loadSlides = async () => setSlides(await fetchSlides(locationSlug));
     const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
+    const loadTargeting = async () => {
+      if (!locationSlug) {
+        setPageLocations({});
+        setLocationId(null);
+        setTargetingLoaded(true);
+        return;
+      }
+      const [nextPageLocations, nextLocationId] = await Promise.all([
+        fetchBulletinPageLocations(),
+        fetchBulletinLocationId(locationSlug),
+      ]);
+      setPageLocations(nextPageLocations);
+      setLocationId(nextLocationId);
+      setTargetingLoaded(true);
+    };
+    setTargetingLoaded(!locationSlug);
     loadContent();
     loadSlides();
     loadHidden();
+    loadTargeting();
     const channel = supabase
       .channel("info-display")
       .on("postgres_changes", { event: "*", schema: "public", table: "info_content" }, loadContent)
       .on("postgres_changes", { event: "*", schema: "public", table: "slides" }, loadSlides)
+      .on("postgres_changes", { event: "*", schema: "public", table: "slide_locations" }, loadSlides)
+      .on("postgres_changes", { event: "*", schema: "public", table: "builtin_page_locations" }, loadTargeting)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bulletin_locations" }, loadTargeting)
       .on("postgres_changes", { event: "*", schema: "public", table: "display_settings" }, loadHidden)
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [locationSlug]);
+
+  const pageIsVisible = (pageKey: string) => {
+    if (!locationSlug) return true;
+    if (!targetingLoaded || !contentLoaded) return false;
+    const targets = pageLocations[pageKey] ?? [];
+    return targets.length === 0 || (locationId !== null && targets.includes(locationId));
+  };
 
   // "This Week's Services" is a repeatable, numbered page type: one bulletin
-  // page per non-empty services page, shown consecutively (Page 1, 2, …).
+  // page per non-empty services page. Filter before numbering so a location
+  // that receives only one service page sees "Page 1 of 1," not a gap.
   const servicesPages = content.services.pages.filter(
-    (p) => p.services.length > 0,
+    (page) =>
+      page.services.length > 0 && pageIsVisible(servicePageKey(page.id)),
   );
   const servicesDefs = servicesPages.map((page, i) => ({
     key: "services" as BuiltinKey,
+    pageKey: servicePageKey(page.id),
     node: (
       <ServicesOverviewPage
         title={page.title}
@@ -103,13 +147,36 @@ export default function InformationDisplay() {
   }));
 
   // Built-in pages, each tagged with a key (for hiding) and a dot tone.
-  const builtinDefs: { key: BuiltinKey; node: React.ReactNode; tone: Tone }[] = [
+  const builtinDefs: {
+    key: BuiltinKey;
+    pageKey: string;
+    node: React.ReactNode;
+    tone: Tone;
+  }[] = [
     ...servicesDefs,
-    { key: "new-arrivals", node: <NewArrivalsPage content={content.newArrivals} />, tone: "white" },
-    { key: "demographic", node: <DemographicPage content={content.demographic} />, tone: "ink" },
-    { key: "events-today", node: <EventsTodayPage />, tone: "blue" },
+    {
+      key: "new-arrivals",
+      pageKey: FIXED_BULLETIN_PAGE_KEYS.newArrivals,
+      node: <NewArrivalsPage content={content.newArrivals} />,
+      tone: "white",
+    },
+    {
+      key: "demographic",
+      pageKey: FIXED_BULLETIN_PAGE_KEYS.demographic,
+      node: <DemographicPage content={content.demographic} />,
+      tone: "ink",
+    },
+    {
+      key: "events-today",
+      pageKey: FIXED_BULLETIN_PAGE_KEYS.eventsToday,
+      node: <EventsTodayPage />,
+      tone: "blue",
+    },
   ];
-  const builtins = builtinDefs.filter((b) => !hidden.includes(b.key));
+  const builtins = builtinDefs.filter((page) => {
+    if (hidden.includes(page.key)) return false;
+    return pageIsVisible(page.pageKey);
+  });
 
   const custom = slides.map((s) => ({
     node: <CustomSlidePage key={s.id} slide={s} />,

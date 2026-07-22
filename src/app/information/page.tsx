@@ -27,14 +27,22 @@ const poppins = Poppins({
   screens. Lives outside the (site) route group so it renders without site
   chrome (like the Live Calendar). Runs unattended; has its own Back to home.
 */
-export default function InformationPage() {
+export default async function InformationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ location?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const rawLocation = Array.isArray(params.location) ? params.location[0] : params.location;
+  const location = rawLocation?.trim().toLowerCase() || undefined;
+
   return (
     <div className={`${playfair.variable} ${poppins.variable} lg:h-auto`}>
       {/* Mobile: header on top, then the bulletin scrolls as one long page.
           Desktop (lg): the header hides and the display fills the screen. */}
       <MobileHeader />
       <div className="lg:h-screen">
-        <InformationDisplay />
+        <InformationDisplay locationSlug={location} />
       </div>
     </div>
   );

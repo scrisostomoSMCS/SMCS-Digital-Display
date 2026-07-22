@@ -104,12 +104,14 @@ export const DEFAULT_SERVICES_TITLE_ES = "Servicios de Esta Semana";
 // One numbered "This Week's Services" page: its OWN title (each page can differ)
 // plus up to MAX_SERVICES_PER_PAGE services.
 export type InfoServicePage = {
+  id: string;
   title: string;
   titleEs?: string;
   services: InfoService[];
 };
 
 export const newServicePage = (): InfoServicePage => ({
+  id: crypto.randomUUID(),
   title: DEFAULT_SERVICES_TITLE,
   titleEs: DEFAULT_SERVICES_TITLE_ES,
   services: [],
@@ -262,7 +264,8 @@ const defaultWeeklyServices = weeklyServices.map(toInfoService).map(withEs);
 
 export const defaultInfoContent: InfoContent = {
   services: {
-    pages: chunk(defaultWeeklyServices, MAX_SERVICES_PER_PAGE).map((s) => ({
+    pages: chunk(defaultWeeklyServices, MAX_SERVICES_PER_PAGE).map((s, i) => ({
+      id: `default-${i + 1}`,
       title: DEFAULT_SERVICES_TITLE,
       titleEs: DEFAULT_SERVICES_TITLE_ES,
       services: s,
@@ -306,6 +309,7 @@ export const serviceIconFor = (name: string): LucideIcon | undefined =>
   ICON_BY_NAME[name];
 
 type SavedServicePage = {
+  id?: string;
   title?: string;
   titleEs?: string;
   services?: InfoService[];
@@ -338,9 +342,11 @@ function normalizeServices(saved?: SavedServicesContent): InfoServicesContent {
   const fallbackTitleEs = saved.titleEs ?? DEFAULT_SERVICES_TITLE_ES;
   const toPage = (
     services: InfoService[] | undefined,
+    id: string,
     title?: string,
     titleEs?: string,
   ): InfoServicePage => ({
+    id,
     title: title ?? fallbackTitle,
     titleEs: titleEs ?? fallbackTitleEs,
     services: (Array.isArray(services) ? services : []).slice(
@@ -351,18 +357,25 @@ function normalizeServices(saved?: SavedServicesContent): InfoServicesContent {
 
   let pages: InfoServicePage[];
   if (Array.isArray(saved.pages)) {
-    pages = saved.pages.map((p) =>
-      Array.isArray(p) ? toPage(p) : toPage(p.services, p.title, p.titleEs),
+    pages = saved.pages.map((p, i) =>
+      Array.isArray(p)
+        ? toPage(p, `saved-${i + 1}`)
+        : toPage(p.services, p.id ?? `saved-${i + 1}`, p.title, p.titleEs),
     );
   } else if (Array.isArray(saved.page1) || Array.isArray(saved.page2)) {
-    pages = [toPage(saved.page1), toPage(saved.page2)];
+    pages = [
+      toPage(saved.page1, "legacy-1"),
+      toPage(saved.page2, "legacy-2"),
+    ];
   } else if (Array.isArray(saved.items)) {
-    pages = chunk(saved.items, MAX_SERVICES_PER_PAGE).map((s) => toPage(s));
+    pages = chunk(saved.items, MAX_SERVICES_PER_PAGE).map((s, i) =>
+      toPage(s, `legacy-items-${i + 1}`),
+    );
   } else {
     pages = d.pages;
   }
 
-  if (pages.length === 0) pages = [toPage([])];
+  if (pages.length === 0) pages = [toPage([], "saved-1")];
   return { pages };
 }
 

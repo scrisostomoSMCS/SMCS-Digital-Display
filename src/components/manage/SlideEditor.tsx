@@ -12,6 +12,7 @@ import {
   type SlideBackground,
 } from "@/lib/slides";
 import SlideTemplateView from "@/components/information/SlideTemplateView";
+import { useBulletinLocations } from "./LocationBadges";
 import { Field, StringListEditor, labelClass, smallBtn } from "./editorFields";
 
 /*
@@ -76,6 +77,7 @@ export default function SlideEditor({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const locations = useBulletinLocations(`slide-editor-${slide.id}`);
 
   const set = <K extends keyof Slide>(k: K, v: Slide[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -111,6 +113,7 @@ export default function SlideEditor({
       caption: draft.caption.trim(),
       captionEs: draft.captionEs.trim(),
       imagePath: draft.imagePath,
+      locationIds: draft.locationIds,
     });
     setSaving(false);
     if (err) {
@@ -171,6 +174,64 @@ export default function SlideEditor({
             ))}
           </div>
         </div>
+
+        <fieldset>
+          <legend className={labelClass}>Display locations</legend>
+          <p className="text-sm text-ink/60">
+            Choose All locations for shared announcements, or select one or more
+            buildings for a targeted slide.
+          </p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              aria-pressed={draft.locationIds.length === 0}
+              onClick={() => set("locationIds", [])}
+              className={`min-h-12 border-2 px-3 py-2 text-left text-base font-semibold ${
+                draft.locationIds.length === 0
+                  ? "border-blue bg-blue/5 text-blue"
+                  : "border-ink/30 hover:border-blue"
+              }`}
+            >
+              All locations
+              <span className="block text-sm font-normal text-ink/60">
+                Includes the main /information URL
+              </span>
+            </button>
+            {locations.map((location) => {
+              const checked = draft.locationIds.includes(location.id);
+              return (
+                <label
+                  key={location.id}
+                  className={`flex min-h-12 cursor-pointer items-center gap-3 border-2 px-3 py-2 text-base font-semibold ${
+                    checked
+                      ? "border-blue bg-blue/5 text-blue"
+                      : "border-ink/30 hover:border-blue"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 accent-blue"
+                    checked={checked}
+                    onChange={() =>
+                      set(
+                        "locationIds",
+                        checked
+                          ? draft.locationIds.filter((id) => id !== location.id)
+                          : [...draft.locationIds, location.id],
+                      )
+                    }
+                  />
+                  {location.name}
+                </label>
+              );
+            })}
+          </div>
+          {locations.length === 0 && (
+            <p className="mt-2 text-sm text-ink/60">
+              Add a display location above to target this slide to a building.
+            </p>
+          )}
+        </fieldset>
 
         {uses.title && (
           <div className="space-y-2">

@@ -58,6 +58,7 @@ export type Slide = {
   imagePath: string | null;
   position: number;
   hidden: boolean; // soft-deleted (recoverable), not shown on the display
+  locationIds: string[]; // empty = shown at every bulletin location
 };
 
 export type SlideInput = {
@@ -72,6 +73,7 @@ export type SlideInput = {
   caption: string;
   captionEs: string;
   imagePath: string | null;
+  locationIds: string[];
 };
 
 type SlideRow = {
@@ -89,6 +91,7 @@ type SlideRow = {
   image_path: string | null;
   position: number;
   hidden: boolean | null;
+  slide_locations: { location_id: string }[] | null;
 };
 
 const asStringArray = (v: unknown): string[] =>
@@ -110,14 +113,15 @@ function fromRow(r: SlideRow): Slide {
     imagePath: r.image_path,
     position: r.position,
     hidden: r.hidden ?? false,
+    locationIds: (r.slide_locations ?? []).map((x) => x.location_id),
   };
 }
 
 const COLUMNS =
-  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, position, hidden";
+  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, position, hidden, slide_locations(location_id)";
 
 // Visible slides (shown on the display and as normal sidebar entries).
-export async function fetchSlides(): Promise<Slide[]> {
+export async function fetchSlides(locationSlug?: string): Promise<Slide[]> {
   const { data, error } = await supabase
     .from("slides")
     .select(COLUMNS)
@@ -127,7 +131,25 @@ export async function fetchSlides(): Promise<Slide[]> {
     console.warn("Slides unavailable:", error.message);
     return [];
   }
-  return (data ?? []).map((r) => fromRow(r as SlideRow));
+  const slides = (data ?? []).map((r) => fromRow(r as SlideRow));
+  if (!locationSlug) return slides;
+
+  const { data: location, error: locationError } = await supabase
+    .from("bulletin_locations")
+    .select("id")
+    .eq("slug", locationSlug)
+    .maybeSingle();
+
+  if (locationError) {
+    console.warn("Bulletin location unavailable:", locationError.message);
+  }
+
+  const locationId = location?.id as string | undefined;
+  return slides.filter(
+    (slide) =>
+      slide.locationIds.length === 0 ||
+      (locationId !== undefined && slide.locationIds.includes(locationId)),
+  );
 }
 
 // Soft-deleted slides (for the "Recently deleted" recovery list).
@@ -166,6 +188,41 @@ function toRow(input: SlideInput) {
   };
 }
 
+async function setSlideLocations(
+  slideId: string,
+  locationIds: string[],
+): Promise<string | null> {
+  const desired = [...new Set(locationIds)];
+  const { data, error } = await supabase
+    .from("slide_locations")
+    .select("location_id")
+    .eq("slide_id", slideId);
+  if (error) return error.message;
+
+  const current = (data ?? []).map((row) => row.location_id as string);
+  const additions = desired.filter((id) => !current.includes(id));
+  const removals = current.filter((id) => !desired.includes(id));
+
+  // Add first so changing a targeted slide never briefly makes it global.
+  if (additions.length > 0) {
+    const { error: insertError } = await supabase
+      .from("slide_locations")
+      .insert(additions.map((locationId) => ({ slide_id: slideId, location_id: locationId })));
+    if (insertError) return insertError.message;
+  }
+
+  if (removals.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("slide_locations")
+      .delete()
+      .eq("slide_id", slideId)
+      .in("location_id", removals);
+    if (deleteError) return deleteError.message;
+  }
+
+  return null;
+}
+
 // New slides go to the end of the rotation.
 export async function createSlide(input: SlideInput): Promise<string | null> {
   const { data: last } = await supabase
@@ -185,6 +242,10 @@ export async function createSlide(input: SlideInput): Promise<string | null> {
     console.error("Create slide failed:", error.message);
     return null;
   }
+  const locationError = await setSlideLocations(data.id as string, input.locationIds);
+  if (locationError) {
+    console.error("Set slide locations failed:", locationError);
+  }
   return data.id as string;
 }
 
@@ -193,7 +254,8 @@ export async function updateSlide(
   input: SlideInput,
 ): Promise<string | null> {
   const { error } = await supabase.from("slides").update(toRow(input)).eq("id", id);
-  return error ? error.message : null;
+  if (error) return error.message;
+  return setSlideLocations(id, input.locationIds);
 }
 
 export async function deleteSlide(id: string): Promise<string | null> {
