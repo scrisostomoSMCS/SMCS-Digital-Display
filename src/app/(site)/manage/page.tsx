@@ -6,6 +6,7 @@ import InfoContentEditor from "@/components/manage/InfoContentEditor";
 import CustomSlidesEditor from "@/components/manage/CustomSlidesEditor";
 import QuickEventForm from "@/components/manage/QuickEventForm";
 import ManageSidebar from "@/components/manage/ManageSidebar";
+import BulletinLocationsManager from "@/components/manage/BulletinLocationsManager";
 
 export const metadata = {
   title: "Manage | SMCS",
@@ -85,19 +86,26 @@ export default async function ManagePage() {
           className="scroll-mt-6"
         >
           <p className="max-w-3xl text-lg">
-            The built-in pages that rotate on the public Digital Bulletin screens.
-            Edit their text below, changes show on the display right away.
+            The pages that rotate on the public Digital Bulletin screens. Edit
+            their text and choose which locations show each page below.
           </p>
-          <div className="mt-6">
-            <InfoContentEditor />
+          <div className="mt-6 space-y-8">
+            <BulletinLocationsManager />
+            <div>
+              <h3 className="text-2xl font-bold text-blue">Shared bulletin pages</h3>
+              <p className="mt-1 mb-4 max-w-3xl text-base text-ink/70">
+                Edit each built-in page and choose All locations or specific buildings.
+              </p>
+              <InfoContentEditor />
+            </div>
           </div>
         </Section>
 
         <Section id="custom-slides" title="Custom slides" className="scroll-mt-6">
           <p className="max-w-3xl text-lg">
             Slides you&rsquo;ve added to the rotation. Expand one to edit its
-            layout, text, colors, and image; each saves on its own. Add or delete
-            slides from the sidebar.
+            layout, text, colors, image, and display locations; each saves on its
+            own. Add or delete slides from the sidebar.
           </p>
           <div className="mt-6">
             <CustomSlidesEditor />

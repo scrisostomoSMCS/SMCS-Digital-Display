@@ -77,12 +77,14 @@ export function Group({
 export function CollapsiblePanel({
   id,
   title,
+  badge,
   open,
   onToggle,
   children,
 }: {
   id?: string;
   title: string;
+  badge?: ReactNode;
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
@@ -93,12 +95,13 @@ export function CollapsiblePanel({
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="flex min-h-12 w-full items-center gap-3 bg-ink/5 px-4 py-3 text-left lg:px-5"
+        className="flex min-h-12 w-full flex-wrap items-center gap-x-3 gap-y-2 bg-ink/5 px-4 py-3 text-left lg:px-5"
       >
         <span aria-hidden="true" className="text-lg text-ink/50">
           {open ? "▾" : "▸"}
         </span>
         <span className="truncate text-xl font-bold text-blue">{title}</span>
+        {badge}
       </button>
       {open && <div className="space-y-5 p-4 lg:p-5">{children}</div>}
     </section>
