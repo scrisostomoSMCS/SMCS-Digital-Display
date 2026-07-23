@@ -24,6 +24,8 @@ import NewArrivalsPage from "./NewArrivalsPage";
 import DemographicPage from "./DemographicPage";
 import EventsTodayPage from "./EventsTodayPage";
 import CustomSlidePage from "./CustomSlidePage";
+// TEMP DEBUG (bed availability) — remove with the {bedDebug} block below.
+import BedAvailabilitySlide from "@/components/BedAvailabilitySlide";
 
 const DOT_CLASS = {
   blue: {
@@ -198,6 +200,18 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
     return () => clearTimeout(id);
   }, [active, compact, pages.length]);
 
+  // --- TEMP DEBUG: bed-availability overlay shown on every bulletin page. ---
+  // A fixed overlay, so it never enters the rotation array or affects layout.
+  // To remove: delete this node, its two {bedDebug} mounts, and the import.
+  const bedDebug = (
+    <div
+      className="fixed left-4 top-4 z-50 max-w-sm bg-white/95 p-3 text-sm font-semibold"
+      style={{ border: "3px solid red", color: "red" }}
+    >
+      <BedAvailabilitySlide />
+    </div>
+  );
+
   if (pages.length === 0) {
     return <div className="h-full w-full bg-paper lg:h-screen lg:w-screen" />;
   }
@@ -207,6 +221,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   if (compact) {
     return (
       <div className="font-body bg-paper text-ink">
+        {bedDebug}
         {pages.map((node, i) => (
           <section key={i}>{node}</section>
         ))}
@@ -218,6 +233,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
 
   return (
     <div className="font-body relative h-full w-full overflow-hidden bg-paper text-ink lg:h-screen lg:w-screen">
+      {bedDebug}
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
