@@ -237,13 +237,15 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
           out against the paper-white bulletin. */}
       <BedAvailabilitySlide className="absolute right-5 top-5 z-20 hidden w-80 max-w-[90vw] lg:block" />
 
-      {/* Back button, shrunk to a bare left arrow to make room for the bed
-          panel; the accessible label carries the full "Back to home" meaning. */}
+      {/* Back button, shrunk to a bare left arrow and parked immediately left of
+          the bed panel (right-5 + w-80 = 21.25rem, plus a 0.75rem gap) — the one
+          spot on the slide that covers no page content. The accessible label
+          carries the full "Back to home" meaning. */}
       <Link
         href="/"
         aria-label="Back to home"
         title="Back to home"
-        className="absolute left-8 top-8 z-10 hidden h-12 w-12 items-center justify-center rounded-full border-2 border-blue bg-paper text-2xl font-semibold text-blue hover:bg-blue hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-4 lg:flex"
+        className="absolute right-[22rem] top-5 z-20 hidden h-12 w-12 items-center justify-center rounded-full border-2 border-blue bg-paper text-2xl font-semibold text-blue hover:bg-blue hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-4 lg:flex"
       >
         <span aria-hidden="true">←</span>
       </Link>
