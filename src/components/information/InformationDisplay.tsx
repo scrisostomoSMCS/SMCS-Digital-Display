@@ -24,7 +24,6 @@ import NewArrivalsPage from "./NewArrivalsPage";
 import DemographicPage from "./DemographicPage";
 import EventsTodayPage from "./EventsTodayPage";
 import CustomSlidePage from "./CustomSlidePage";
-// TEMP DEBUG (bed availability) — remove with the {bedDebug} block below.
 import BedAvailabilitySlide from "@/components/BedAvailabilitySlide";
 
 const DOT_CLASS = {
@@ -200,18 +199,6 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
     return () => clearTimeout(id);
   }, [active, compact, pages.length]);
 
-  // --- TEMP DEBUG: bed-availability overlay shown on every bulletin page. ---
-  // A fixed overlay, so it never enters the rotation array or affects layout.
-  // To remove: delete this node, its two {bedDebug} mounts, and the import.
-  const bedDebug = (
-    <div
-      className="fixed left-4 top-4 z-50 max-w-sm bg-white/95 p-3 text-sm font-semibold"
-      style={{ border: "3px solid red", color: "red" }}
-    >
-      <BedAvailabilitySlide />
-    </div>
-  );
-
   if (pages.length === 0) {
     return <div className="h-full w-full bg-paper lg:h-screen lg:w-screen" />;
   }
@@ -221,7 +208,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   if (compact) {
     return (
       <div className="font-body bg-paper text-ink">
-        {bedDebug}
+        <BedAvailabilitySlide className="m-4" />
         {pages.map((node, i) => (
           <section key={i}>{node}</section>
         ))}
@@ -233,7 +220,6 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
 
   return (
     <div className="font-body relative h-full w-full overflow-hidden bg-paper text-ink lg:h-screen lg:w-screen">
-      {bedDebug}
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -247,11 +233,19 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
         </motion.div>
       </AnimatePresence>
 
+      {/* Live bed availability: top-right callout, white on red so it stands
+          out against the paper-white bulletin. */}
+      <BedAvailabilitySlide className="absolute right-5 top-5 z-20 hidden w-80 max-w-[90vw] lg:block" />
+
+      {/* Back button, shrunk to a bare left arrow to make room for the bed
+          panel; the accessible label carries the full "Back to home" meaning. */}
       <Link
         href="/"
-        className="absolute right-8 top-8 z-10 hidden border-2 border-blue bg-paper px-5 py-2 text-lg font-semibold text-blue hover:bg-blue hover:text-paper lg:inline-block"
+        aria-label="Back to home"
+        title="Back to home"
+        className="absolute left-8 top-8 z-10 hidden h-12 w-12 items-center justify-center rounded-full border-2 border-blue bg-paper text-2xl font-semibold text-blue hover:bg-blue hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-4 lg:flex"
       >
-        ← Back to home
+        <span aria-hidden="true">←</span>
       </Link>
 
       {/* Each compact dot gets its own contrast ring so it remains visible over
