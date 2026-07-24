@@ -1,49 +1,13 @@
 'use client';
-import { useEffect, useState } from 'react';
-
-type Count = { label: string; count: number };
-type Program = { key: string; label: string; counts: Record<string, Count>; total: number };
-type BedData = {
-  ok: boolean;
-  programs?: Program[];
-  reserve_phone?: string;
-  updated_at_display?: string;
-};
+import { shortBedLabel, useBedAvailability } from '@/lib/useBedAvailability';
 
 // Attention panel: always white text on red so live bed counts stand out
 // against the paper-white bulletin. Red is intentional here (outside the
 // teal/blue palette) because this is a live-status callout.
-const RED = '#c1121f';
-
-// The API labels are verbose ("Male beds available", "Double Rooms Available").
-// The panel header already says "Bed Availability," so drop the redundant
-// "beds/rooms available" tail and keep only the qualifier ("Male", "Double").
-// A plain "Available" collapses to nothing, leaving just the number.
-const shortLabel = (label: string) =>
-  label.replace(/\s*(beds?|rooms?)?\s*available$/i, '').trim();
+export const BED_RED = '#c1121f';
 
 export default function BedAvailabilitySlide({ className = '' }: { className?: string }) {
-  const [data, setData] = useState<BedData | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const res = await fetch('/api/beds');
-        const json: BedData = await res.json();
-        // Only overwrite on success — a failed poll keeps the last good numbers
-        // on screen rather than blanking the display.
-        if (!cancelled && json.ok) setData(json);
-      } catch {
-        /* keep showing last known data */
-      }
-    };
-
-    load();
-    const id = setInterval(load, 60_000);
-    return () => { cancelled = true; clearInterval(id); };
-  }, []);
+  const data = useBedAvailability();
 
   if (!data?.programs) return null; // Never render a zero we're not sure of
 
@@ -54,7 +18,7 @@ export default function BedAvailabilitySlide({ className = '' }: { className?: s
   return (
     <section
       className={`font-body overflow-hidden rounded-lg text-white shadow-lg ${className}`}
-      style={{ backgroundColor: RED }}
+      style={{ backgroundColor: BED_RED }}
     >
       <header className="flex items-baseline justify-between gap-2 px-2.5 pb-1 pt-1.5">
         <h2 className="text-xs font-bold leading-tight tracking-tight">Bed Availability</h2>
@@ -83,7 +47,7 @@ export default function BedAvailabilitySlide({ className = '' }: { className?: s
                   ) : (
                     <span className="shrink-0 whitespace-nowrap text-right text-white/90">
                       {Object.entries(p.counts).map(([k, c], i) => {
-                        const q = shortLabel(c.label);
+                        const q = shortBedLabel(c.label);
                         return (
                           <span key={k}>
                             {i > 0 && <span className="text-white/50"> · </span>}
