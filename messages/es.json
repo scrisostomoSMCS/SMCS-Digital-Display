@@ -30,11 +30,17 @@
     "notice": "Este es un sitio de información pública."
   },
   "home": {
-    "heroLine1": "Haz La",
-    "heroLine2": "Diferencia.",
-    "heroSubtitle": "St. Mary's Community Services, conectando a nuestra comunidad con el cuidado y los servicios que necesita.",
+    "heroLine1": "Bienvenido al",
+    "heroLine2": "Boletín Digital",
+    "heroLine3": "de St. Mary's",
+    "heroSubtitle": "Horarios, servicios y anuncios diarios de St. Mary's Community Services. Este es el sitio del boletín digital, no el sitio web principal de SMCS.",
     "liveCalendar": "Calendario en Vivo",
     "learnMore": "Conoce Más",
+    "bulletinPreview": {
+      "label": "El Boletín de Esta Semana",
+      "cta": "Ver Boletín",
+      "aria": "Abrir el boletín digital"
+    },
     "about": {
       "title": "Sobre Nosotros",
       "imageOverlay": "Sirviendo a Nuestra Comunidad",
