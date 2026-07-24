@@ -100,13 +100,13 @@ export default function BulletinLocationsManager() {
         <label className="block">
           <span className="block text-base font-semibold">Add a location</span>
           <span className="block text-sm text-ink/60">
-            Use the building or screen area name, such as Dining Hall.
+            Use the building or screen area name, such as Dining Room.
           </span>
           <input
             className={inputClass}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Dining Hall"
+            placeholder="Dining Room"
             maxLength={80}
           />
           {previewSlug && (
