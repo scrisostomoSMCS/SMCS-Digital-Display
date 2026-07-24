@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import ImageWithOverlay from "@/components/ImageWithOverlay";
 import BulletinPreviewCard from "@/components/BulletinPreviewCard";
+import BedAvailabilityPopup from "@/components/BedAvailabilityPopup";
 
 // User-facing text comes from messages/<locale>.json ("home" section).
 export default async function Home() {
@@ -10,6 +11,9 @@ export default async function Home() {
 
   return (
     <>
+      {/* Live bed counts, shown bottom-left on arrival until dismissed. */}
+      <BedAvailabilityPopup />
+
       {/* Hero, background photo (public/hero.avif) + big serif headline.
           A neutral dark scrim over the photo darkens it and keeps the white
           text readable; adjust bg-ink/NN to darken more or less. The nav bar

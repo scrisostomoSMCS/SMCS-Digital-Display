@@ -40,6 +40,12 @@
       "cta": "View Bulletin",
       "aria": "Open the digital bulletin"
     },
+    "bedPopup": {
+      "title": "Live Bed Availability",
+      "close": "Close bed availability",
+      "full": "Full",
+      "reserve": "Reserve"
+    },
     "about": {
       "title": "About Us",
       "imageOverlay": "Serving Our Community",

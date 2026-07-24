@@ -41,6 +41,12 @@
       "cta": "Ver Boletín",
       "aria": "Abrir el boletín digital"
     },
+    "bedPopup": {
+      "title": "Disponibilidad de Camas en Vivo",
+      "close": "Cerrar disponibilidad de camas",
+      "full": "Lleno",
+      "reserve": "Reservar"
+    },
     "about": {
       "title": "Sobre Nosotros",
       "imageOverlay": "Sirviendo a Nuestra Comunidad",
