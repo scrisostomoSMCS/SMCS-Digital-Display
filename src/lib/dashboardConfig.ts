@@ -23,7 +23,7 @@ export const DAY_END_HOUR = 20; // 8:00 PM
 // info + announcements for now) so it's trivial to make editable later.
 export const INFO_BAR_ITEMS: string[] = [
   "Welcome to SMCS, this week's scheduled services are shown below",
-  "Phone: (555) 123-4567",
-  "Email: info@smcs.example",
+  "Phone: (209) 467-0703",
+  "Email: info@smcares.org",
   "Office hours: Monday–Friday, 9:00 AM – 5:00 PM",
 ];
