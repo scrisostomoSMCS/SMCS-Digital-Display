@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import Section from "@/components/Section";
 import ImageWithOverlay from "@/components/ImageWithOverlay";
+import BulletinPreviewCard from "@/components/BulletinPreviewCard";
 
 // User-facing text comes from messages/<locale>.json ("home" section).
 export default async function Home() {
@@ -21,10 +22,15 @@ export default async function Home() {
         />
         <div className="absolute inset-0 bg-ink/70" aria-hidden="true" />
         <div className="relative mx-auto w-full max-w-6xl px-6 py-20">
-          <h1 className="font-display text-6xl font-bold leading-[0.9] md:text-8xl lg:text-9xl">
+          {/* Three explicit lines. The headline is longer than the old two-word
+              one, so the top of the responsive scale is a step smaller to keep
+              "Digital Bulletin" on one line at every width. */}
+          <h1 className="font-display text-4xl font-bold leading-[0.9] sm:text-5xl md:text-6xl lg:text-7xl">
             {t("heroLine1")}
             <br />
             {t("heroLine2")}
+            <br />
+            {t("heroLine3")}
           </h1>
           <p className="mt-6 max-w-2xl text-xl text-paper/90 md:text-2xl">
             {t("heroSubtitle")}
@@ -43,6 +49,9 @@ export default async function Home() {
               {t("learnMore")}
             </Link>
           </div>
+
+          {/* Scaled-down live window into /information, linked to the full page. */}
+          <BulletinPreviewCard />
         </div>
       </section>
 

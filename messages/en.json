@@ -29,11 +29,17 @@
     "notice": "This is a public information site."
   },
   "home": {
-    "heroLine1": "Make A",
-    "heroLine2": "Difference.",
-    "heroSubtitle": "St. Mary's Community Services, connecting our community to the care and services they need.",
+    "heroLine1": "Welcome to",
+    "heroLine2": "St. Mary's",
+    "heroLine3": "Digital Bulletin",
+    "heroSubtitle": "Live schedules, services, and daily announcements for St. Mary's Community Services. This is the digital bulletin site, not the main SMCS website.",
     "liveCalendar": "Live Calendar",
     "learnMore": "Learn More",
+    "bulletinPreview": {
+      "label": "This Week's Bulletin",
+      "cta": "View Bulletin",
+      "aria": "Open the digital bulletin"
+    },
     "about": {
       "title": "About Us",
       "imageOverlay": "Serving Our Community",
