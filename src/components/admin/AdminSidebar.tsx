@@ -8,6 +8,7 @@ import Link from "next/link";
 const NAV = [
   { label: "Home", href: "/" },
   { label: "Live Calendar", href: "/dashboard" },
+  { label: "Digital Bulletin", href: "/information" },
   { label: "My Schedule", href: "/schedule" },
   { label: "Manage", href: "/manage" },
 ];
