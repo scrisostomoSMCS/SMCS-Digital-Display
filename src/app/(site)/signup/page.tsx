@@ -8,7 +8,7 @@ export const metadata = {
 };
 
 /*
-  Public staff registration. Only @smcs.org emails can create an account (checked
+  Public staff registration. Only @smcares.org emails can create an account (checked
   here and enforced in the database). New accounts have no editing access until
   an administrator grants employee/admin, the domain gates registration, not
   access. This is separate from the client eligibility path.
