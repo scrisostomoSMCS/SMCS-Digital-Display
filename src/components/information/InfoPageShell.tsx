@@ -4,12 +4,12 @@ import type { ReactNode } from "react";
   Frame for a signage page. Each page picks a bold full-bleed background so the
   sections feel distinct: white, blue, or teal. Text color is set for contrast.
 
-  Responsive height:
-  - Desktop / wall display (lg+): fixed to the viewport (h-full, clipped) so the
-    rotating kiosk shows exactly one screen at a time.
-  - Mobile / tablet (<lg): at least one screen tall but free to grow, and it does
-    NOT clip, so the whole bulletin reads as one long scrollable page with every
-    card fully visible (see InformationDisplay's stacked mobile layout).
+  Sizing: fills its parent exactly (h-full) and clips, so a slide is always one
+  screenful and never taller. The parent is the fixed bulletin canvas (see
+  lib/bulletinCanvas), so "one screenful" means the same composition at every
+  output size. Breakpoints here are container queries against that canvas, NOT
+  viewport media queries — inside an iframe the viewport is the iframe's own box,
+  which is what used to drop the bulletin into a phone layout.
 */
 type Bg = "paper" | "blue" | "teal";
 
@@ -28,7 +28,7 @@ export default function InfoPageShell({
 }) {
   return (
     <div
-      className={`font-body relative flex min-h-dvh flex-col overflow-x-hidden px-4 py-8 sm:px-6 lg:h-full lg:min-h-0 lg:overflow-hidden lg:px-16 lg:py-8 ${BG[bg]}`}
+      className={`font-body relative flex h-full min-h-full flex-col overflow-x-hidden px-4 py-8 @min-[40rem]:px-6 @min-[64rem]:min-h-0 @min-[64rem]:overflow-hidden @min-[64rem]:px-16 @min-[64rem]:py-8 ${BG[bg]}`}
     >
       {children}
     </div>

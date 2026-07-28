@@ -12,6 +12,11 @@ import {
   type SlideBackground,
 } from "@/lib/slides";
 import SlideTemplateView from "@/components/information/SlideTemplateView";
+import {
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  canvasStyle,
+} from "@/lib/bulletinCanvas";
 import { useBulletinLocations } from "./LocationBadges";
 import { Field, StringListEditor, labelClass, smallBtn } from "./editorFields";
 
@@ -31,15 +36,18 @@ const USES = {
   "title-list": { title: true, body: false, items: true, image: false, caption: false },
 } as const;
 
-// Live preview: render the real display component at 1920×1080 and scale it into
-// the available width (proportions stay identical to the wall screen).
+// Live preview: render the real display component on the real bulletin canvas
+// and scale it into the available width (proportions stay identical to the wall
+// screen). canvasStyle is what makes this a true preview: the slide's breakpoints
+// are container queries against the canvas, so without it they would resolve
+// against the admin's browser window and show a layout the wall screen never uses.
 function Preview({ slide }: { slide: Slide }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.3);
   useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
-    const update = () => setScale(el.clientWidth / 1920);
+    const update = () => setScale(el.clientWidth / CANVAS_WIDTH);
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
@@ -49,11 +57,11 @@ function Preview({ slide }: { slide: Slide }) {
     <div
       ref={boxRef}
       className="relative w-full overflow-hidden border-2 border-placeholder"
-      style={{ aspectRatio: "16 / 9" }}
+      style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
     >
       <div
         className="absolute left-0 top-0 origin-top-left"
-        style={{ width: 1920, height: 1080, transform: `scale(${scale})` }}
+        style={{ ...canvasStyle, transform: `scale(${scale})` }}
       >
         <SlideTemplateView slide={slide} animate={false} />
       </div>

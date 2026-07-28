@@ -9,11 +9,12 @@ import {
 import { riseItem } from "./motion";
 
 /*
-  A single service card on the Digital Bulletin. Shows everything at every size:
-  icon + name (English / Spanish), times, description (English + Spanish), and
-  location. The two weekly-services pages opt into roomier desktop cards; other
-  bulletin cards keep their existing fixed-grid treatment. On mobile every card
-  grows naturally because the whole bulletin scrolls (see InformationDisplay).
+  A single service card on the Digital Bulletin. Shows everything: icon + name
+  (English / Spanish), times, description (English + Spanish), and location. The
+  two weekly-services pages opt into roomier cards; other bulletin cards keep
+  their existing fixed-grid treatment. Breakpoints are container queries against
+  the bulletin canvas, so a card looks the same on a 4K wall screen and in a
+  small embedded iframe (see lib/bulletinCanvas).
 */
 type Tone = "blue" | "teal" | "paper";
 
@@ -47,7 +48,7 @@ const TONE = {
 export default function ExpandableServiceCard({
   service,
   tone,
-  iconSize = 30,
+  iconSize = 40,
   roomy = false,
 }: {
   service: InfoService;
@@ -61,13 +62,13 @@ export default function ExpandableServiceCard({
   return (
     <motion.div
       variants={riseItem}
-      className={`flex min-h-0 min-w-0 flex-col p-4 ${
+      className={`flex min-h-0 min-w-0 flex-col p-5 ${
         roomy
-          ? "lg:px-6 lg:py-5"
-          : "lg:overflow-hidden lg:px-5 lg:py-3"
+          ? "@min-[64rem]:px-8 @min-[64rem]:py-6"
+          : "@min-[64rem]:overflow-hidden @min-[64rem]:px-6 @min-[64rem]:py-4"
       } ${colors.card}`}
     >
-      <div className={`flex min-w-0 items-start gap-3 ${colors.heading}`}>
+      <div className={`flex min-w-0 items-start gap-4 ${colors.heading}`}>
         {Icon && (
           <Icon
             size={iconSize}
@@ -76,30 +77,24 @@ export default function ExpandableServiceCard({
             className="mt-1 shrink-0"
           />
         )}
-        <h2
-          className={`font-body min-w-0 flex-1 break-words text-xl font-semibold leading-tight ${
-            roomy ? "lg:text-xl" : "lg:text-2xl"
-          }`}
-        >
+        <h2 className="font-body min-w-0 flex-1 break-words text-3xl font-semibold leading-tight">
           {service.name}
           {service.nameEs && (
             <span
-              className={`block text-base font-medium lg:inline ${
-                roomy ? "lg:text-lg" : "lg:text-2xl"
-              } ${colors.secondary}`}
+              className={`block text-2xl font-medium @min-[64rem]:inline ${colors.secondary}`}
             >
-              <span className="hidden lg:inline"> / </span>
+              <span className="hidden @min-[64rem]:inline"> / </span>
               {service.nameEs}
             </span>
           )}
         </h2>
       </div>
 
-      <div className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <div className="@min-[64rem]:flex @min-[64rem]:min-h-0 @min-[64rem]:flex-1 @min-[64rem]:flex-col">
         {service.time && (
           <div
-            className={`font-body mt-2 space-y-0.5 text-lg font-semibold lg:mt-1.5 ${
-              roomy ? "lg:text-lg" : "lg:text-xl"
+            className={`font-body mt-3 space-y-1 text-2xl font-semibold @min-[64rem]:mt-2 ${
+              roomy ? "@min-[64rem]:text-xl" : "@min-[64rem]:text-3xl"
             }`}
           >
             {service.time.split("\n").map((line) => (
@@ -107,10 +102,14 @@ export default function ExpandableServiceCard({
             ))}
           </div>
         )}
+        {/* Descriptions carry most of a card's height, so they take a smaller
+            step up than the name/time above them. On the densest services page
+            the full 1.5x description would push the card row past the canvas
+            (see the overflow note in ServicesOverviewPage). */}
         {service.description && (
           <p
-            className={`font-body mt-1 text-sm ${
-              roomy ? "lg:text-base lg:leading-relaxed" : "lg:text-base"
+            className={`font-body mt-2 text-xl ${
+              roomy ? "@min-[64rem]:leading-relaxed" : ""
             } ${colors.description}`}
           >
             {service.description}
@@ -118,8 +117,8 @@ export default function ExpandableServiceCard({
         )}
         {service.descriptionEs && (
           <p
-            className={`font-body text-xs ${
-              roomy ? "lg:text-sm lg:leading-relaxed" : "lg:text-sm"
+            className={`font-body text-lg ${
+              roomy ? "@min-[64rem]:leading-relaxed" : ""
             } ${colors.translation}`}
           >
             {service.descriptionEs}
@@ -127,7 +126,7 @@ export default function ExpandableServiceCard({
         )}
         {service.location && (
           <p
-            className={`font-body mt-2 pt-1.5 text-xs font-semibold uppercase tracking-widest lg:mt-auto ${colors.location}`}
+            className={`font-body mt-3 pt-2 text-lg font-semibold uppercase tracking-widest @min-[64rem]:mt-auto ${colors.location}`}
           >
             {service.location}
           </p>

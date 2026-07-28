@@ -28,7 +28,7 @@ function ImageSlot({ src, tone }: { src: string | null; tone: string }) {
         <img src={src} alt="" className="max-h-full max-w-full object-contain" />
       ) : (
         <div
-          className={`flex h-4/5 w-4/5 items-center justify-center border-2 text-lg ${tone}`}
+          className={`flex h-4/5 w-4/5 items-center justify-center border-2 text-2xl ${tone}`}
         >
           No image
         </div>
@@ -60,11 +60,11 @@ export default function SlideTemplateView({
       className="shrink-0"
     >
       <InfoEyebrow tone={eyebrowTone} />
-      <h1 className="font-display mt-2 text-3xl leading-none sm:text-4xl lg:text-6xl">
+      <h1 className="font-display mt-2 max-w-[76%] text-4xl leading-none @min-[40rem]:text-5xl @min-[64rem]:text-7xl">
         {slide.title}
       </h1>
       {slide.titleEs && (
-        <p className="font-display mt-1 text-xl leading-tight opacity-80 sm:text-2xl lg:text-4xl">
+        <p className="font-display mt-1 max-w-[76%] text-3xl leading-tight opacity-80 @min-[40rem]:text-3xl @min-[64rem]:text-5xl">
           {slide.titleEs}
         </p>
       )}
@@ -72,8 +72,8 @@ export default function SlideTemplateView({
   );
 
   const Leaf = (
-    <div className="pointer-events-none absolute bottom-8 right-14 hidden lg:block">
-      <RotatingLeaf size={150} className={leafColor} duration={25} />
+    <div className="pointer-events-none absolute bottom-8 right-14 hidden @min-[64rem]:block">
+      <RotatingLeaf size={190} className={leafColor} duration={25} />
     </div>
   );
 
@@ -87,11 +87,11 @@ export default function SlideTemplateView({
           </div>
           {slide.caption && (
             <div className="mt-4 shrink-0">
-              <p className="font-display text-2xl leading-tight sm:text-3xl lg:text-5xl">
+              <p className="font-display text-3xl leading-tight @min-[40rem]:text-4xl @min-[64rem]:text-6xl">
                 {slide.caption}
               </p>
               {slide.captionEs && (
-                <p className="font-display mt-1 text-lg leading-tight opacity-80 sm:text-xl lg:text-3xl">
+                <p className="font-display mt-1 text-2xl leading-tight opacity-80 @min-[40rem]:text-3xl @min-[64rem]:text-4xl">
                   {slide.captionEs}
                 </p>
               )}
@@ -106,16 +106,16 @@ export default function SlideTemplateView({
     return (
       <InfoPageShell bg={bg}>
         {Header}
-        <div className="relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto pb-2 lg:mt-6 lg:items-center lg:gap-8 lg:overflow-visible lg:pb-0 lg:grid-cols-2">
-          <div className="min-h-48 lg:h-full lg:min-h-0">
+        <div className="relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto pb-2 @min-[64rem]:mt-6 @min-[64rem]:items-center @min-[64rem]:gap-8 @min-[64rem]:overflow-visible @min-[64rem]:pb-0 @min-[64rem]:grid-cols-2">
+          <div className="min-h-48 @min-[64rem]:h-full @min-[64rem]:min-h-0">
             <ImageSlot src={img} tone={placeholderTone} />
           </div>
           <div>
-            <p className="font-body text-lg font-medium sm:text-xl lg:text-3xl">
+            <p className="font-body text-2xl font-medium @min-[40rem]:text-3xl @min-[64rem]:text-4xl">
               {slide.body}
             </p>
             {slide.bodyEs && (
-              <p className="font-body mt-2 text-base font-medium opacity-80 sm:text-lg lg:mt-3 lg:text-2xl">
+              <p className="font-body mt-2 text-2xl font-medium opacity-80 @min-[40rem]:text-2xl @min-[64rem]:mt-3 @min-[64rem]:text-3xl">
                 {slide.bodyEs}
               </p>
             )}
@@ -134,7 +134,7 @@ export default function SlideTemplateView({
           variants={staggerContainer}
           initial={init}
           animate="show"
-          className="relative z-10 mt-4 grid min-h-0 grid-cols-1 gap-3 overflow-y-auto pb-2 sm:grid-cols-2 lg:mt-7 lg:gap-4 lg:overflow-visible lg:pb-0"
+          className="relative z-10 mt-4 grid min-h-0 grid-cols-1 gap-3 overflow-y-auto pb-2 @min-[40rem]:grid-cols-2 @min-[64rem]:mt-7 @min-[64rem]:gap-4 @min-[64rem]:overflow-visible @min-[64rem]:pb-0"
         >
           {slide.items.map((item, i) => (
             <motion.div
@@ -147,9 +147,9 @@ export default function SlideTemplateView({
                 aria-hidden="true"
               />
               <div>
-                <div className="text-lg font-semibold sm:text-xl lg:text-3xl">{item}</div>
+                <div className="text-2xl font-semibold @min-[40rem]:text-3xl @min-[64rem]:text-4xl">{item}</div>
                 {slide.itemsEs[i] && (
-                  <div className="text-sm font-medium opacity-80 sm:text-base lg:text-xl">
+                  <div className="text-xl font-medium opacity-80 @min-[40rem]:text-2xl @min-[64rem]:text-3xl">
                     {slide.itemsEs[i]}
                   </div>
                 )}
@@ -170,13 +170,13 @@ export default function SlideTemplateView({
         variants={riseItem}
         initial={init}
         animate="show"
-        className="relative z-10 mt-4 max-w-5xl min-h-0 overflow-y-auto pb-2 lg:mt-6 lg:overflow-visible lg:pb-0"
+        className="relative z-10 mt-4 max-w-5xl min-h-0 overflow-y-auto pb-2 @min-[64rem]:mt-6 @min-[64rem]:overflow-visible @min-[64rem]:pb-0"
       >
-        <p className="font-body text-lg font-medium sm:text-xl lg:text-3xl">
+        <p className="font-body text-2xl font-medium @min-[40rem]:text-3xl @min-[64rem]:text-4xl">
           {slide.body}
         </p>
         {slide.bodyEs && (
-          <p className="font-body mt-2 text-base font-medium opacity-80 sm:text-lg lg:mt-3 lg:text-2xl">
+          <p className="font-body mt-2 text-2xl font-medium opacity-80 @min-[40rem]:text-2xl @min-[64rem]:mt-3 @min-[64rem]:text-3xl">
             {slide.bodyEs}
           </p>
         )}

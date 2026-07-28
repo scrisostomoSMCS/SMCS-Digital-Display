@@ -13,8 +13,7 @@ import type { InfoContent } from "@/lib/infoContent";
   signature leaf sits in the empty space.
 
   Bilingual: the headline stays inline; longer English and Spanish copy uses
-  paired columns on bulletin-sized screens so both languages fit without being
-  clipped. Smaller screens can scroll the content region when needed.
+  paired columns so both languages fit without being clipped.
 */
 export default function NewArrivalsPage({
   content,
@@ -25,8 +24,8 @@ export default function NewArrivalsPage({
 
   return (
     <InfoPageShell bg="blue">
-      <div className="pointer-events-none absolute bottom-8 right-12 hidden lg:block">
-        <RotatingLeaf size={150} className="text-teal/25" duration={26} />
+      <div className="pointer-events-none absolute bottom-8 right-12 hidden @min-[64rem]:block">
+        <RotatingLeaf size={190} className="text-teal/25" duration={26} />
       </div>
 
       <motion.header
@@ -36,16 +35,16 @@ export default function NewArrivalsPage({
         className="shrink-0"
       >
         <InfoEyebrow tone="white" />
-        <h1 className="font-display mt-1 flex flex-wrap items-baseline gap-x-4 leading-[0.95]">
-          <span className="text-3xl sm:text-4xl lg:text-6xl">{content.headline}</span>
+        <h1 className="font-display mt-1 max-w-[76%] flex flex-wrap items-baseline gap-x-4 leading-[0.95]">
+          <span className="text-4xl @min-[40rem]:text-5xl @min-[64rem]:text-7xl">{content.headline}</span>
           {content.headlineEs && (
-            <span className="text-xl text-paper/75 sm:text-2xl lg:text-4xl">
+            <span className="text-3xl text-paper/75 @min-[40rem]:text-3xl @min-[64rem]:text-5xl">
               {content.headlineEs}
             </span>
           )}
         </h1>
-        <div className="mt-2 grid max-w-6xl gap-x-10 gap-y-1 lg:grid-cols-2">
-          <p className="font-body text-base font-medium text-paper/90 sm:text-lg lg:text-2xl">
+        <div className="mt-2 grid max-w-6xl gap-x-10 gap-y-1 @min-[64rem]:grid-cols-2">
+          <p className="font-body text-2xl font-medium text-paper/90 @min-[40rem]:text-2xl @min-[64rem]:text-3xl">
             {content.intro}
           </p>
           {content.introEs && (
@@ -55,7 +54,7 @@ export default function NewArrivalsPage({
             // row does not grow -- the steps list and the "Available Now" panel
             // below stay exactly where they were. Tighter leading buys the space
             // the shift needs without the last line reaching the teal panel.
-            <p className="font-body text-sm font-medium text-paper/70 sm:text-base lg:-mb-8 lg:pt-8 lg:text-xl lg:leading-[1.3]">
+            <p className="font-body text-xl font-medium text-paper/70 @min-[40rem]:text-2xl @min-[64rem]:-mb-8 @min-[64rem]:pt-8 @min-[64rem]:text-3xl @min-[64rem]:leading-[1.3]">
               {content.introEs}
             </p>
           )}
@@ -66,46 +65,46 @@ export default function NewArrivalsPage({
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="relative z-10 mt-4 grid grid-cols-1 gap-6 lg:min-h-0 lg:flex-1 lg:grid-cols-5 lg:gap-8"
+        className="relative z-10 mt-5 grid grid-cols-1 gap-8 @min-[64rem]:min-h-0 @min-[64rem]:flex-1 @min-[64rem]:grid-cols-5 @min-[64rem]:gap-10"
       >
         <motion.section
           variants={riseItem}
-          className="min-h-0 lg:col-span-3"
+          className="min-h-0 @min-[64rem]:col-span-3"
         >
-          <p className="font-body text-sm font-semibold uppercase tracking-[0.3em] lg:text-base">
+          <p className="font-body text-xl font-semibold uppercase tracking-[0.3em] @min-[64rem]:text-2xl">
             {content.stepsLabel}
             {content.stepsLabelEs && (
               <span className="text-paper/70"> · {content.stepsLabelEs}</span>
             )}
           </p>
-          <ol className="mt-3 space-y-3">
+          <ol className="mt-4 space-y-5">
             {content.steps.map((step, i) => (
               <li key={`${step.title}-${i}`} className="flex items-start gap-4">
-                <span className="font-display text-4xl leading-none text-paper/40 lg:text-5xl">
+                <span className="font-display text-5xl leading-none text-paper/40 @min-[64rem]:text-6xl">
                   {i + 1}
                 </span>
                 <div
                   className={`grid min-w-0 flex-1 gap-x-6 gap-y-1 ${
-                    step.titleEs || step.detailEs ? "lg:grid-cols-2" : ""
+                    step.titleEs || step.detailEs ? "@min-[64rem]:grid-cols-2" : ""
                   }`}
                 >
                   <div className="min-w-0 break-words">
-                    <p className="font-body text-lg font-semibold sm:text-xl lg:text-2xl">
+                    <p className="font-body text-2xl font-semibold @min-[40rem]:text-3xl">
                       {step.title}
                     </p>
-                    <p className="font-body mt-0.5 text-sm text-paper/80 sm:text-base lg:text-lg">
+                    <p className="font-body mt-0.5 text-xl text-paper/80 @min-[40rem]:text-2xl">
                       {step.detail}
                     </p>
                   </div>
                   {(step.titleEs || step.detailEs) && (
                     <div className="min-w-0 break-words border-l-2 border-paper/25 pl-4">
                       {step.titleEs && (
-                        <p className="font-body text-base font-medium text-paper/75 sm:text-lg lg:text-xl">
+                        <p className="font-body text-2xl font-medium text-paper/75 @min-[40rem]:text-2xl @min-[64rem]:text-3xl">
                           {step.titleEs}
                         </p>
                       )}
                       {step.detailEs && (
-                        <p className="font-body mt-0.5 text-sm text-paper/60 lg:text-base">
+                        <p className="font-body mt-0.5 text-xl text-paper/60 @min-[64rem]:text-2xl">
                           {step.detailEs}
                         </p>
                       )}
@@ -119,25 +118,25 @@ export default function NewArrivalsPage({
 
         <motion.section
           variants={riseItem}
-          className="flex min-h-0 flex-col bg-teal p-5 text-ink lg:col-span-2"
+          className="flex min-h-0 flex-col bg-teal p-6 text-ink @min-[64rem]:col-span-2"
         >
-          <p className="font-body text-sm font-semibold uppercase tracking-[0.3em] lg:text-base">
+          <p className="font-body text-xl font-semibold uppercase tracking-[0.3em] @min-[64rem]:text-2xl">
             {content.availableLabel}
             {content.availableLabelEs && (
               <span className="text-ink/60"> · {content.availableLabelEs}</span>
             )}
           </p>
-          <ul className="mt-3 grid grid-cols-1 gap-x-5 gap-y-3 lg:grid-cols-2">
+          <ul className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 @min-[64rem]:grid-cols-2">
             {content.availableNow.map((item, i) => (
               <li
                 key={`${item}-${i}`}
                 className="font-body min-w-0 break-words leading-tight"
               >
-                <span className="block text-lg font-semibold lg:text-xl">
+                <span className="block text-2xl font-semibold @min-[64rem]:text-3xl">
                   {item}
                 </span>
                 {availableEs[i] && (
-                  <span className="mt-0.5 block text-sm font-medium text-ink/70 lg:text-base">
+                  <span className="mt-0.5 block text-xl font-medium text-ink/70 @min-[64rem]:text-2xl">
                     {availableEs[i]}
                   </span>
                 )}
