@@ -6,6 +6,7 @@ import InfoEyebrow from "./InfoEyebrow";
 import RotatingLeaf from "./RotatingLeaf";
 import ExpandableServiceCard from "./ExpandableServiceCard";
 import { staggerContainer, headerIn } from "./motion";
+import { BED_PANEL_CLEARANCE } from "@/components/BedAvailabilitySlide";
 import { type InfoContent } from "@/lib/infoContent";
 
 /*
@@ -32,10 +33,10 @@ export default function DemographicPage({
         variants={headerIn}
         initial="hidden"
         animate="show"
-        className="shrink-0"
+        className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
         <InfoEyebrow tone="ink" />
-        <h1 className="font-display mt-1 max-w-[76%] flex flex-wrap items-baseline gap-x-4 leading-none">
+        <h1 className="font-display mt-1 max-w-[68%] flex flex-wrap items-baseline gap-x-4 leading-none">
           <span className="text-4xl @min-[40rem]:text-5xl @min-[64rem]:text-6xl">{content.heading}</span>
           {content.headingEs && (
             <span className="text-3xl text-ink/60 @min-[40rem]:text-3xl @min-[64rem]:text-4xl">

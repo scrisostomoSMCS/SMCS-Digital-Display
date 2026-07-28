@@ -5,6 +5,7 @@ import InfoPageShell from "./InfoPageShell";
 import InfoEyebrow from "./InfoEyebrow";
 import ExpandableServiceCard from "./ExpandableServiceCard";
 import { staggerContainer, headerIn } from "./motion";
+import { BED_PANEL_CLEARANCE } from "@/components/BedAvailabilitySlide";
 import { type InfoService } from "@/lib/infoContent";
 
 /*
@@ -34,10 +35,10 @@ export default function ServicesOverviewPage({
         variants={headerIn}
         initial="hidden"
         animate="show"
-        className="shrink-0"
+        className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
         <InfoEyebrow tone="blue" />
-        <h1 className="font-display mt-1 max-w-[76%] flex flex-wrap items-baseline gap-x-4 leading-none">
+        <h1 className="font-display mt-1 max-w-[68%] flex flex-wrap items-baseline gap-x-4 leading-none">
           <span className="text-4xl @min-[40rem]:text-5xl @min-[64rem]:text-6xl">{title}</span>
           {titleEs && (
             <span className="text-3xl text-ink/60 @min-[40rem]:text-3xl @min-[64rem]:text-4xl">
@@ -46,7 +47,7 @@ export default function ServicesOverviewPage({
           )}
         </h1>
         {totalPages > 1 && (
-          <p className="font-body mt-2 max-w-[76%] text-2xl font-semibold uppercase tracking-widest text-blue/70 @min-[64rem]:text-2xl">
+          <p className="font-body mt-2 max-w-[68%] text-2xl font-semibold uppercase tracking-widest text-blue/70 @min-[64rem]:text-2xl">
             Page {pageNumber} of {totalPages} · Página {pageNumber} de{" "}
             {totalPages}
           </p>

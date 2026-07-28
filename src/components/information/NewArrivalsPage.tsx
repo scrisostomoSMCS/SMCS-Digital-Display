@@ -5,6 +5,7 @@ import InfoPageShell from "./InfoPageShell";
 import InfoEyebrow from "./InfoEyebrow";
 import RotatingLeaf from "./RotatingLeaf";
 import { staggerContainer, riseItem, headerIn } from "./motion";
+import { BED_PANEL_CLEARANCE } from "@/components/BedAvailabilitySlide";
 import type { InfoContent } from "@/lib/infoContent";
 
 /*
@@ -32,10 +33,10 @@ export default function NewArrivalsPage({
         variants={headerIn}
         initial="hidden"
         animate="show"
-        className="shrink-0"
+        className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
         <InfoEyebrow tone="white" />
-        <h1 className="font-display mt-1 max-w-[76%] flex flex-wrap items-baseline gap-x-4 leading-[0.95]">
+        <h1 className="font-display mt-1 max-w-[68%] flex flex-wrap items-baseline gap-x-4 leading-[0.95]">
           <span className="text-4xl @min-[40rem]:text-5xl @min-[64rem]:text-7xl">{content.headline}</span>
           {content.headlineEs && (
             <span className="text-3xl text-paper/75 @min-[40rem]:text-3xl @min-[64rem]:text-5xl">

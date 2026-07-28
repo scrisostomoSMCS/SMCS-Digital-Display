@@ -5,6 +5,7 @@ import InfoPageShell from "./InfoPageShell";
 import InfoEyebrow from "./InfoEyebrow";
 import RotatingLeaf from "./RotatingLeaf";
 import { staggerContainer, riseItem, headerIn } from "./motion";
+import { BED_PANEL_CLEARANCE } from "@/components/BedAvailabilitySlide";
 import { slideImageUrl, type Slide } from "@/lib/slides";
 
 /*
@@ -57,14 +58,14 @@ export default function SlideTemplateView({
       variants={headerIn}
       initial={init}
       animate="show"
-      className="shrink-0"
+      className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
     >
       <InfoEyebrow tone={eyebrowTone} />
-      <h1 className="font-display mt-2 max-w-[76%] text-4xl leading-none @min-[40rem]:text-5xl @min-[64rem]:text-7xl">
+      <h1 className="font-display mt-2 max-w-[68%] text-4xl leading-none @min-[40rem]:text-5xl @min-[64rem]:text-7xl">
         {slide.title}
       </h1>
       {slide.titleEs && (
-        <p className="font-display mt-1 max-w-[76%] text-3xl leading-tight opacity-80 @min-[40rem]:text-3xl @min-[64rem]:text-5xl">
+        <p className="font-display mt-1 max-w-[68%] text-3xl leading-tight opacity-80 @min-[40rem]:text-3xl @min-[64rem]:text-5xl">
           {slide.titleEs}
         </p>
       )}
@@ -81,7 +82,11 @@ export default function SlideTemplateView({
     return (
       <InfoPageShell bg={bg}>
         <div className="relative z-10 flex h-full flex-col">
-          <InfoEyebrow tone={eyebrowTone} />
+          {/* No headline on this template, so the eyebrow band itself carries
+              the bed-panel clearance and the image starts below the panel. */}
+          <div className={`shrink-0 ${BED_PANEL_CLEARANCE}`}>
+            <InfoEyebrow tone={eyebrowTone} />
+          </div>
           <div className="mt-4 min-h-0 flex-1">
             <ImageSlot src={img} tone={placeholderTone} />
           </div>

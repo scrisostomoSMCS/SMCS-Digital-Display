@@ -7,6 +7,7 @@ import InfoPageShell from "./InfoPageShell";
 import InfoEyebrow from "./InfoEyebrow";
 import RotatingLeaf from "./RotatingLeaf";
 import { staggerContainer, riseItem, headerIn } from "./motion";
+import { BED_PANEL_CLEARANCE } from "@/components/BedAvailabilitySlide";
 import { supabase } from "@/lib/supabase";
 import { fetchTodaysEvents, type DashboardEvent } from "@/lib/events";
 
@@ -65,12 +66,12 @@ export default function EventsTodayPage() {
         variants={headerIn}
         initial="hidden"
         animate="show"
-        className="shrink-0"
+        className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
         <InfoEyebrow tone="blue" />
         {/* Fixed labels are shown bilingually (this page isn't content-edited);
             event names/times come from the calendar as staff entered them. */}
-        <h1 className="font-display mt-1 max-w-[76%] flex flex-wrap items-baseline gap-x-4 leading-none">
+        <h1 className="font-display mt-1 max-w-[68%] flex flex-wrap items-baseline gap-x-4 leading-none">
           <span className="text-4xl @min-[40rem]:text-5xl @min-[64rem]:text-7xl">Happening Today</span>
           <span className="text-3xl text-ink/60 @min-[40rem]:text-3xl @min-[64rem]:text-5xl">Eventos de Hoy</span>
         </h1>
