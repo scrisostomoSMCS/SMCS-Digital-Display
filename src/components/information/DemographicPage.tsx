@@ -24,8 +24,8 @@ export default function DemographicPage({
 }) {
   return (
     <InfoPageShell bg="teal">
-      <div className="pointer-events-none absolute bottom-8 right-14 hidden lg:block">
-        <RotatingLeaf size={150} className="text-paper/30" duration={24} />
+      <div className="pointer-events-none absolute bottom-8 right-14 hidden @min-[64rem]:block">
+        <RotatingLeaf size={190} className="text-paper/30" duration={24} />
       </div>
 
       <motion.header
@@ -35,19 +35,19 @@ export default function DemographicPage({
         className="shrink-0"
       >
         <InfoEyebrow tone="ink" />
-        <h1 className="font-display mt-1 flex flex-wrap items-baseline gap-x-4 leading-none">
-          <span className="text-3xl sm:text-4xl lg:text-5xl">{content.heading}</span>
+        <h1 className="font-display mt-1 max-w-[76%] flex flex-wrap items-baseline gap-x-4 leading-none">
+          <span className="text-4xl @min-[40rem]:text-5xl @min-[64rem]:text-6xl">{content.heading}</span>
           {content.headingEs && (
-            <span className="text-xl text-ink/60 sm:text-2xl lg:text-3xl">
+            <span className="text-3xl text-ink/60 @min-[40rem]:text-3xl @min-[64rem]:text-4xl">
               {content.headingEs}
             </span>
           )}
         </h1>
-        <p className="font-body mt-2 max-w-5xl text-base font-medium sm:text-lg lg:text-xl">
+        <p className="font-body mt-2 max-w-5xl text-2xl font-medium @min-[40rem]:text-2xl @min-[64rem]:text-3xl">
           {content.intro}
         </p>
         {content.introEs && (
-          <p className="font-body max-w-5xl text-sm font-medium text-ink/70 sm:text-base lg:text-lg">
+          <p className="font-body max-w-5xl text-xl font-medium text-ink/70 @min-[40rem]:text-2xl">
             {content.introEs}
           </p>
         )}
@@ -57,7 +57,7 @@ export default function DemographicPage({
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="relative z-10 mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:min-h-0 lg:flex-1 lg:grid-cols-3 lg:grid-rows-2"
+        className="relative z-10 mt-5 grid grid-cols-1 gap-4 @min-[40rem]:grid-cols-2 @min-[64rem]:min-h-0 @min-[64rem]:flex-1 @min-[64rem]:grid-cols-3 @min-[64rem]:grid-rows-2"
       >
         {content.services.map((s, i) => {
           return (
@@ -65,7 +65,7 @@ export default function DemographicPage({
               key={`${s.name}-${i}`}
               service={s}
               tone="paper"
-              iconSize={28}
+              iconSize={38}
             />
           );
         })}

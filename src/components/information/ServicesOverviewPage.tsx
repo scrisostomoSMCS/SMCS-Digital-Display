@@ -37,31 +37,32 @@ export default function ServicesOverviewPage({
         className="shrink-0"
       >
         <InfoEyebrow tone="blue" />
-        <h1 className="font-display mt-1 flex flex-wrap items-baseline gap-x-4 leading-none">
-          <span className="text-3xl sm:text-4xl lg:text-5xl">{title}</span>
+        <h1 className="font-display mt-1 max-w-[76%] flex flex-wrap items-baseline gap-x-4 leading-none">
+          <span className="text-4xl @min-[40rem]:text-5xl @min-[64rem]:text-6xl">{title}</span>
           {titleEs && (
-            <span className="text-xl text-ink/60 sm:text-2xl lg:text-3xl">
+            <span className="text-3xl text-ink/60 @min-[40rem]:text-3xl @min-[64rem]:text-4xl">
               {titleEs}
             </span>
           )}
         </h1>
         {totalPages > 1 && (
-          <p className="font-body mt-2 text-base font-semibold uppercase tracking-widest text-blue/70 lg:text-lg">
+          <p className="font-body mt-2 max-w-[76%] text-2xl font-semibold uppercase tracking-widest text-blue/70 @min-[64rem]:text-2xl">
             Page {pageNumber} of {totalPages} · Página {pageNumber} de{" "}
             {totalPages}
           </p>
         )}
       </motion.header>
 
-      {/* Up to 4 tall vertical "slabs" side by side (they stack on mobile). The
-          row is at least ~55vh tall (slab look) and GROWS to fit the longest
-          card so no description is ever cut off; the cards stretch to equal
-          height. Never scrolls or clips. */}
+      {/* Up to 4 tall vertical "slabs" side by side. The row is at least ~55% of
+          the canvas height (slab look) and GROWS to fit the longest card so no
+          description is ever cut off; the cards stretch to equal height. Never
+          scrolls or clips. cqh, not vh: the canvas is the reference, not the
+          browser window. */}
       <motion.div
         variants={staggerContainer}
         initial="hidden"
         animate="show"
-        className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:mt-6 lg:grid-cols-4 lg:grid-rows-1 lg:gap-5 lg:min-h-[55vh]"
+        className="mt-5 grid grid-cols-1 gap-4 @min-[40rem]:grid-cols-2 @min-[64rem]:mt-8 @min-[64rem]:grid-cols-4 @min-[64rem]:grid-rows-1 @min-[64rem]:gap-6 @min-[64rem]:min-h-[55cqh]"
       >
         {services.slice(0, 4).map((s, i) => {
           const blue = i % 2 === 0;
@@ -78,7 +79,7 @@ export default function ServicesOverviewPage({
 
       {/* Flexible empty band reserved for a future live bed-availability
           display: it fills whatever height is left below the cards. */}
-      <div aria-hidden="true" className="hidden lg:block lg:flex-1" />
+      <div aria-hidden="true" className="hidden @min-[64rem]:block @min-[64rem]:flex-1" />
     </InfoPageShell>
   );
 }

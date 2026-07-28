@@ -1,6 +1,5 @@
 import { Playfair_Display, Poppins } from "next/font/google";
 import InformationDisplay from "@/components/information/InformationDisplay";
-import MobileHeader from "@/components/MobileHeader";
 
 export const metadata = {
   title: "Digital Bulletin | SMCS",
@@ -26,6 +25,12 @@ const poppins = Poppins({
   Full-screen, auto-rotating informational display for wall-mounted campus
   screens. Lives outside the (site) route group so it renders without site
   chrome (like the Live Calendar). Runs unattended; has its own Back to home.
+
+  This route is embedded as-is in an iframe (the WordPress site, Yodeck), so it
+  carries no site header and never scrolls: it fills its box exactly and the
+  display scales its canvas to fit. Deliberately one rendering for every
+  context — a size-conditional layout here is what previously made an embedded
+  bulletin fall apart into a stack of slides.
 */
 export default async function InformationPage({
   searchParams,
@@ -37,13 +42,10 @@ export default async function InformationPage({
   const location = rawLocation?.trim().toLowerCase() || undefined;
 
   return (
-    <div className={`${playfair.variable} ${poppins.variable} lg:h-auto`}>
-      {/* Mobile: header on top, then the bulletin scrolls as one long page.
-          Desktop (lg): the header hides and the display fills the screen. */}
-      <MobileHeader />
-      <div className="lg:h-screen">
-        <InformationDisplay locationSlug={location} />
-      </div>
+    <div
+      className={`${playfair.variable} ${poppins.variable} h-dvh w-full overflow-hidden`}
+    >
+      <InformationDisplay locationSlug={location} />
     </div>
   );
 }
