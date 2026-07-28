@@ -270,18 +270,20 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
         </AnimatePresence>
 
         {/* Live bed availability: top-right callout, white on red so it stands
-            out against the paper-white bulletin. */}
-        <BedAvailabilitySlide className="absolute right-5 top-5 z-20 w-80" />
+            out against the paper-white bulletin. Slides keep this corner clear
+            via BED_PANEL_CLEARANCE on their header band — widening the panel
+            here means re-checking that constant. */}
+        <BedAvailabilitySlide className="absolute right-5 top-5 z-20 w-[29rem]" />
 
         {/* Back button, shrunk to a bare left arrow and parked immediately left of
-            the bed panel (right-5 + w-80 = 21.25rem, plus a 0.75rem gap) — the one
-            spot on the slide that covers no page content. The accessible label
-            carries the full "Back to home" meaning. */}
+            the bed panel (right-5 + w-[29rem] = 30.25rem, plus a 0.75rem gap) —
+            the one spot on the slide that covers no page content. The accessible
+            label carries the full "Back to home" meaning. */}
         <Link
           href="/"
           aria-label="Back to home"
           title="Back to home"
-          className="absolute right-[22rem] top-5 z-20 flex h-12 w-12 items-center justify-center rounded-full border-2 border-blue bg-paper text-3xl font-semibold text-blue hover:bg-blue hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-4"
+          className="absolute right-[31rem] top-5 z-20 flex h-12 w-12 items-center justify-center rounded-full border-2 border-blue bg-paper text-3xl font-semibold text-blue hover:bg-blue hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-4"
         >
           <span aria-hidden="true">←</span>
         </Link>
