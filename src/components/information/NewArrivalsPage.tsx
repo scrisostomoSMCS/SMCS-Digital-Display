@@ -49,13 +49,12 @@ export default function NewArrivalsPage({
             {content.intro}
           </p>
           {content.introEs && (
-            // Nudged down on the wall display only: the live bed panel floats
-            // over the top-right corner and would clip this column's first line.
-            // The padding is cancelled by an equal negative bottom margin so the
-            // row does not grow -- the steps list and the "Available Now" panel
-            // below stay exactly where they were. Tighter leading buys the space
-            // the shift needs without the last line reaching the teal panel.
-            <p className="font-body text-xl font-medium text-paper/70 @min-[40rem]:text-2xl @min-[64rem]:-mb-8 @min-[64rem]:pt-8 @min-[64rem]:text-3xl @min-[64rem]:leading-[1.3]">
+            // Sits level with the English column. This used to be nudged down to
+            // clear the live bed panel, but the panel starts well right of this
+            // grid's max width, so the offset only pushed the last line into the
+            // "Where to start" label below. Tighter leading keeps four lines of
+            // Spanish inside the header band.
+            <p className="font-body text-xl font-medium text-paper/70 @min-[40rem]:text-2xl @min-[64rem]:text-3xl @min-[64rem]:leading-[1.3]">
               {content.introEs}
             </p>
           )}
