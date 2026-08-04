@@ -18,6 +18,12 @@ export const FIRST_DAY = 0;
 export const DAY_START_HOUR = 8; // 8:00 AM
 export const DAY_END_HOUR = 20; // 8:00 PM
 
+// Whether to show the QR slot in the top-right of the Live Calendar. QR
+// generation is not implemented yet, so the slot would render as an empty
+// framed box reading "QR" on a public wall display. Hidden until a real code
+// is generated; flip to true to bring the slot back.
+export const SHOW_QR_PLACEHOLDER = false;
+
 // Content of the scrolling info bar at the top of the screen. Each string is
 // one item in the marquee: a welcome line, the live SMCS contact details, and
 // standing announcements. Kept as a single config value so making it staff-

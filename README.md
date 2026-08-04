@@ -280,7 +280,7 @@ changes as new, ordered, idempotent migration files; never rewrite applied ones.
     │   │   └── motion.ts                # Shared Framer Motion variants
     │   ├── manage/                  # Staff editors: slides, info content, events, locations
     │   ├── admin/                   # Admin sidebar + user manager
-    │   ├── dashboard/               # Live Calendar: info bar, calendar, QR placeholder
+    │   ├── dashboard/               # Live Calendar: info bar, calendar, QR placeholder (hidden)
     │   ├── calendar/                # Shared week calendar + event modal
     │   ├── schedule/                # Personal calendar wrapper
     │   ├── auth/                    # Login / sign-up forms, auth nav
@@ -648,8 +648,13 @@ attention-grabbing animation.
 
 ## Known Unfinished Work
 
-- The Live Calendar's QR area is still `QrPlaceholder`; QR generation is not
-  implemented.
+- **QR code: not implemented, and currently hidden on the Live Calendar.** The
+  plan is a QR in the top-right of `/dashboard` that people scan to open the
+  schedule on their phone. Only the empty `QrPlaceholder` slot was ever built,
+  so it is gated behind `SHOW_QR_PLACEHOLDER` in `src/lib/dashboardConfig.ts`,
+  set to `false`, rather than showing an empty box labeled "QR" on a public
+  wall display. The component and its layout slot are kept as-is. To finish:
+  generate a real code and flip the flag to `true`.
 - The Live Calendar's info bar (`INFO_BAR_ITEMS` in `dashboardConfig.ts`) and
   the header contact details (`siteConfig.ts`) are edited in code, not by
   staff. Both files hold the real SMCS phone and email, and they duplicate each
