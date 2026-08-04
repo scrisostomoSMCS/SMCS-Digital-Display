@@ -22,8 +22,8 @@ The repository is not only the bulletin. The same Next.js app also serves:
 | Route          | What it is                                                          |
 | -------------- | ------------------------------------------------------------------- |
 | `/`            | Public marketing home page (hero, live bulletin preview, bed popup)  |
-| `/information` | **Digital Bulletin** — the wall display / Yodeck / iframe target     |
-| `/dashboard`   | Live Calendar — public, view-only week schedule for TVs and phones   |
+| `/information` | **Digital Bulletin**: the wall display / Yodeck / iframe target      |
+| `/dashboard`   | Live Calendar: public, view-only week schedule for TVs and phones    |
 | `/schedule`    | A signed-in user's personal schedule                                 |
 | `/manage`      | Staff editor: events, bulletin content, custom slides, locations     |
 | `/admin`       | Admin-only user and role management                                  |
@@ -33,7 +33,7 @@ The site is bilingual (English / Spanish) via a locale cookie, and the bulletin
 renders both languages together since an unattended wall display has nobody to
 operate a language chooser.
 
-> **TODO: verify** — the prompt that produced this README described the repo as
+> **TODO: verify.** The prompt that produced this README described the repo as
 > a bulletin-only project. It is actually the full SMCS website plus the
 > bulletin. Confirm whether the bulletin is meant to be split into its own
 > deployment, or whether one app serving all routes is the intended shape.
@@ -45,14 +45,14 @@ operate a language chooser.
 **Supabase is the single source of truth.** All bulletin content, custom
 slides, events, user profiles/roles, and display settings live in Supabase
 Postgres, protected by Row Level Security. This web app reads and writes it
-directly from the browser using the public anon key — RLS, not key secrecy, is
+directly from the browser using the public anon key. RLS, not key secrecy, is
 the authorization boundary.
 
 **WordPress is a secondary data source, for bed counts only.** SMCS staff
 update bed availability inside WordPress admin; this app reads those numbers
 through a single server-side API route and never writes back.
 
-> **TODO: verify** — a React Native mobile app is said to share this Supabase
+> **TODO: verify.** A React Native mobile app is said to share this Supabase
 > backend. There is no mobile app code in this repository and nothing in the
 > code references one. Confirm the app exists, where it lives, and whether any
 > schema in `supabase/migrations/` is shared with it before changing tables.
@@ -71,18 +71,6 @@ flowchart LR
     BUL -->|"full screen URL"| YOD["Yodeck TV"]
 ```
 
-Plain-text version of the same flow:
-
-```
-WordPress (bed counts)  ──REST──▶  /api/beds  ──60s poll──▶  /information
-                                                            ▲
-Supabase (everything else)  ──reads + Realtime──────────────┘
-        ▲
-        └── writes from /manage and /admin (staff only, enforced by RLS)
-
-/information is consumed by:  Yodeck TVs  ·  a WordPress iframe  ·  a browser tab
-```
-
 ### The fixed 1920×1080 canvas
 
 This is the single most important design decision in the bulletin, and the one
@@ -90,7 +78,7 @@ most likely to be broken accidentally.
 
 Every slide is laid out on a **fixed 1920×1080 canvas**
 (`src/lib/bulletinCanvas.ts`). `InformationDisplay` measures the box it was
-handed — not the window — with a **`ResizeObserver`**, computes the largest
+handed (not the window) with a **`ResizeObserver`**, computes the largest
 whole-canvas scale that fits (`fitScale`, a "contain" fit that letterboxes
 rather than crops), and applies it as a single CSS `transform: scale()`. The
 letterbox bars are filled with the current slide's own background color so an
@@ -130,7 +118,7 @@ a good reference for the markup:
 </div>
 ```
 
-> **TODO: verify** — the WordPress side (which page, which plugin/block holds
+> **TODO: verify.** The WordPress side (which page, which plugin/block holds
 > the iframe, who has admin access) is not represented in this repository. Get
 > the page URL and credentials documented before the handoff.
 
@@ -158,16 +146,16 @@ type/lint gate.
 
 ## Prerequisites
 
-- **Node.js** — no version is pinned in `package.json`. Development is done on
+- **Node.js**: no version is pinned in `package.json`. Development is done on
   Node 22.x, which is what you should use. Next.js 15 requires Node 18.18+.
-- **npm** — the repo commits `package-lock.json`, so use npm (`npm ci`), not
+- **npm**: the repo commits `package-lock.json`, so use npm (`npm ci`), not
   yarn or pnpm.
-- **A Supabase project** — with the migrations in `supabase/migrations/`
+- **A Supabase project**: with the migrations in `supabase/migrations/`
   applied. Ask an existing maintainer for access to the production project
   rather than creating a new one.
 - **A Vercel account** with access to the SMCS project (for deploys).
-- **Yodeck access** — to point the physical TVs at the bulletin URLs.
-- **WordPress admin access** on the SMCS site — to update bed counts and to
+- **Yodeck access**: to point the physical TVs at the bulletin URLs.
+- **WordPress admin access** on the SMCS site, to update bed counts and to
   edit the page holding the bulletin iframe.
 
 ## Environment Variables
@@ -178,21 +166,21 @@ Copy the names from `.env.example` into a local `.env.local`. **Never commit
 | Variable                        | Public? | What it does | Where to get it |
 | ------------------------------- | ------- | ------------ | --------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`      | Public (browser) | Supabase project URL, e.g. `https://<ref>.supabase.co`. Used by the browser client, the server client, and middleware. | Supabase → Settings → API → "Project URL" |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public (browser) | Supabase publishable/anon key. Safe to expose — access is restricted by RLS, not by hiding this key. | Supabase → Settings → API → "Publishable key" (or the legacy "anon" key) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public (browser) | Supabase publishable/anon key. Safe to expose; access is restricted by RLS, not by hiding this key. | Supabase → Settings → API → "Publishable key" (or the legacy "anon" key) |
 | `BED_DATA_URL`                  | **Server-only** | Full URL of the WordPress REST endpoint returning live bed availability JSON. Read only inside `/api/beds`, so it never reaches the browser. | The SMCS WordPress site (ask whoever maintains the bed-count plugin/endpoint) |
 
 Notes:
 
-- `.env.local` is read by Next.js **at startup only** — restart the dev server
+- `.env.local` is read by Next.js **at startup only**, so restart the dev server
   after editing it.
 - `src/lib/supabase.ts` throws a descriptive error at import time if either
   `NEXT_PUBLIC_*` variable is missing, so a misconfigured environment fails
   loudly rather than silently.
 - **Never** put a Supabase `service_role` / secret key in any `NEXT_PUBLIC_*`
   variable. It bypasses RLS entirely and would be shipped to every browser.
-- `.env.example` still carries a stale comment claiming Supabase variables are
-  "not needed yet." They are required. `DATABASE_URL` is commented out there
-  and is **not** used anywhere in the code today.
+- `.env.example` lists all three required names with no values, and is the
+  template to copy. The `DATABASE_URL` it mentions is commented out and is
+  **not** read anywhere in the code today.
 
 Example `.env.local` (placeholders only):
 
@@ -222,10 +210,10 @@ npm run dev
 
 Then open:
 
-- <http://localhost:3000> — home page
-- <http://localhost:3000/information> — the Digital Bulletin
-- <http://localhost:3000/information?location=dining-room> — a location-targeted bulletin
-- <http://localhost:3000/bed-test> — the bed panel in isolation
+- <http://localhost:3000>: home page
+- <http://localhost:3000/information>: the Digital Bulletin
+- <http://localhost:3000/information?location=dining-room>: a location-targeted bulletin
+- <http://localhost:3000/bed-test>: the bed panel in isolation
 
 Verification commands:
 
@@ -242,7 +230,7 @@ Do not run `npm run build` while `npm run dev` is running against the same
 `supabase/migrations/*.sql` **in numeric order** via the Supabase SQL Editor
 (each file's header comment says so). Migration `0008` creates the public
 `slide-images` Storage bucket and its staff-write policies. Migration `0011` is
-superseded by `0020` — do not re-run `0011` after `0020`. Add new schema
+superseded by `0020`, so do not re-run `0011` after `0020`. Add new schema
 changes as new, ordered, idempotent migration files; never rewrite applied ones.
 
 ## Project Structure
@@ -252,7 +240,7 @@ changes as new, ordered, idempotent migration files; never rewrite applied ones.
 ├── messages/
 │   ├── en.json                      # English UI strings (next-intl)
 │   └── es.json                      # Spanish UI strings
-├── supabase/migrations/             # Ordered SQL — the database source of truth
+├── supabase/migrations/             # Ordered SQL, the database source of truth
 ├── public/                          # Checked-in site images (hero.avif, etc.)
 ├── docs/                            # Screenshots + Supabase confirmation-email template
 ├── next.config.ts                   # Next config; wires the next-intl plugin
@@ -272,7 +260,7 @@ changes as new, ordered, idempotent migration files; never rewrite applied ones.
     │   │   ├── manage/page.tsx      # Staff editor (employee/admin only)
     │   │   ├── login/page.tsx
     │   │   └── signup/page.tsx      # Staff sign-up, @smcares.org only
-    │   ├── information/page.tsx     # DIGITAL BULLETIN — full-screen, no chrome, reads ?location=
+    │   ├── information/page.tsx     # DIGITAL BULLETIN: full-screen, no chrome, reads ?location=
     │   ├── dashboard/page.tsx       # Live Calendar wall display
     │   ├── admin/page.tsx           # Admin user/role manager
     │   ├── bed-test/page.tsx        # Scratch page: bed panel on its own
@@ -315,7 +303,7 @@ changes as new, ordered, idempotent migration files; never rewrite applied ones.
         ├── staffSignup.ts           # STAFF_EMAIL_DOMAIN ("smcares.org") + check
         ├── dashboardConfig.ts       # Live Calendar hours, info-bar items
         ├── siteConfig.ts, siteNavigation.ts, eventColors.ts
-        └── README.md                # Note: partly stale, references an older calendar path
+        └── README.md                # Guide to this folder, grouped by concern
 ```
 
 ## Key Features
@@ -330,8 +318,8 @@ path:
 2. **`GET /api/beds`** (`src/app/api/beds/route.ts`) fetches `BED_DATA_URL`
    server-side with `next: { revalidate: 60 }` and `export const revalidate = 60`,
    so Next.js caches the upstream response for **60 seconds**. On any failure it
-   logs and returns `{ ok: false }` with HTTP 200 — deliberately, so the client
-   treats it as "no new data" rather than an error.
+   logs and returns `{ ok: false }` with HTTP 200. That is deliberate, so the
+   client treats it as "no new data" rather than an error.
 3. **`useBedAvailability()`** (`src/lib/useBedAvailability.ts`) fetches
    `/api/beds` on mount and then **every 60 seconds**. It ignores responses with
    `ok: false`, so a failed poll keeps the last good numbers on screen instead of
@@ -343,7 +331,7 @@ path:
 Because there are two 60-second layers (route cache + client poll), a change in
 WordPress appears on the display **within roughly 60 seconds, and at worst
 around two minutes**. `BedAvailabilitySlide` renders nothing at all when no
-program data has loaded — the display never shows a number it is not sure of.
+program data has loaded; the display never shows a number it is not sure of.
 
 The panel's position is a contract with the slides: `BED_PANEL_CLEARANCE` in
 `BedAvailabilitySlide.tsx` is a `min-height` each slide applies to its header
@@ -374,10 +362,10 @@ current slide's background so they stay visible.
 
 Two filters apply on top of that order:
 
-- **Hidden built-ins** — staff can remove a built-in page from the rotation
+- **Hidden built-ins**: staff can remove a built-in page from the rotation
   without losing its editor (`display_settings.hidden_builtins`). Services, new
   arrivals, and events-today are protected and cannot be hidden.
-- **Location targeting** — with `?location=<slug>`, a page or slide appears only
+- **Location targeting**: with `?location=<slug>`, a page or slide appears only
   if it has no location rows (meaning "all locations") or if it explicitly
   targets that location.
 
@@ -391,16 +379,16 @@ TVs.**
 
 Staff (role `employee` or `admin`) get a sticky sidebar over three sections:
 
-- **Calendar** — create, drag, resize, and delete events; a quick-add form
+- **Calendar**: create, drag, resize, and delete events; a quick-add form
   writes to the same `events` table that feeds the Live Calendar and the
   "Events today" bulletin slide.
-- **Digital Bulletin pages** — edit the built-in pages' copy (English and
+- **Digital Bulletin pages**: edit the built-in pages' copy (English and
   Spanish), hide/restore built-ins, and assign pages to locations.
-- **Custom slides** — pick one of four templates (`title-body`,
+- **Custom slides**: pick one of four templates (`title-body`,
   `title-image-text`, `image-focus`, `title-list`), pick a background
   (blue/teal/white), enter English and Spanish text, upload an image to the
   `slide-images` Storage bucket, reorder by drag, and target locations.
-- **Bulletin locations** — add screens and copy the exact
+- **Bulletin locations**: add screens and copy the exact
   `/information?location=<slug>` URL to paste into Yodeck.
 
 Deletions are recoverable: hidden built-ins and soft-deleted custom slides
@@ -421,7 +409,7 @@ There is exactly one API route in this application.
 - **Behavior:** server-side fetch of `process.env.BED_DATA_URL`, spread into the
   response envelope.
 - **Revalidation:** `export const revalidate = 60` plus `next: { revalidate: 60 }`
-  on the fetch — the upstream WordPress response is cached for 60 seconds.
+  on the fetch, so the upstream WordPress response is cached for 60 seconds.
 - **Success:** `200` with `{ ok: true, ...upstreamJson }`:
 
   ```json
@@ -440,13 +428,13 @@ There is exactly one API route in this application.
   }
   ```
 
-  > **TODO: verify** — the exact upstream field names and program list above are
+  > **TODO: verify.** The exact upstream field names and program list above are
   > reconstructed from the `BedData` TypeScript type in
   > `src/lib/useBedAvailability.ts`. Confirm against a real response from the
   > WordPress endpoint.
 
 - **Failure:** logs `Bed data fetch failed:` and returns **HTTP 200** with
-  `{ ok: false }`. This is intentional — clients keep displaying the last known
+  `{ ok: false }`. This is intentional: clients keep displaying the last known
   good counts instead of blanking or erroring.
 - A program whose `total` is `0` is rendered as a "Full" badge rather than a
   zero.
@@ -457,7 +445,7 @@ All other data flows go directly from the browser to Supabase (through
 ## Deployment
 
 This is a standard Next.js app. There is **no `vercel.json`** and no other
-checked-in Vercel configuration — do not assume custom regions, redirects, or
+checked-in Vercel configuration, so do not assume custom regions, redirects, or
 build settings exist.
 
 1. Import the GitHub repository into Vercel. The framework preset is Next.js;
@@ -471,7 +459,7 @@ build settings exist.
 3. Deploy, then smoke-test `/`, `/information`, `/dashboard`, `/manage`, and
    `/api/beds` on the deployment URL.
 
-The database is deployed separately — apply `supabase/migrations/*.sql` in the
+The database is deployed separately: apply `supabase/migrations/*.sql` in the
 Supabase SQL Editor in numeric order (see [Local Setup](#local-setup)).
 
 ### Production handoff checklist
@@ -509,12 +497,12 @@ Supabase SQL Editor in numeric order (see [Local Setup](#local-setup)).
       };
       ```
 
-      Prefer CSP `frame-ancestors` over `X-Frame-Options` — the latter has no
+      Prefer CSP `frame-ancestors` over `X-Frame-Options`; the latter has no
       multi-origin form, and `SAMEORIGIN` would break the WordPress embed. If
       you add `X-Frame-Options` for older-browser coverage, scope it to the same
       `/information` source and make sure it does not contradict the CSP.
 
-      > **TODO: verify** — confirm the exact production WordPress origin(s)
+      > **TODO: verify.** Confirm the exact production WordPress origin(s)
       > (apex vs. `www`, http vs. https) before adding this, since a wrong value
       > silently blanks the embed.
 - [ ] Yodeck players updated to the production URLs (below).
@@ -531,7 +519,7 @@ https://<your-vercel-domain>/information?location=<slug>
 ```
 
 - Set the Yodeck item to **full screen, 1920×1080, no scrollbars**, with
-  refresh/reload off — the page rotates and refreshes its own data
+  refresh/reload off, since the page rotates and refreshes its own data
   indefinitely, so a scheduled reload is unnecessary.
 - Omitting `?location=` shows **every** page and slide (all global plus all
   targeted content). Use a slug so a screen only shows what is meant for it.
@@ -557,12 +545,12 @@ Locations seeded by migration `0017`, with later renames applied in `0018` and
 ## Maintenance & Troubleshooting
 
 **Bed counts are not updating on the display.**
-Check in order: (1) open `/api/beds` on the deployment — if it returns
+Check in order: (1) open `/api/beds` on the deployment, and if it returns
 `{ ok: false }`, the upstream fetch failed, so check `BED_DATA_URL` is set in
 Vercel and that the WordPress endpoint responds; (2) remember the two
 60-second layers, so wait ~2 minutes before concluding anything is broken;
 (3) if the panel is missing entirely rather than stale, `programs` was absent
-from the response — `BedAvailabilitySlide` returns `null` rather than render an
+from the response, so `BedAvailabilitySlide` returns `null` rather than render an
 uncertain number.
 
 **The bed panel covers slide content.**
@@ -580,13 +568,13 @@ the slide for `vw`, `vh`, or Tailwind viewport breakpoints (`sm:`, `md:`,
 **The iframe renders blank or is refused.**
 Open the WordPress page's browser console. `Refused to display … in a frame`
 means a `frame-ancestors` / `X-Frame-Options` value does not include the
-WordPress origin — fix the header in `next.config.ts` (see the handoff
+WordPress origin, so fix the header in `next.config.ts` (see the handoff
 checklist). Also confirm the WordPress page uses the **Blank template**, and
 that the iframe's container has a real height (a `16/9` aspect-ratio box, not
 `height: auto`).
 
 **The bulletin is letterboxed with colored bars.**
-Expected — `fitScale` "contains" rather than crops so nothing is cut off. The
+Expected: `fitScale` "contains" rather than crops so nothing is cut off. The
 bars are painted with the current slide's background. If the container is not
 16:9, either fix the container or accept the bars.
 
@@ -598,8 +586,8 @@ starts at `0`). If you see a flash, something is rendering the canvas outside
 **A staff edit does not appear on the TVs.**
 The display listens to Supabase Realtime. Confirm the edited table is in the
 Realtime publication (the migrations set this up) and that the slide is not
-`hidden`, is not location-targeted away from that screen, and — for services
-pages — is not empty (empty services pages are filtered out before numbering).
+`hidden`, is not location-targeted away from that screen, and (for services
+pages) is not empty (empty services pages are filtered out before numbering).
 
 **Sign-up is rejected.**
 Only `@smcares.org` addresses can register. That is enforced both in
@@ -618,7 +606,7 @@ a product decision and a data migration plan.
 
 ## Constraints & Conventions
 
-**Free-tier infrastructure only — this is a hard cost constraint.** SMCS is a
+**Free-tier infrastructure only. This is a hard cost constraint.** SMCS is a
 nonprofit and this project runs on free tiers (Vercel Hobby, Supabase free).
 Do not introduce paid services, paid add-ons, or usage patterns that would push
 past free-tier limits. Prefer polling intervals and caching that stay within
@@ -662,13 +650,13 @@ attention-grabbing animation.
 
 - The Live Calendar's QR area is still `QrPlaceholder`; QR generation is not
   implemented.
-- `dashboardConfig.ts` and `siteConfig.ts` contain placeholder announcement and
-  contact content that should be confirmed against real SMCS values.
+- The Live Calendar's info bar (`INFO_BAR_ITEMS` in `dashboardConfig.ts`) and
+  the header contact details (`siteConfig.ts`) are edited in code, not by
+  staff. Both files hold the real SMCS phone and email, and they duplicate each
+  other, so a change has to be made in both places. Making them staff-editable
+  is the obvious next step.
 - `informationContent.ts` is sample/fallback copy; staff overrides saved in
   Supabase take precedence.
 - Client self-registration and a staff/admin path for assigning personal
-  `signups` are not implemented — the database trigger currently allows only the
+  `signups` are not implemented; the database trigger currently allows only the
   staff email domain to create users.
-- Stale docs to distrust in favor of the code: `.env.example` claims Supabase
-  variables are not needed yet (they are), and `src/lib/README.md` references an
-  older calendar component path.

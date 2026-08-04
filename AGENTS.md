@@ -73,10 +73,10 @@ Database deployment is separate from the web deployment. Apply `supabase/migrati
 ## Known Unfinished Work
 
 - The Live Calendar QR area is still `QrPlaceholder`; QR generation is not implemented.
-- `dashboardConfig.ts` still contains placeholder announcement/contact-bar content.
+- The Live Calendar info bar (`INFO_BAR_ITEMS` in `dashboardConfig.ts`) and the header contact details (`siteConfig.ts`) hold the real SMCS values but are code-edited, not staff-editable, and the phone/email are duplicated across both files.
 - `informationContent.ts` identifies its built-in copy as sample/fallback content, although staff can override it through Supabase.
 - Client self-registration and a staff/admin assignment path for personal `signups` are not implemented. The current database trigger allows only the configured staff email domain to create users.
-- Some phase comments and documentation are stale: `.env.example` says Supabase variables are not yet needed, and `src/lib/README.md` references an older calendar component path. Trust current imports and implementation.
+- `.env.example` and `src/lib/README.md` were rewritten to match the current code (three required env vars; the real `src/lib` contents). Some inline comments elsewhere still use "Phase 1/2/3" language; trust current imports and implementation over phase labels.
 - The worktree was clean when this file was requested; there was no pre-existing uncommitted diff to preserve or document. Recent history primarily changes signup/login wording, the admin panel/sidebar, manage-page usability, and per-event colors.
 
 ## Working Style

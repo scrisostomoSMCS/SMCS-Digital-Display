@@ -2,8 +2,8 @@ import { INFO_BAR_ITEMS } from "@/lib/dashboardConfig";
 
 /*
   Scrolling marquee at the very top of the dashboard. Content comes from the
-  single INFO_BAR_ITEMS config value (placeholder contact info + announcements),
-  so making it editable later is a one-spot change.
+  single INFO_BAR_ITEMS config value (contact details + standing
+  announcements), so making it staff-editable later is a one-spot change.
 
   The items are rendered twice so the CSS animation can loop seamlessly by
   translating exactly half the track width (see .marquee in globals.css).
