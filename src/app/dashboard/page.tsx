@@ -4,6 +4,7 @@ import InfoBar from "@/components/dashboard/InfoBar";
 import DashboardCalendar from "@/components/dashboard/DashboardCalendar";
 import QrPlaceholder from "@/components/dashboard/QrPlaceholder";
 import MobileHeader from "@/components/MobileHeader";
+import { SHOW_QR_PLACEHOLDER } from "@/lib/dashboardConfig";
 
 export const metadata = {
   title: "Live Calendar | SMCS",
@@ -22,8 +23,9 @@ const poppins = Poppins({
   Lives outside the (site) route group so it renders without site chrome.
 
   Layout, top to bottom: scrolling info bar; a compact control row with a Home
-  link (left) and the reserved QR slot (right); then the week calendar, which
-  fills all remaining screen height.
+  link (left) and the reserved QR slot (right, currently hidden via
+  SHOW_QR_PLACEHOLDER); then the week calendar, which fills all remaining
+  screen height.
 */
 export default function DashboardPage() {
   return (
@@ -41,8 +43,11 @@ export default function DashboardPage() {
             ← Home
           </Link>
 
-          {/* Reserved top-right slot for a future QR code. */}
-          <QrPlaceholder />
+          {/* Reserved top-right slot for a future QR code. Hidden until QR
+              generation exists, so the wall display never shows an empty
+              placeholder box (see SHOW_QR_PLACEHOLDER in dashboardConfig).
+              justify-between keeps Home on the left with no second child. */}
+          {SHOW_QR_PLACEHOLDER && <QrPlaceholder />}
         </div>
 
         {/* min-h-0 lets the calendar fill the remaining viewport height. */}

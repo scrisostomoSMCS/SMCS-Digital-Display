@@ -72,7 +72,7 @@ Database deployment is separate from the web deployment. Apply `supabase/migrati
 
 ## Known Unfinished Work
 
-- The Live Calendar QR area is still `QrPlaceholder`; QR generation is not implemented.
+- QR generation is not implemented. The Live Calendar's `QrPlaceholder` slot is hidden behind `SHOW_QR_PLACEHOLDER` in `src/lib/dashboardConfig.ts` (currently `false`) so the wall display never shows an empty "QR" box. Keep the component; flip the flag once a real code is generated.
 - The Live Calendar info bar (`INFO_BAR_ITEMS` in `dashboardConfig.ts`) and the header contact details (`siteConfig.ts`) hold the real SMCS values but are code-edited, not staff-editable, and the phone/email are duplicated across both files.
 - `informationContent.ts` identifies its built-in copy as sample/fallback content, although staff can override it through Supabase.
 - Client self-registration and a staff/admin assignment path for personal `signups` are not implemented. The current database trigger allows only the configured staff email domain to create users.

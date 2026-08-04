@@ -1,5 +1,10 @@
 /*
-  Reserved slot for a future QR code (generated in a later phase, not yet).
+  Reserved slot for a future QR code. QR generation is not implemented, so this
+  is NOT currently rendered: the Live Calendar gates it behind
+  SHOW_QR_PLACEHOLDER (see lib/dashboardConfig), which is false, because an
+  empty box reading "QR" on a public wall display looks broken. Kept so the
+  layout slot and styling are ready when a real code is generated.
+
   Compact horizontal form for the top-right corner: caption beside a small,
   accent-framed empty box sized for a QR code.
 */
