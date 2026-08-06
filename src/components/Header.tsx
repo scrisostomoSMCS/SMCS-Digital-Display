@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import AuthNav from "@/components/auth/AuthNav";
@@ -23,11 +22,15 @@ export default async function Header() {
 
       <DesktopHeaderContent>
         {/* Logo sits on a white block so the blue/teal mark keeps its contrast
-            against the teal bar */}
-        <Link
-          href="/"
+            against the teal bar. It links OUT to the main smcares.org site
+            rather than to this site's "/", so it is a plain external anchor.
+            The mobile header's "SMCS" wordmark still goes to "/". */}
+        <a
+          href="https://smcares.org"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center bg-paper px-5 py-2"
-          aria-label={t("homeAria")}
+          aria-label={t("siteAria")}
         >
           <Image
             src="/smcslogo.png"
@@ -37,7 +40,7 @@ export default async function Header() {
             priority
             className="h-9 w-auto"
           />
-        </Link>
+        </a>
 
         {/* Contact */}
         <div className="hidden flex-1 items-center justify-center gap-8 px-4 text-base font-semibold md:flex">
