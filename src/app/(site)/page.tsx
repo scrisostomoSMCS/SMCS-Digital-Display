@@ -14,7 +14,7 @@ export default async function Home() {
       {/* Live bed counts, shown bottom-left on arrival until dismissed. */}
       <BedAvailabilityPopup />
 
-      {/* Hero, background photo (public/hero.avif) + big serif headline.
+      {/* Hero, background photo (public/hero.avif) behind the bulletin preview.
           A neutral dark scrim over the photo darkens it and keeps the white
           text readable; adjust bg-ink/NN to darken more or less. The nav bar
           overlays the top of this image on the home page (see NavBar). */}
@@ -26,20 +26,7 @@ export default async function Home() {
         />
         <div className="absolute inset-0 bg-ink/70" aria-hidden="true" />
         <div className="relative mx-auto w-full max-w-6xl px-6 py-20">
-          {/* Three explicit lines. The headline is longer than the old two-word
-              one, so the top of the responsive scale is a step smaller to keep
-              "Digital Bulletin" on one line at every width. */}
-          <h1 className="font-display text-4xl font-bold leading-[0.9] sm:text-5xl md:text-6xl lg:text-7xl">
-            {t("heroLine1")}
-            <br />
-            {t("heroLine2")}
-            <br />
-            {t("heroLine3")}
-          </h1>
-          <p className="mt-6 max-w-2xl text-xl text-paper/90 md:text-2xl">
-            {t("heroSubtitle")}
-          </p>
-          <div className="mt-10 flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4">
             <Link
               href="/dashboard"
               className="inline-block border-2 border-paper bg-paper px-7 py-3 text-lg font-semibold text-blue hover:bg-blue hover:text-paper"
