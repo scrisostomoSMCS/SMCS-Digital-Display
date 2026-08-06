@@ -31,16 +31,28 @@ export default function NavBar() {
         }
       >
         <ul className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-1 px-4 py-1.5">
-          {SITE_NAV_LINKS.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className="inline-block px-4 py-2 text-lg font-semibold text-paper hover:underline"
-              >
-                {t(link.key)}
-              </Link>
-            </li>
-          ))}
+          {SITE_NAV_LINKS.map((link) => {
+            const className =
+              "inline-block px-4 py-2 text-lg font-semibold text-paper hover:underline";
+            return (
+              <li key={link.href}>
+                {link.external ? (
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={className}
+                  >
+                    {t(link.key)}
+                  </a>
+                ) : (
+                  <Link href={link.href} className={className}>
+                    {t(link.key)}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </nav>
       <StickySubNav mainNavRef={mainNavRef} />

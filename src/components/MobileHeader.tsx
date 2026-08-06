@@ -159,17 +159,33 @@ export default function MobileHeader() {
 
               <nav aria-label="Mobile navigation" className="overflow-y-auto py-3">
                 <ul>
-                  {SITE_NAV_LINKS.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        onClick={() => closeMenu(false)}
-                        className="flex min-h-12 items-center border-l-4 border-transparent px-5 py-3 text-base font-semibold text-ink hover:border-teal hover:bg-blue/5 hover:text-blue"
-                      >
-                        {tNav(link.key)}
-                      </Link>
-                    </li>
-                  ))}
+                  {SITE_NAV_LINKS.map((link) => {
+                    const className =
+                      "flex min-h-12 items-center border-l-4 border-transparent px-5 py-3 text-base font-semibold text-ink hover:border-teal hover:bg-blue/5 hover:text-blue";
+                    return (
+                      <li key={link.href}>
+                        {link.external ? (
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => closeMenu(false)}
+                            className={className}
+                          >
+                            {tNav(link.key)}
+                          </a>
+                        ) : (
+                          <Link
+                            href={link.href}
+                            onClick={() => closeMenu(false)}
+                            className={className}
+                          >
+                            {tNav(link.key)}
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
                 <ul className="mt-3 border-t border-placeholder pt-3">
                   <AuthNav

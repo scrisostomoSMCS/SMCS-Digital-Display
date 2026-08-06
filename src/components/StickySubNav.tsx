@@ -60,16 +60,28 @@ export default function StickySubNav({ mainNavRef }: StickySubNavProps) {
               SMCS
             </Link>
             <ul className="flex flex-1 flex-wrap items-center justify-center py-1">
-              {SITE_NAV_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="flex min-h-11 items-center px-3 py-2 text-sm font-semibold text-paper hover:underline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-paper sm:text-base md:px-4"
-                  >
-                    {t(link.key)}
-                  </Link>
-                </li>
-              ))}
+              {SITE_NAV_LINKS.map((link) => {
+                const className =
+                  "flex min-h-11 items-center px-3 py-2 text-sm font-semibold text-paper hover:underline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-paper sm:text-base md:px-4";
+                return (
+                  <li key={link.href}>
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={className}
+                      >
+                        {t(link.key)}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className={className}>
+                        {t(link.key)}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </motion.nav>
