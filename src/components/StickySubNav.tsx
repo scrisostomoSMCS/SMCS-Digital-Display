@@ -2,6 +2,7 @@
 
 import type { RefObject } from "react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
@@ -21,6 +22,7 @@ export default function StickySubNav({ mainNavRef }: StickySubNavProps) {
   const [visible, setVisible] = useState(false);
   const reduceMotion = useReducedMotion();
   const t = useTranslations("nav");
+  const tHeader = useTranslations("header");
 
   useEffect(() => {
     const mainNav = mainNavRef.current;
@@ -52,12 +54,20 @@ export default function StickySubNav({ mainNavRef }: StickySubNavProps) {
           transition={{ duration: reduceMotion ? 0 : 0.22, ease: "easeOut" }}
         >
           <div className="mx-auto flex max-w-6xl items-center px-2 sm:px-4">
+            {/* Same white block as the main header: the blue/teal mark needs a
+                paper background to stay legible on the blue bar. */}
             <Link
               href="/"
-              aria-label="SMCS home"
-              className="hidden min-h-11 shrink-0 items-center px-3 text-base font-semibold text-paper hover:underline md:flex"
+              aria-label={tHeader("homeAria")}
+              className="hidden min-h-11 shrink-0 items-center bg-paper px-3 py-1 md:flex"
             >
-              SMCS
+              <Image
+                src="/smcslogo.png"
+                alt={tHeader("logo")}
+                width={1468}
+                height={354}
+                className="h-7 w-auto"
+              />
             </Link>
             <ul className="flex flex-1 flex-wrap items-center justify-center py-1">
               {SITE_NAV_LINKS.map((link) => {
