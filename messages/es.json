@@ -15,6 +15,7 @@
   "header": {
     "logo": "St. Mary's Community Services",
     "homeAria": "Inicio de SMCS",
+    "siteAria": "Sitio web principal de St. Mary's Community Services (se abre en una pestaña nueva)",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú"
   },
