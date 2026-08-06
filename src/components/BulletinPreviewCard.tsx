@@ -25,11 +25,7 @@ export default function BulletinPreviewCard() {
   const t = useTranslations("home.bulletinPreview");
 
   return (
-    <div className="mt-10 w-full max-w-6xl">
-      <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-paper/80">
-        {t("label")}
-      </p>
-
+    <div className="mt-8 w-full max-w-6xl">
       <a
         href="https://smcares.org"
         target="_blank"

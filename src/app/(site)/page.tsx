@@ -26,7 +26,18 @@ export default async function Home() {
         />
         <div className="absolute inset-0 bg-ink/70" aria-hidden="true" />
         <div className="relative mx-auto w-full max-w-6xl px-6 py-20">
-          <div className="flex flex-wrap gap-4">
+          {/* Welcome copy sits directly above the preview it describes. */}
+          <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl">
+            {t("welcomeTitle")}
+          </h1>
+          <p className="mt-3 text-lg text-paper/90 md:text-xl">
+            {t("welcomeSubtitle")}
+          </p>
+
+          {/* Scaled-down live window into /information. */}
+          <BulletinPreviewCard />
+
+          <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href="/dashboard"
               className="inline-block border-2 border-paper bg-paper px-7 py-3 text-lg font-semibold text-blue hover:bg-blue hover:text-paper"
@@ -40,9 +51,6 @@ export default async function Home() {
               {t("learnMore")}
             </Link>
           </div>
-
-          {/* Scaled-down live window into /information, linked to the full page. */}
-          <BulletinPreviewCard />
         </div>
       </section>
 
