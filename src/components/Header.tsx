@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
 import { getTranslations } from "next-intl/server";
@@ -21,13 +22,21 @@ export default async function Header() {
       <MobileHeader />
 
       <DesktopHeaderContent>
-        {/* Logo placeholder, white text on the teal bar (no box) */}
+        {/* Logo sits on a white block so the blue/teal mark keeps its contrast
+            against the teal bar */}
         <Link
           href="/"
-          className="flex items-center px-6 py-3 text-lg font-bold tracking-tight text-paper"
+          className="flex items-center bg-paper px-5 py-2"
           aria-label={t("homeAria")}
         >
-          {t("logo")}
+          <Image
+            src="/smcslogo.png"
+            alt={t("logo")}
+            width={1468}
+            height={354}
+            priority
+            className="h-9 w-auto"
+          />
         </Link>
 
         {/* Contact */}
