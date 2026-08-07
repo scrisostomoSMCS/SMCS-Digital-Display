@@ -11,6 +11,28 @@ export const labelClass = "block text-base font-semibold";
 export const smallBtn =
   "min-h-11 border-2 border-blue px-3 py-1 text-sm font-semibold text-blue hover:bg-blue hover:text-paper lg:min-h-0";
 
+/*
+  Live "142/160" readout for a length-limited field. Turns blue at 90% so the
+  ceiling is visible before it is hit; the input itself refuses more characters,
+  so this is information, not an error state. aria-live announces the count as
+  it changes for anyone not watching the number.
+*/
+export function CharCount({ value, max }: { value: string; max: number }) {
+  const used = value.length;
+  const close = used >= max * 0.9;
+  return (
+    <span
+      aria-live="polite"
+      className={`mt-1 block text-right text-sm tabular-nums ${
+        close ? "font-semibold text-blue" : "text-ink/60"
+      }`}
+    >
+      {used}/{max}
+      {used >= max && <span className="ml-2">Limit reached</span>}
+    </span>
+  );
+}
+
 export function Field({
   label,
   value,
@@ -18,6 +40,7 @@ export function Field({
   hint,
   textarea,
   rows = 2,
+  maxLength,
 }: {
   label: string;
   value: string;
@@ -25,6 +48,9 @@ export function Field({
   hint?: string;
   textarea?: boolean;
   rows?: number;
+  // Sized so the text cannot be cut off on the wall display, see
+  // lib/bulletinLimits. Omit for fields that are not shown on the bulletin.
+  maxLength?: number;
 }) {
   return (
     <label className="block">
@@ -35,15 +61,18 @@ export function Field({
           className={inputClass}
           rows={rows}
           value={value}
+          maxLength={maxLength}
           onChange={(e) => onChange(e.target.value)}
         />
       ) : (
         <input
           className={inputClass}
           value={value}
+          maxLength={maxLength}
           onChange={(e) => onChange(e.target.value)}
         />
       )}
+      {maxLength !== undefined && <CharCount value={value} max={maxLength} />}
     </label>
   );
 }
@@ -108,30 +137,43 @@ export function CollapsiblePanel({
   );
 }
 
-// Editor for a simple list of strings (add / edit / remove).
+// Editor for a simple list of strings (add / edit / remove). maxItems/maxLength
+// come from the measured ceilings in lib/bulletinLimits: past them the list
+// runs off the bulletin canvas.
 export function StringListEditor({
   items,
   onChange,
   addLabel = "+ Add item",
+  maxItems,
+  maxLength,
 }: {
   items: string[];
   onChange: (next: string[]) => void;
   addLabel?: string;
+  maxItems?: number;
+  maxLength?: number;
 }) {
+  const atLimit = maxItems !== undefined && items.length >= maxItems;
   return (
     <div className="space-y-2">
       {items.map((item, i) => (
         <div key={i} className="flex flex-col gap-2 sm:flex-row lg:flex-row">
-          <input
-            className={inputClass}
-            value={item}
-            onChange={(e) =>
-              onChange(items.map((x, idx) => (idx === i ? e.target.value : x)))
-            }
-          />
+          <div className="min-w-0 flex-1">
+            <input
+              className={inputClass}
+              value={item}
+              maxLength={maxLength}
+              onChange={(e) =>
+                onChange(items.map((x, idx) => (idx === i ? e.target.value : x)))
+              }
+            />
+            {maxLength !== undefined && (
+              <CharCount value={item} max={maxLength} />
+            )}
+          </div>
           <button
             type="button"
-            className={`${smallBtn} sm:w-auto lg:w-auto`}
+            className={`${smallBtn} shrink-0 sm:w-auto lg:w-auto`}
             onClick={() => onChange(items.filter((_, idx) => idx !== i))}
           >
             Remove
@@ -140,11 +182,17 @@ export function StringListEditor({
       ))}
       <button
         type="button"
-        className={smallBtn}
+        className={`${smallBtn} disabled:cursor-not-allowed disabled:opacity-45`}
+        disabled={atLimit}
         onClick={() => onChange([...items, ""])}
       >
         {addLabel}
       </button>
+      {atLimit && (
+        <p className="text-sm font-semibold text-ink/60">
+          Maximum of {maxItems} fits on the display.
+        </p>
+      )}
     </div>
   );
 }

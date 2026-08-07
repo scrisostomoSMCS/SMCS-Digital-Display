@@ -20,9 +20,14 @@ import { type InfoContent } from "@/lib/infoContent";
 */
 export default function DemographicPage({
   content,
+  animate = true,
 }: {
   content: InfoContent["demographic"];
+  // false renders the finished state with no entrance animation, for the
+  // manage page's static preview.
+  animate?: boolean;
 }) {
+  const init = animate ? "hidden" : false;
   return (
     <InfoPageShell bg="teal">
       <div className="pointer-events-none absolute bottom-8 right-14 hidden @min-[64rem]:block">
@@ -31,7 +36,7 @@ export default function DemographicPage({
 
       <motion.header
         variants={headerIn}
-        initial="hidden"
+        initial={init}
         animate="show"
         className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
@@ -56,7 +61,7 @@ export default function DemographicPage({
 
       <motion.div
         variants={staggerContainer}
-        initial="hidden"
+        initial={init}
         animate="show"
         className="relative z-10 mt-5 grid grid-cols-1 gap-4 @min-[40rem]:grid-cols-2 @min-[64rem]:min-h-0 @min-[64rem]:flex-1 @min-[64rem]:grid-cols-3 @min-[64rem]:grid-rows-2"
       >

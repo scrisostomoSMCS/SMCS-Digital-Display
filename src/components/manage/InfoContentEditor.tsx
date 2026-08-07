@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -16,11 +16,22 @@ import {
 } from "@/lib/infoContent";
 import {
   Field,
+  CharCount,
   CollapsiblePanel,
   inputClass,
   labelClass,
   smallBtn,
 } from "./editorFields";
+import BulletinCanvasPreview from "@/components/information/BulletinCanvasPreview";
+import ServicesOverviewPage from "@/components/information/ServicesOverviewPage";
+import NewArrivalsPage from "@/components/information/NewArrivalsPage";
+import DemographicPage from "@/components/information/DemographicPage";
+import EventsTodayPage from "@/components/information/EventsTodayPage";
+import {
+  SERVICES_LIMITS,
+  DEMOGRAPHIC_LIMITS,
+  NEW_ARRIVALS_LIMITS,
+} from "@/lib/bulletinLimits";
 import {
   deleteBulletinPageLocations,
   fetchBulletinPageLocations,
@@ -40,18 +51,46 @@ import LocationBadges, { useBulletinLocations } from "./LocationBadges";
 */
 
 // Editor for a list of services (used by the services and demographic pages).
+/*
+  Preview block shown at the top of each page's panel: the real display
+  component on the real canvas, so what staff see here is what the wall screen
+  draws. Kept above the fields so the effect of an edit is visible while typing.
+*/
+function PagePreview({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-5 border-b-2 border-blue/20 pb-5">
+      <p className={labelClass}>Preview</p>
+      <p className="mb-2 text-sm text-ink/60">
+        Exactly how this page appears on the Digital Bulletin, including the
+        live bed-availability panel drawn on top of it.
+      </p>
+      <BulletinCanvasPreview>{children}</BulletinCanvasPreview>
+    </div>
+  );
+}
+
+type ServiceLimits = {
+  name: number;
+  nameEs: number;
+  description: number;
+  location: number;
+  time: number;
+};
+
 function ServiceListEditor({
   services,
   onChange,
   maxItems,
   allowReorder = false,
   longDescriptions = false,
+  limits,
 }: {
   services: InfoService[];
   onChange: (next: InfoService[]) => void;
   maxItems?: number;
   allowReorder?: boolean;
   longDescriptions?: boolean;
+  limits: ServiceLimits;
 }) {
   const patch = (i: number, p: Partial<InfoService>) =>
     onChange(services.map((s, idx) => (idx === i ? { ...s, ...p } : s)));
@@ -101,11 +140,13 @@ function ServiceListEditor({
               label="Name"
               value={s.name}
               onChange={(v) => patch(i, { name: v })}
+              maxLength={limits.name}
             />
             <Field
               label="Location"
               value={s.location ?? ""}
               onChange={(v) => patch(i, { location: v })}
+              maxLength={limits.location}
             />
             <label className="block">
               <span className={labelClass}>Icon</span>
@@ -128,6 +169,7 @@ function ServiceListEditor({
               label="Name (Español)"
               value={s.nameEs ?? ""}
               onChange={(v) => patch(i, { nameEs: v })}
+              maxLength={limits.nameEs}
             />
           </div>
           <div className="mt-3">
@@ -138,6 +180,7 @@ function ServiceListEditor({
               onChange={(v) => patch(i, { time: v })}
               textarea
               rows={2}
+              maxLength={limits.time}
             />
           </div>
           <div className="mt-3">
@@ -147,6 +190,7 @@ function ServiceListEditor({
               onChange={(v) => patch(i, { description: v })}
               textarea={longDescriptions}
               rows={4}
+              maxLength={limits.description}
             />
           </div>
           <div className="mt-3">
@@ -156,6 +200,7 @@ function ServiceListEditor({
               onChange={(v) => patch(i, { descriptionEs: v })}
               textarea={longDescriptions}
               rows={4}
+              maxLength={limits.description}
             />
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -366,6 +411,18 @@ export default function InfoContentEditor() {
           onToggle={() => toggle(`services-page-${idx + 1}`)}
         >
           <BulletinPageLocationSelector pageKey={servicePageKey(page.id)} />
+
+          <PagePreview>
+            <ServicesOverviewPage
+              title={page.title}
+              titleEs={page.titleEs}
+              services={page.services}
+              pageNumber={idx + 1}
+              totalPages={servicesPages.length}
+              animate={false}
+            />
+          </PagePreview>
+
           <div className="mb-4 border-b-2 border-blue/20 pb-4">
             <p className="mb-3 text-sm text-ink/60">
               The heading shown at the top of this services page.
@@ -374,12 +431,14 @@ export default function InfoContentEditor() {
               label="Page title"
               value={page.title}
               onChange={(v) => patchServicesPage(idx, { title: v })}
+              maxLength={SERVICES_LIMITS.pageTitle}
             />
             <div className="mt-3">
               <Field
                 label="Page title (Español)"
                 value={page.titleEs ?? ""}
                 onChange={(v) => patchServicesPage(idx, { titleEs: v })}
+                maxLength={SERVICES_LIMITS.pageTitle}
               />
             </div>
           </div>
@@ -404,6 +463,13 @@ export default function InfoContentEditor() {
             maxItems={MAX_SERVICES_PER_PAGE}
             allowReorder
             longDescriptions
+            limits={{
+              name: SERVICES_LIMITS.serviceName,
+              nameEs: SERVICES_LIMITS.serviceName,
+              time: SERVICES_LIMITS.serviceTime,
+              description: SERVICES_LIMITS.serviceDescription,
+              location: SERVICES_LIMITS.serviceLocation,
+            }}
           />
         </CollapsiblePanel>
       ))}
@@ -434,15 +500,22 @@ export default function InfoContentEditor() {
         <BulletinPageLocationSelector
           pageKey={FIXED_BULLETIN_PAGE_KEYS.newArrivals}
         />
+
+        <PagePreview>
+          <NewArrivalsPage content={na} animate={false} />
+        </PagePreview>
+
         <Field
           label="New arrivals page: headline"
           value={na.headline}
           onChange={(v) => setArrivals({ headline: v })}
+          maxLength={NEW_ARRIVALS_LIMITS.headline}
         />
         <Field
           label="New arrivals page: headline (Español)"
           value={na.headlineEs ?? ""}
           onChange={(v) => setArrivals({ headlineEs: v })}
+          maxLength={NEW_ARRIVALS_LIMITS.headline}
         />
         <Field
           label="New arrivals page: message"
@@ -450,6 +523,7 @@ export default function InfoContentEditor() {
           onChange={(v) => setArrivals({ intro: v })}
           textarea
           rows={3}
+          maxLength={NEW_ARRIVALS_LIMITS.intro}
         />
         <Field
           label="New arrivals page: message (Español)"
@@ -457,16 +531,19 @@ export default function InfoContentEditor() {
           onChange={(v) => setArrivals({ introEs: v })}
           textarea
           rows={3}
+          maxLength={NEW_ARRIVALS_LIMITS.intro}
         />
         <Field
           label="“Where to start” heading"
           value={na.stepsLabel}
           onChange={(v) => setArrivals({ stepsLabel: v })}
+          maxLength={NEW_ARRIVALS_LIMITS.stepsLabel}
         />
         <Field
           label="“Where to start” heading (Español)"
           value={na.stepsLabelEs ?? ""}
           onChange={(v) => setArrivals({ stepsLabelEs: v })}
+          maxLength={NEW_ARRIVALS_LIMITS.stepsLabel}
         />
         <div>
           <p className={labelClass}>Steps</p>
@@ -484,12 +561,14 @@ export default function InfoContentEditor() {
                     label={`Step ${i + 1}: title`}
                     value={step.title}
                     onChange={(v) => patch({ title: v })}
+                    maxLength={NEW_ARRIVALS_LIMITS.stepTitle}
                   />
                   <div className="mt-3">
                     <Field
                       label={`Step ${i + 1}: title (Español)`}
                       value={step.titleEs ?? ""}
                       onChange={(v) => patch({ titleEs: v })}
+                      maxLength={NEW_ARRIVALS_LIMITS.stepTitle}
                     />
                   </div>
                   <div className="mt-3">
@@ -497,6 +576,7 @@ export default function InfoContentEditor() {
                       label={`Step ${i + 1}: detail`}
                       value={step.detail}
                       onChange={(v) => patch({ detail: v })}
+                      maxLength={NEW_ARRIVALS_LIMITS.stepDetail}
                     />
                   </div>
                   <div className="mt-3">
@@ -504,6 +584,7 @@ export default function InfoContentEditor() {
                       label={`Step ${i + 1}: detail (Español)`}
                       value={step.detailEs ?? ""}
                       onChange={(v) => patch({ detailEs: v })}
+                      maxLength={NEW_ARRIVALS_LIMITS.stepDetail}
                     />
                   </div>
                   <button
@@ -520,26 +601,36 @@ export default function InfoContentEditor() {
                 </div>
               );
             })}
+            {/* A 4th step overflows the page by ~246px at any text length. */}
             <button
               type="button"
-              className={smallBtn}
+              className={`${smallBtn} disabled:cursor-not-allowed disabled:opacity-45`}
+              disabled={na.steps.length >= NEW_ARRIVALS_LIMITS.maxSteps}
               onClick={() =>
                 setArrivals({ steps: [...na.steps, { title: "", detail: "" }] })
               }
             >
               + Add step
             </button>
+            {na.steps.length >= NEW_ARRIVALS_LIMITS.maxSteps && (
+              <p className="text-sm font-semibold text-ink/60">
+                Maximum of {NEW_ARRIVALS_LIMITS.maxSteps} steps fits on this
+                page.
+              </p>
+            )}
           </div>
         </div>
         <Field
           label="“Available now” heading"
           value={na.availableLabel}
           onChange={(v) => setArrivals({ availableLabel: v })}
+          maxLength={NEW_ARRIVALS_LIMITS.availableLabel}
         />
         <Field
           label="“Available now” heading (Español)"
           value={na.availableLabelEs ?? ""}
           onChange={(v) => setArrivals({ availableLabelEs: v })}
+          maxLength={NEW_ARRIVALS_LIMITS.availableLabel}
         />
         <div>
           <p className={labelClass}>“Available now” items (English + Español)</p>
@@ -549,29 +640,43 @@ export default function InfoContentEditor() {
                 key={i}
                 className="flex flex-col gap-2 border-2 border-placeholder p-2 lg:flex-row lg:items-center"
               >
-                <input
-                  className={inputClass}
-                  placeholder="English"
-                  value={item}
-                  onChange={(e) =>
-                    setArrivals({
-                      availableNow: na.availableNow.map((x, idx) =>
-                        idx === i ? e.target.value : x,
-                      ),
-                    })
-                  }
-                />
-                <input
-                  className={inputClass}
-                  placeholder="Español"
-                  value={(na.availableNowEs ?? [])[i] ?? ""}
-                  onChange={(e) => {
-                    const next = [...(na.availableNowEs ?? [])];
-                    while (next.length < na.availableNow.length) next.push("");
-                    next[i] = e.target.value;
-                    setArrivals({ availableNowEs: next });
-                  }}
-                />
+                <div className="min-w-0 flex-1">
+                  <input
+                    className={inputClass}
+                    placeholder="English"
+                    value={item}
+                    maxLength={NEW_ARRIVALS_LIMITS.availableItem}
+                    onChange={(e) =>
+                      setArrivals({
+                        availableNow: na.availableNow.map((x, idx) =>
+                          idx === i ? e.target.value : x,
+                        ),
+                      })
+                    }
+                  />
+                  <CharCount
+                    value={item}
+                    max={NEW_ARRIVALS_LIMITS.availableItem}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <input
+                    className={inputClass}
+                    placeholder="Español"
+                    value={(na.availableNowEs ?? [])[i] ?? ""}
+                    maxLength={NEW_ARRIVALS_LIMITS.availableItem}
+                    onChange={(e) => {
+                      const next = [...(na.availableNowEs ?? [])];
+                      while (next.length < na.availableNow.length) next.push("");
+                      next[i] = e.target.value;
+                      setArrivals({ availableNowEs: next });
+                    }}
+                  />
+                  <CharCount
+                    value={(na.availableNowEs ?? [])[i] ?? ""}
+                    max={NEW_ARRIVALS_LIMITS.availableItem}
+                  />
+                </div>
                 <button
                   type="button"
                   className={smallBtn}
@@ -588,9 +693,13 @@ export default function InfoContentEditor() {
                 </button>
               </div>
             ))}
+            {/* A 5th item overflows the teal panel by ~208px at any length. */}
             <button
               type="button"
-              className={smallBtn}
+              className={`${smallBtn} disabled:cursor-not-allowed disabled:opacity-45`}
+              disabled={
+                na.availableNow.length >= NEW_ARRIVALS_LIMITS.maxAvailableNow
+              }
               onClick={() =>
                 setArrivals({
                   availableNow: [...na.availableNow, ""],
@@ -600,6 +709,12 @@ export default function InfoContentEditor() {
             >
               + Add item
             </button>
+            {na.availableNow.length >= NEW_ARRIVALS_LIMITS.maxAvailableNow && (
+              <p className="text-sm font-semibold text-ink/60">
+                Maximum of {NEW_ARRIVALS_LIMITS.maxAvailableNow} items fits on
+                this page.
+              </p>
+            )}
           </div>
         </div>
       </CollapsiblePanel>
@@ -618,15 +733,22 @@ export default function InfoContentEditor() {
         <BulletinPageLocationSelector
           pageKey={FIXED_BULLETIN_PAGE_KEYS.demographic}
         />
+
+        <PagePreview>
+          <DemographicPage content={content.demographic} animate={false} />
+        </PagePreview>
+
         <Field
           label="Featured group page: title"
           value={content.demographic.heading}
           onChange={(v) => setDemographic({ heading: v })}
+          maxLength={DEMOGRAPHIC_LIMITS.heading}
         />
         <Field
           label="Featured group page: title (Español)"
           value={content.demographic.headingEs ?? ""}
           onChange={(v) => setDemographic({ headingEs: v })}
+          maxLength={DEMOGRAPHIC_LIMITS.heading}
         />
         <Field
           label="Featured group page: message"
@@ -634,6 +756,7 @@ export default function InfoContentEditor() {
           onChange={(v) => setDemographic({ intro: v })}
           textarea
           rows={3}
+          maxLength={DEMOGRAPHIC_LIMITS.intro}
         />
         <Field
           label="Featured group page: message (Español)"
@@ -641,13 +764,27 @@ export default function InfoContentEditor() {
           onChange={(v) => setDemographic({ introEs: v })}
           textarea
           rows={3}
+          maxLength={DEMOGRAPHIC_LIMITS.intro}
         />
         <div>
           <p className={labelClass}>Featured group page: service list</p>
+          {/* Six cards in a fixed 3x2 grid that clips, so the per-card budget
+              is smaller here than on "This Week's Services". */}
+          <p className="text-sm text-ink/60">
+            Six cards fit on this page.
+          </p>
           <div className="mt-2">
             <ServiceListEditor
               services={content.demographic.services}
               onChange={(services) => setDemographic({ services })}
+              maxItems={DEMOGRAPHIC_LIMITS.maxServices}
+              limits={{
+                name: DEMOGRAPHIC_LIMITS.serviceName,
+                nameEs: DEMOGRAPHIC_LIMITS.serviceName,
+                time: DEMOGRAPHIC_LIMITS.serviceTime,
+                description: DEMOGRAPHIC_LIMITS.serviceDescription,
+                location: DEMOGRAPHIC_LIMITS.serviceLocation,
+              }}
             />
           </div>
         </div>
@@ -667,9 +804,17 @@ export default function InfoContentEditor() {
         <BulletinPageLocationSelector
           pageKey={FIXED_BULLETIN_PAGE_KEYS.eventsToday}
         />
+
+        {/* Read-only by nature: this page has no editable text, it draws
+            today's calendar events. The preview shows today's real list. */}
+        <PagePreview>
+          <EventsTodayPage animate={false} />
+        </PagePreview>
+
         <p className="text-base text-ink/70">
           This page’s events come from the calendar automatically. Use the
           location setting above to choose which bulletin screens include it.
+          Event names and locations are limited on the calendar form itself.
         </p>
       </CollapsiblePanel>
 

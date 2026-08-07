@@ -7,6 +7,7 @@ import CustomSlidesEditor from "@/components/manage/CustomSlidesEditor";
 import QuickEventForm from "@/components/manage/QuickEventForm";
 import ManageSidebar from "@/components/manage/ManageSidebar";
 import BulletinLocationsManager from "@/components/manage/BulletinLocationsManager";
+import { bulletinFontClass } from "@/lib/bulletinFonts";
 
 export const metadata = {
   title: "Manage | SMCS",
@@ -40,7 +41,15 @@ export default async function ManagePage() {
   if (!profile || !STAFF_ROLES.includes(profile.role)) redirect("/");
 
   return (
-    <div className="mx-auto flex max-w-7xl gap-0 px-0 lg:gap-8 lg:px-6">
+    // bulletinFontClass: the slide previews below draw real bulletin pages, and
+    // they only wrap text the way the wall screen does if Playfair/Poppins are
+    // in scope. next/font can only be called from a Server Component, which is
+    // why the variables are applied here rather than inside the preview itself.
+    // Declaring the variables does not change this page's own typography — only
+    // .font-display / .font-body consume them.
+    <div
+      className={`${bulletinFontClass} mx-auto flex max-w-7xl gap-0 px-0 lg:gap-8 lg:px-6`}
+    >
       {/* Sticky section navigation (its own component). Hidden on small
           screens, where the page just scrolls. */}
       <ManageSidebar />

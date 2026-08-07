@@ -18,10 +18,15 @@ import type { InfoContent } from "@/lib/infoContent";
 */
 export default function NewArrivalsPage({
   content,
+  animate = true,
 }: {
   content: InfoContent["newArrivals"];
+  // false renders the finished state with no entrance animation, for the
+  // manage page's static preview.
+  animate?: boolean;
 }) {
   const availableEs = content.availableNowEs ?? [];
+  const init = animate ? "hidden" : false;
 
   return (
     <InfoPageShell bg="blue">
@@ -31,7 +36,7 @@ export default function NewArrivalsPage({
 
       <motion.header
         variants={headerIn}
-        initial="hidden"
+        initial={init}
         animate="show"
         className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
@@ -63,7 +68,7 @@ export default function NewArrivalsPage({
 
       <motion.div
         variants={staggerContainer}
-        initial="hidden"
+        initial={init}
         animate="show"
         className="relative z-10 mt-5 grid grid-cols-1 gap-8 @min-[64rem]:min-h-0 @min-[64rem]:flex-1 @min-[64rem]:grid-cols-5 @min-[64rem]:gap-10"
       >
