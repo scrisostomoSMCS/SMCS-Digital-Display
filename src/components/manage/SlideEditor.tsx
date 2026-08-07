@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   updateSlide,
   uploadSlideImage,
@@ -12,11 +12,8 @@ import {
   type SlideBackground,
 } from "@/lib/slides";
 import SlideTemplateView from "@/components/information/SlideTemplateView";
-import {
-  CANVAS_HEIGHT,
-  CANVAS_WIDTH,
-  canvasStyle,
-} from "@/lib/bulletinCanvas";
+import BulletinCanvasPreview from "@/components/information/BulletinCanvasPreview";
+import { SLIDE_LIMITS, slideBodyLimit } from "@/lib/bulletinLimits";
 import { useBulletinLocations } from "./LocationBadges";
 import { Field, StringListEditor, labelClass, smallBtn } from "./editorFields";
 
@@ -35,39 +32,6 @@ const USES = {
   "image-focus": { title: false, body: false, items: false, image: true, caption: true },
   "title-list": { title: true, body: false, items: true, image: false, caption: false },
 } as const;
-
-// Live preview: render the real display component on the real bulletin canvas
-// and scale it into the available width (proportions stay identical to the wall
-// screen). canvasStyle is what makes this a true preview: the slide's breakpoints
-// are container queries against the canvas, so without it they would resolve
-// against the admin's browser window and show a layout the wall screen never uses.
-function Preview({ slide }: { slide: Slide }) {
-  const boxRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.3);
-  useEffect(() => {
-    const el = boxRef.current;
-    if (!el) return;
-    const update = () => setScale(el.clientWidth / CANVAS_WIDTH);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  return (
-    <div
-      ref={boxRef}
-      className="relative w-full overflow-hidden border-2 border-placeholder"
-      style={{ aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
-    >
-      <div
-        className="absolute left-0 top-0 origin-top-left"
-        style={{ ...canvasStyle, transform: `scale(${scale})` }}
-      >
-        <SlideTemplateView slide={slide} animate={false} />
-      </div>
-    </div>
-  );
-}
 
 export default function SlideEditor({
   slide,
@@ -90,6 +54,9 @@ export default function SlideEditor({
   const set = <K extends keyof Slide>(k: K, v: Slide[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
   const uses = USES[draft.template];
+  // "Title + image + text" gives the paragraph a half-width column, so it holds
+  // less than the full-width layouts.
+  const bodyLimit = slideBodyLimit(draft.template);
 
   async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -247,11 +214,13 @@ export default function SlideEditor({
               label="Title"
               value={draft.title}
               onChange={(v) => set("title", v)}
+              maxLength={SLIDE_LIMITS.title}
             />
             <Field
               label="Title (Español)"
               value={draft.titleEs}
               onChange={(v) => set("titleEs", v)}
+              maxLength={SLIDE_LIMITS.title}
             />
           </div>
         )}
@@ -263,6 +232,7 @@ export default function SlideEditor({
               onChange={(v) => set("body", v)}
               textarea
               rows={4}
+              maxLength={bodyLimit}
             />
             <Field
               label="Body text (Español)"
@@ -270,6 +240,7 @@ export default function SlideEditor({
               onChange={(v) => set("bodyEs", v)}
               textarea
               rows={4}
+              maxLength={bodyLimit}
             />
           </div>
         )}
@@ -280,11 +251,13 @@ export default function SlideEditor({
               hint="Short line shown under the image."
               value={draft.caption}
               onChange={(v) => set("caption", v)}
+              maxLength={SLIDE_LIMITS.caption}
             />
             <Field
               label="Caption (Español)"
               value={draft.captionEs}
               onChange={(v) => set("captionEs", v)}
+              maxLength={SLIDE_LIMITS.caption}
             />
           </div>
         )}
@@ -296,6 +269,8 @@ export default function SlideEditor({
                 <StringListEditor
                   items={draft.items}
                   onChange={(items) => set("items", items)}
+                  maxItems={SLIDE_LIMITS.maxItems}
+                  maxLength={SLIDE_LIMITS.item}
                 />
               </div>
             </div>
@@ -309,6 +284,8 @@ export default function SlideEditor({
                 <StringListEditor
                   items={draft.itemsEs}
                   onChange={(items) => set("itemsEs", items)}
+                  maxItems={SLIDE_LIMITS.maxItems}
+                  maxLength={SLIDE_LIMITS.item}
                 />
               </div>
             </div>
@@ -365,10 +342,13 @@ export default function SlideEditor({
       <div>
         <p className={labelClass}>Preview</p>
         <div className="mt-2">
-          <Preview slide={draft} />
+          <BulletinCanvasPreview label="Preview of this slide as it appears on the display">
+            <SlideTemplateView slide={draft} animate={false} />
+          </BulletinCanvasPreview>
         </div>
         <p className="mt-2 text-sm text-ink/60">
-          Exactly how the slide appears in the rotating display.
+          Exactly how the slide appears in the rotating display, including the
+          live bed-availability panel that sits on top of it.
         </p>
       </div>
     </div>

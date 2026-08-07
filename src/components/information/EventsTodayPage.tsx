@@ -32,9 +32,16 @@ function timeRange(startISO: string, endISO?: string): string {
   return `${hm(start)}${sameMer ? "" : ` ${mer(start)}`} – ${hm(end)} ${mer(end)}`;
 }
 
-export default function EventsTodayPage() {
+export default function EventsTodayPage({
+  animate = true,
+}: {
+  // false renders the finished state with no entrance animation, for the
+  // manage page's static preview.
+  animate?: boolean;
+} = {}) {
   const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const init = animate ? "hidden" : false;
 
   useEffect(() => {
     const load = async () => {
@@ -64,7 +71,7 @@ export default function EventsTodayPage() {
 
       <motion.header
         variants={headerIn}
-        initial="hidden"
+        initial={init}
         animate="show"
         className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
@@ -97,7 +104,7 @@ export default function EventsTodayPage() {
       ) : (
         <motion.ul
           variants={staggerContainer}
-          initial="hidden"
+          initial={init}
           animate="show"
           className="relative z-10 mt-5 flex flex-col gap-4 @min-[64rem]:mt-8 @min-[64rem]:min-h-0 @min-[64rem]:flex-1 @min-[64rem]:gap-5 @min-[64rem]:overflow-hidden"
         >

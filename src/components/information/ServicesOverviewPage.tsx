@@ -22,18 +22,23 @@ export default function ServicesOverviewPage({
   services,
   pageNumber,
   totalPages,
+  animate = true,
 }: {
   title: string;
   titleEs?: string;
   services: InfoService[];
   pageNumber: number;
   totalPages: number;
+  // false renders the finished state with no entrance animation, for the
+  // manage page's static preview.
+  animate?: boolean;
 }) {
+  const init = animate ? "hidden" : false;
   return (
     <InfoPageShell bg="paper">
       <motion.header
         variants={headerIn}
-        initial="hidden"
+        initial={init}
         animate="show"
         className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
@@ -61,7 +66,7 @@ export default function ServicesOverviewPage({
           browser window. */}
       <motion.div
         variants={staggerContainer}
-        initial="hidden"
+        initial={init}
         animate="show"
         className="mt-5 grid grid-cols-1 gap-4 @min-[40rem]:grid-cols-2 @min-[64rem]:mt-8 @min-[64rem]:grid-cols-4 @min-[64rem]:grid-rows-1 @min-[64rem]:gap-6 @min-[64rem]:min-h-[55cqh]"
       >
