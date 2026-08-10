@@ -20,13 +20,34 @@ import { slideImageUrl, type Slide } from "@/lib/slides";
   distance. Spanish lines only appear when a Spanish value exists.
 */
 
-function ImageSlot({ src, tone }: { src: string | null; tone: string }) {
+function ImageSlot({
+  src,
+  tone,
+  fill = false,
+}: {
+  src: string | null;
+  tone: string;
+  fill?: boolean;
+}) {
   return (
     <div className="flex h-full w-full items-center justify-center overflow-hidden">
       {src ? (
         // Auto-fitted to the slot (object-contain) so it can never overflow.
+        // fill: also scales SMALL images UP to the slot instead of leaving them
+        // at natural size — object-contain still preserves the aspect ratio and
+        // centers, so nothing is cropped or stretched. Only "Image with caption"
+        // wants this; elsewhere the image sits beside text and staying natural
+        // size reads better.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="max-h-full max-w-full object-contain" />
+        <img
+          src={src}
+          alt=""
+          className={
+            fill
+              ? "h-full w-full object-contain"
+              : "max-h-full max-w-full object-contain"
+          }
+        />
       ) : (
         <div
           className={`flex h-4/5 w-4/5 items-center justify-center border-2 text-2xl ${tone}`}
@@ -81,22 +102,41 @@ export default function SlideTemplateView({
   if (slide.template === "image-focus") {
     return (
       <InfoPageShell bg={bg}>
-        <div className="relative z-10 flex h-full flex-col">
-          {/* No headline on this template, so the eyebrow band itself carries
-              the bed-panel clearance and the image starts below the panel. */}
+        {/* Vertical split: image region on top takes every row the caption does
+            not need (flex-1), caption sits centered underneath at its natural
+            height. All proportional — no fixed pixel offsets — so it holds at
+            any canvas scale, and the ratio is unaffected by how tall or wide the
+            uploaded image happens to be.
+
+            No headline on this template, so the eyebrow band itself carries
+            BED_PANEL_CLEARANCE. That band is what keeps the TOP of the image
+            below the live bed-availability panel, which floats over the
+            top-right of every slide — without it a full-width image runs under
+            the red card. The image takes the rest of the canvas from there. */}
+        <div className="relative z-10 flex h-full min-h-0 flex-col">
           <div className={`shrink-0 ${BED_PANEL_CLEARANCE}`}>
             <InfoEyebrow tone={eyebrowTone} />
           </div>
-          <div className="mt-4 min-h-0 flex-1">
-            <ImageSlot src={img} tone={placeholderTone} />
+          {/* Negative margins cancel InfoPageShell's own side padding at each
+              breakpoint, so the image runs edge to edge on the canvas instead of
+              stopping at the text margin. Keep these in step with the shell's
+              px-* values or the image will not reach the edge (or will overhang
+              it). The caption below stays inside the normal margins. */}
+          <div className="-mx-4 mt-2 min-h-0 flex-1 @min-[40rem]:-mx-6 @min-[64rem]:-mx-16 @min-[64rem]:mt-3">
+            <ImageSlot src={img} tone={placeholderTone} fill />
           </div>
+          {/* Every row this block gives up is a row the image gets, and a taller
+              image is also a WIDER one (object-contain scales both together), so
+              the padding here is deliberately tight and the -mb-* reclaims most
+              of the shell's bottom padding. English stays at text-6xl — this has
+              to read from across a lobby — so the Spanish line carries the trim. */}
           {slide.caption && (
-            <div className="mt-4 shrink-0">
-              <p className="font-display text-3xl leading-tight @min-[40rem]:text-4xl @min-[64rem]:text-6xl">
+            <div className="shrink-0 px-4 py-1 text-center @min-[64rem]:-mb-5 @min-[64rem]:py-2">
+              <p className="font-display mx-auto max-w-[90%] break-words text-3xl leading-tight @min-[40rem]:text-4xl @min-[64rem]:text-6xl">
                 {slide.caption}
               </p>
               {slide.captionEs && (
-                <p className="font-display mt-1 text-2xl leading-tight opacity-80 @min-[40rem]:text-3xl @min-[64rem]:text-4xl">
+                <p className="font-display mx-auto mt-1 max-w-[90%] break-words text-2xl leading-tight opacity-80 @min-[40rem]:text-3xl">
                   {slide.captionEs}
                 </p>
               )}
