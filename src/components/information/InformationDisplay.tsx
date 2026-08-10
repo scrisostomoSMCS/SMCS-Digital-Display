@@ -27,31 +27,42 @@ import EventsTodayPage from "./EventsTodayPage";
 import CustomSlidePage from "./CustomSlidePage";
 import BedAvailabilitySlide from "@/components/BedAvailabilitySlide";
 
-const DOT_CLASS = {
-  blue: {
-    border: "border-blue",
-    on: "bg-blue",
-    off: "bg-paper hover:bg-blue/30",
-    ring: "ring-paper",
-  },
-  white: {
-    border: "border-paper",
-    on: "bg-paper",
-    off: "hover:bg-paper/30",
-    ring: "ring-ink/50",
-  },
-  ink: {
-    border: "border-ink",
-    on: "bg-ink",
-    off: "hover:bg-ink/30",
-    ring: "ring-paper",
-  },
-} as const;
-type Tone = keyof typeof DOT_CLASS;
+// Prev/next arrows: bare glyphs, no button chrome — deliberately unlike the
+// circled back button at the top, which is a different kind of control (it
+// leaves the bulletin) and should not be confused with paging. Black on every
+// background by request; note that on the blue slides this is dark-on-dark.
+const NAV_CLASS = "text-ink hover:text-blue";
 
-// Dot tone that stays visible on a given slide background.
-const toneForBg = (bg: SlideBackground): Tone =>
-  bg === "blue" ? "white" : bg === "teal" ? "ink" : "blue";
+/*
+  Paging arrow: a stem plus a head, drawn rather than typed. A text glyph ("←")
+  ties length and weight together — the typeface decides both, and text-* scales
+  them as one. Here they are separate knobs: strokeWidth sets thickness, and the
+  stem's x-extent sets length, so it can be short AND heavy. currentColor makes
+  it inherit the color set by NAV_CLASS on the button.
+*/
+function NavArrow({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-8 w-8"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={4.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path
+        d={
+          dir === "left"
+            ? "M20 12 H6 M12 6 L6 12 L12 18"
+            : "M4 12 H18 M12 6 L18 12 L12 18"
+        }
+      />
+    </svg>
+  );
+}
+
 
 // Fills the letterbox bars around the scaled canvas with the current slide's own
 // background, so an odd-shaped container reads as one field of color.
@@ -175,7 +186,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   }));
 
   // Built-in pages, each tagged with a key (for hiding) and the background its
-  // shell paints, which drives both the dot tone and the letterbox fill.
+  // shell paints, which drives both the nav-arrow tone and the letterbox fill.
   const builtinDefs: {
     key: BuiltinKey;
     pageKey: string;
@@ -231,7 +242,6 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
 
   const current = active % pages.length;
   const currentBg = backgrounds[current] ?? "paper";
-  const c = DOT_CLASS[toneForBg(currentBg)];
 
   return (
     // Stage: fills whatever we were handed (tab, iframe, Yodeck region) and
@@ -288,9 +298,40 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
           <span aria-hidden="true">←</span>
         </Link>
 
-        {/* Each compact dot gets its own contrast ring so it remains visible over
-            any card color without adding a panel over the slide content. */}
-        <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-5">
+        {/* Manual paging, parked in the two bottom corners so neither arrow sits
+            over slide content. Both wrap around, so the rotation has no ends.
+            Pressing one also restarts the auto-advance timer, because the
+            interval effect is keyed on `active` — a viewer who steps to a page
+            gets the full PAGE_DURATION to read it rather than the remainder of
+            the previous page's clock. */}
+        <button
+          type="button"
+          onClick={() => setActive((a) => (a - 1 + pages.length) % pages.length)}
+          aria-label="Previous page"
+          title="Previous page"
+          className={`absolute bottom-4 left-5 z-20 flex h-10 w-10 items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 ${NAV_CLASS}`}
+        >
+          <NavArrow dir="left" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setActive((a) => (a + 1) % pages.length)}
+          aria-label="Next page"
+          title="Next page"
+          className={`absolute bottom-4 right-5 z-20 flex h-10 w-10 items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 ${NAV_CLASS}`}
+        >
+          <NavArrow dir="right" />
+        </button>
+
+        {/* Position readout: which page of how many, and a jump target for each.
+            Deliberately tiny and low-contrast-when-inactive — this is a status
+            indicator for a wall screen, not a control anyone walks up to press,
+            so it should register only if you look for it.
+
+            z-10 keeps it above the slide's own opaque background (at z-0 the
+            shell would paint straight over it) but below the bed panel and the
+            arrows at z-20, so it never draws on top of an information card. */}
+        <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-2">
           {pages.map((_, i) => (
             <button
               key={i}
@@ -298,8 +339,8 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
               onClick={() => setActive(i)}
               aria-label={`Show page ${i + 1}`}
               aria-current={i === current}
-              className={`h-5 w-5 rounded-full border-2 ring-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 ${c.border} ${c.ring} ${
-                i === current ? c.on : c.off
+              className={`h-2 w-2 rounded-full transition-colors ${
+                i === current ? "bg-ink" : "bg-ink/25 hover:bg-ink/50"
               }`}
             />
           ))}
