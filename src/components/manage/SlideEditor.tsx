@@ -208,6 +208,22 @@ export default function SlideEditor({
           )}
         </fieldset>
 
+        {/* Templates WITH a headline use `title` for two jobs at once: the words
+            on the wall AND the name of this page in the sidebar, the panel
+            header, and the delete prompts. Templates without a headline still
+            need the second job done — otherwise every "Image with caption" page
+            sits in the list as "New slide" and staff cannot tell them apart. So
+            the same column is offered here as an off-screen page name. It is
+            never rendered by SlideTemplateView's image-focus branch. */}
+        {!uses.title && (
+          <Field
+            label="Page name"
+            hint="Names this page in the list on the left. It is not shown on the display."
+            value={draft.title}
+            onChange={(v) => set("title", v)}
+            maxLength={SLIDE_LIMITS.title}
+          />
+        )}
         {uses.title && (
           <div className="space-y-2">
             <Field
