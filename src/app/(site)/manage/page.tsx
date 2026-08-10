@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Section from "@/components/Section";
@@ -47,79 +48,99 @@ export default async function ManagePage() {
     // why the variables are applied here rather than inside the preview itself.
     // Declaring the variables does not change this page's own typography — only
     // .font-display / .font-body consume them.
-    <div
-      className={`${bulletinFontClass} mx-auto flex max-w-7xl gap-0 px-0 lg:gap-8 lg:px-6`}
-    >
-      {/* Sticky section navigation (its own component). Hidden on small
-          screens, where the page just scrolls. */}
-      <ManageSidebar />
-
-      <div className="min-w-0 flex-1">
-        <Section id="calendar" title="Calendar" className="scroll-mt-6">
-          <p className="max-w-3xl text-lg">
-            Add and edit the schedule here. Click a time slot to create an event;
-            drag to move it, or drag an edge to resize. Click an event to edit or
-            delete it. Changes appear on the Live Calendar within a second or two.
-          </p>
-          <p className="mt-3 flex flex-wrap items-center gap-4 text-base">
-            <span className="flex items-center gap-2">
-              <span className="inline-block h-4 w-4 bg-blue" /> On Live Calendar
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="inline-block h-4 w-4 bg-teal" /> Off dashboard
-              (personal)
-            </span>
-          </p>
-
-          {/* Second entry point for events, writes to the same events data
-              as the calendar (and thus the dashboard + "Events today" slide). */}
-          <div className="mt-8">
-            <h3 className="text-xl font-bold text-blue">Quick add an event</h3>
-            <span className="mt-1 mb-3 block h-1 w-16 bg-teal" />
-            <p className="mb-4 max-w-3xl text-base text-ink/70">
-              Adds to the calendar, the Live Calendar, and &ldquo;Events
-              happening today&rdquo;, the same as adding it on the calendar
-              below.
-            </p>
-            <QuickEventForm />
-          </div>
-
-          <div className="mt-8 h-[68dvh] min-h-[460px] lg:h-[80vh] lg:min-h-[560px]">
-            <ManageCalendar />
-          </div>
-        </Section>
-
-        <Section
-          id="digital-schedule"
-          title="Digital Bulletin pages"
-          className="scroll-mt-6"
+    <div className={`${bulletinFontClass} mx-auto max-w-7xl px-0 lg:px-6`}>
+      {/* The nav bar's "Home" leaves for smcares.org, so staff need an explicit
+          way back to this site's home page from the editor. */}
+      <div className="flex justify-end px-6 pt-6 lg:px-0">
+        <Link
+          href="/"
+          className="inline-block border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper"
         >
-          <p className="max-w-3xl text-lg">
-            The pages that rotate on the public Digital Bulletin screens. Edit
-            their text and choose which locations show each page below.
-          </p>
-          <div className="mt-6 space-y-8">
-            <BulletinLocationsManager />
-            <div>
-              <h3 className="text-2xl font-bold text-blue">Shared bulletin pages</h3>
-              <p className="mt-1 mb-4 max-w-3xl text-base text-ink/70">
-                Edit each built-in page and choose All locations or specific buildings.
-              </p>
-              <InfoContentEditor />
-            </div>
-          </div>
-        </Section>
+          ← Back to Digital Bulletin Home
+        </Link>
+      </div>
 
-        <Section id="custom-slides" title="Custom slides" className="scroll-mt-6">
-          <p className="max-w-3xl text-lg">
-            Slides you&rsquo;ve added to the rotation. Expand one to edit its
-            layout, text, colors, image, and display locations; each saves on its
-            own. Add or delete slides from the sidebar.
-          </p>
-          <div className="mt-6">
-            <CustomSlidesEditor />
-          </div>
-        </Section>
+      <div className="flex gap-0 lg:gap-8">
+        {/* Sticky section navigation (its own component). Hidden on small
+            screens, where the page just scrolls. */}
+        <ManageSidebar />
+
+        <div className="min-w-0 flex-1">
+          <Section id="calendar" title="Calendar" className="scroll-mt-6">
+            <p className="max-w-3xl text-lg">
+              Add and edit the schedule here. Click a time slot to create an
+              event; drag to move it, or drag an edge to resize. Click an event
+              to edit or delete it. Changes appear on the Live Calendar within a
+              second or two.
+            </p>
+            <p className="mt-3 flex flex-wrap items-center gap-4 text-base">
+              <span className="flex items-center gap-2">
+                <span className="inline-block h-4 w-4 bg-blue" /> On Live
+                Calendar
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="inline-block h-4 w-4 bg-teal" /> Off dashboard
+                (personal)
+              </span>
+            </p>
+
+            {/* Second entry point for events, writes to the same events data
+                as the calendar (and thus the dashboard + "Events today" slide). */}
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-blue">Quick add an event</h3>
+              <span className="mt-1 mb-3 block h-1 w-16 bg-teal" />
+              <p className="mb-4 max-w-3xl text-base text-ink/70">
+                Adds to the calendar, the Live Calendar, and &ldquo;Events
+                happening today&rdquo;, the same as adding it on the calendar
+                below.
+              </p>
+              <QuickEventForm />
+            </div>
+
+            <div className="mt-8 h-[68dvh] min-h-[460px] lg:h-[80vh] lg:min-h-[560px]">
+              <ManageCalendar />
+            </div>
+          </Section>
+
+          <Section
+            id="digital-schedule"
+            title="Digital Bulletin pages"
+            className="scroll-mt-6"
+          >
+            <p className="max-w-3xl text-lg">
+              The pages that rotate on the public Digital Bulletin screens. Edit
+              their text and choose which locations show each page below.
+            </p>
+            <div className="mt-6 space-y-8">
+              <BulletinLocationsManager />
+              <div>
+                <h3 className="text-2xl font-bold text-blue">
+                  Shared bulletin pages
+                </h3>
+                <p className="mt-1 mb-4 max-w-3xl text-base text-ink/70">
+                  Edit each built-in page and choose All locations or specific
+                  buildings.
+                </p>
+                <InfoContentEditor />
+              </div>
+            </div>
+          </Section>
+
+          <Section
+            id="custom-slides"
+            title="Custom slides"
+            className="scroll-mt-6"
+          >
+            <p className="max-w-3xl text-lg">
+              Slides you&rsquo;ve added to the rotation. Expand one to edit its
+              layout, text, colors, image, and display locations; each saves on
+              its own. Add or delete slides from the sidebar.
+            </p>
+            <div className="mt-6">
+              <CustomSlidesEditor />
+            </div>
+          </Section>
+        </div>
       </div>
     </div>
   );
