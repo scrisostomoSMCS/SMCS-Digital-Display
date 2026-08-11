@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { PAGE_DURATION } from "@/lib/informationContent";
@@ -93,16 +93,26 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
   const [locationId, setLocationId] = useState<string | null>(null);
   const [targetingLoaded, setTargetingLoaded] = useState(!locationSlug);
-  const stageRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
   // 0 until measured, which keeps the unscaled canvas from flashing at full size
   // on first paint.
   const [scale, setScale] = useState(0);
 
-  // Measure the box we were given (NOT the window) and scale the canvas to fit.
-  // A ResizeObserver rather than a resize listener so this also tracks an iframe
-  // or Yodeck region that changes size without the window changing.
-  useEffect(() => {
-    const stage = stageRef.current;
+  /*
+    Measure the box we were given (NOT the window) and scale the canvas to fit.
+    A ResizeObserver rather than a resize listener so this also tracks an iframe
+    or Yodeck region that changes size without the window changing.
+
+    Attached as a ref callback rather than a mount effect: the stage is absent
+    from the tree until there are pages to draw (see the empty-rotation return
+    below), which a location-targeted bulletin always is on its first render
+    while targeting loads. A mount effect would have measured a null stage once,
+    never run again, and left scale at 0 — an invisible canvas on a paper-white
+    stage, i.e. a permanently blank screen.
+  */
+  const measureStage = useCallback((stage: HTMLDivElement | null) => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
     if (!stage) return;
     const fit = (width: number, height: number) =>
       setScale(fitScale(width, height));
@@ -112,7 +122,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       if (box) fit(box.width, box.height);
     });
     observer.observe(stage);
-    return () => observer.disconnect();
+    observerRef.current = observer;
   }, []);
 
   useEffect(() => {
@@ -156,74 +166,93 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
     };
   }, [locationSlug]);
 
-  const pageIsVisible = (pageKey: string) => {
-    if (!locationSlug) return true;
+  const pageIsVisible = (pageKey: string, ignoreTargeting: boolean) => {
+    if (ignoreTargeting || !locationSlug) return true;
     if (!targetingLoaded || !contentLoaded) return false;
     const targets = pageLocations[pageKey] ?? [];
     return targets.length === 0 || (locationId !== null && targets.includes(locationId));
   };
 
-  // "This Week's Services" is a repeatable, numbered page type: one bulletin
-  // page per non-empty services page. Filter before numbering so a location
-  // that receives only one service page sees "Page 1 of 1," not a gap.
-  const servicesPages = content.services.pages.filter(
-    (page) =>
-      page.services.length > 0 && pageIsVisible(servicePageKey(page.id)),
-  );
-  const servicesDefs = servicesPages.map((page, i) => ({
-    key: "services" as BuiltinKey,
-    pageKey: servicePageKey(page.id),
-    node: (
-      <ServicesOverviewPage
-        title={page.title}
-        titleEs={page.titleEs}
-        services={page.services}
-        pageNumber={i + 1}
-        totalPages={servicesPages.length}
-      />
-    ),
-    bg: "paper" as SlideBackground,
-  }));
+  // Builds the rotation for this display. `ignoreTargeting` drops the
+  // per-location filter, which is how the never-blank fallback below reuses this
+  // exact code path instead of assembling a second, divergent page list.
+  const buildRotation = (ignoreTargeting: boolean) => {
+    // "This Week's Services" is a repeatable, numbered page type: one bulletin
+    // page per non-empty services page. Filter before numbering so a location
+    // that receives only one service page sees "Page 1 of 1," not a gap.
+    const servicesPages = content.services.pages.filter(
+      (page) =>
+        page.services.length > 0 &&
+        pageIsVisible(servicePageKey(page.id), ignoreTargeting),
+    );
+    const servicesDefs = servicesPages.map((page, i) => ({
+      key: "services" as BuiltinKey,
+      pageKey: servicePageKey(page.id),
+      node: (
+        <ServicesOverviewPage
+          title={page.title}
+          titleEs={page.titleEs}
+          services={page.services}
+          pageNumber={i + 1}
+          totalPages={servicesPages.length}
+        />
+      ),
+      bg: "paper" as SlideBackground,
+    }));
 
-  // Built-in pages, each tagged with a key (for hiding) and the background its
-  // shell paints, which drives both the nav-arrow tone and the letterbox fill.
-  const builtinDefs: {
-    key: BuiltinKey;
-    pageKey: string;
-    node: React.ReactNode;
-    bg: SlideBackground;
-  }[] = [
-    ...servicesDefs,
-    {
-      key: "new-arrivals",
-      pageKey: FIXED_BULLETIN_PAGE_KEYS.newArrivals,
-      node: <NewArrivalsPage content={content.newArrivals} />,
-      bg: "blue",
-    },
-    {
-      key: "demographic",
-      pageKey: FIXED_BULLETIN_PAGE_KEYS.demographic,
-      node: <DemographicPage content={content.demographic} />,
-      bg: "teal",
-    },
-    {
-      key: "events-today",
-      pageKey: FIXED_BULLETIN_PAGE_KEYS.eventsToday,
-      node: <EventsTodayPage />,
-      bg: "paper",
-    },
-  ];
-  const builtins = builtinDefs.filter((page) => {
-    if (hidden.includes(page.key)) return false;
-    return pageIsVisible(page.pageKey);
-  });
+    // Built-in pages, each tagged with a key (for hiding) and the background its
+    // shell paints, which drives both the nav-arrow tone and the letterbox fill.
+    const builtinDefs: {
+      key: BuiltinKey;
+      pageKey: string;
+      node: React.ReactNode;
+      bg: SlideBackground;
+    }[] = [
+      ...servicesDefs,
+      {
+        key: "new-arrivals",
+        pageKey: FIXED_BULLETIN_PAGE_KEYS.newArrivals,
+        node: <NewArrivalsPage content={content.newArrivals} />,
+        bg: "blue",
+      },
+      {
+        key: "demographic",
+        pageKey: FIXED_BULLETIN_PAGE_KEYS.demographic,
+        node: <DemographicPage content={content.demographic} />,
+        bg: "teal",
+      },
+      {
+        key: "events-today",
+        pageKey: FIXED_BULLETIN_PAGE_KEYS.eventsToday,
+        node: <EventsTodayPage />,
+        bg: "paper",
+      },
+    ];
+    const builtins = builtinDefs.filter((page) => {
+      if (hidden.includes(page.key)) return false;
+      return pageIsVisible(page.pageKey, ignoreTargeting);
+    });
 
-  const custom = slides.map((s) => ({
-    node: <CustomSlidePage key={s.id} slide={s} />,
-    bg: s.background,
-  }));
+    const custom = slides.map((s) => ({
+      node: <CustomSlidePage key={s.id} slide={s} />,
+      bg: s.background,
+    }));
 
-  const all = [...builtins, ...custom];
+    return [...builtins, ...custom];
+  };
+
+  /*
+    Never blank: once loading has settled, a rotation that came out empty falls
+    back to the untargeted one. That covers a location slug matching no row in
+    bulletin_locations (a mistyped or renamed URL on a wall screen) and a real
+    location that every page happens to be targeted away from. A screen showing
+    the general bulletin is right in a way an empty white screen never is.
+    Built-ins staff have explicitly hidden stay hidden — that is a deliberate
+    setting, not a mismatch.
+  */
+  const targeted = buildRotation(false);
+  const settled = !locationSlug || (targetingLoaded && contentLoaded);
+  const all = targeted.length > 0 || !settled ? targeted : buildRotation(true);
   const pages = all.map((p) => p.node);
   const backgrounds = all.map((p) => p.bg);
 
@@ -247,7 +276,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
     // Stage: fills whatever we were handed (tab, iframe, Yodeck region) and
     // clips. Its only job is to center and scale the canvas.
     <div
-      ref={stageRef}
+      ref={measureStage}
       className={`font-body relative h-full w-full overflow-hidden text-ink ${STAGE_BG[currentBg]}`}
     >
       {/* Canvas: always exactly CANVAS_WIDTH x CANVAS_HEIGHT, so every slide
