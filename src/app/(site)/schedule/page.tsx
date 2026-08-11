@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Section from "@/components/Section";
 import ScheduleCalendar from "@/components/schedule/ScheduleCalendar";
+import { SHOW_MY_SCHEDULE } from "@/lib/siteConfig";
 
 export const metadata = {
   title: "My Schedule | SMCS",
@@ -15,6 +16,11 @@ export const metadata = {
   only ever this user's own signups. Role-agnostic: any signed-in user works.
 */
 export default async function SchedulePage() {
+  // Feature hidden: send direct visits home before any data is fetched, so
+  // nothing renders and there is no flash. Everything below is untouched and
+  // comes back as soon as SHOW_MY_SCHEDULE is true again.
+  if (!SHOW_MY_SCHEDULE) redirect("/");
+
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

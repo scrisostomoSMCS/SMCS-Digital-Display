@@ -1,17 +1,22 @@
 import Link from "next/link";
+import { SHOW_MY_SCHEDULE } from "@/lib/siteConfig";
 
 /*
   Left navigation for the full-screen admin layout (blue, like the mockup).
   The admin page lives outside the (site) route group, so it has no top bar;
   this sidebar is its navigation back into the rest of the app.
 */
-const NAV = [
+const NAV: { label: string; href: string; show?: boolean }[] = [
   { label: "Home", href: "/" },
   { label: "Live Calendar", href: "/dashboard" },
   { label: "Digital Bulletin", href: "/information" },
-  { label: "My Schedule", href: "/schedule" },
+  // Hidden while SHOW_MY_SCHEDULE is off; the entry stays here so turning the
+  // flag back on restores it in its original position.
+  { label: "My Schedule", href: "/schedule", show: SHOW_MY_SCHEDULE },
   { label: "Manage", href: "/manage" },
 ];
+
+const VISIBLE_NAV = NAV.filter((n) => n.show !== false);
 
 export default function AdminSidebar() {
   return (
@@ -26,7 +31,7 @@ export default function AdminSidebar() {
           SMCS LOGO
         </Link>
         <nav aria-label="Admin navigation" className="mt-6 flex flex-col">
-          {NAV.map((n) => (
+          {VISIBLE_NAV.map((n) => (
             <Link
               key={n.href}
               href={n.href}

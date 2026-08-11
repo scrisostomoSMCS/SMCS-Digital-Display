@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { SHOW_MY_SCHEDULE } from "@/lib/siteConfig";
 
 /*
   Route protection for logged-in-only pages. Public pages (home, Live
@@ -8,6 +9,17 @@ import { NextResponse, type NextRequest } from "next/server";
   after signing in). Also refreshes the auth cookie on each matched request.
 */
 export async function middleware(request: NextRequest) {
+  // My Schedule hidden: bounce straight home rather than falling through to the
+  // auth check below, which would send signed-out visitors to /login for a
+  // feature that isn't there. The matcher below is left untouched, so this
+  // route protects itself normally again the moment SHOW_MY_SCHEDULE is true.
+  if (!SHOW_MY_SCHEDULE && request.nextUrl.pathname.startsWith("/schedule")) {
+    const homeUrl = request.nextUrl.clone();
+    homeUrl.pathname = "/";
+    homeUrl.search = "";
+    return NextResponse.redirect(homeUrl);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

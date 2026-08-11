@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { supabase } from "@/lib/supabase";
+import { SHOW_MY_SCHEDULE } from "@/lib/siteConfig";
 
 /*
   Auth-aware nav controls. Signed in: a link to the personal calendar + log out.
@@ -95,15 +96,17 @@ export default function AuthNav({
 
   return (
     <>
-      <li>
-        <Link
-          href="/schedule"
-          onClick={onNavigate}
-          className={variant === "mobile" ? mobileLinkClass : linkClass}
-        >
-          {t("mySchedule")}
-        </Link>
-      </li>
+      {SHOW_MY_SCHEDULE && (
+        <li>
+          <Link
+            href="/schedule"
+            onClick={onNavigate}
+            className={variant === "mobile" ? mobileLinkClass : linkClass}
+          >
+            {t("mySchedule")}
+          </Link>
+        </li>
+      )}
       {isStaff && (
         <li>
           <Link
