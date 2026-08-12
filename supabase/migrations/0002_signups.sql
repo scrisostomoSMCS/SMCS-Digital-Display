@@ -34,6 +34,7 @@ insert into public.signups (user_id, event_id)
 select u.id, e.id
 from auth.users u
 cross join public.events e
-where u.email = 'moresoup11@gmail.com'
+-- Set this to a real auth.users account before running; otherwise this seed inserts nothing.
+where u.email = 'REPLACE_WITH_TEST_ACCOUNT@example.com'
   and e.name in ('Sunday Service', 'Bible Study', 'Food Bank', 'Evening Concert')
 on conflict (user_id, event_id) do nothing;
