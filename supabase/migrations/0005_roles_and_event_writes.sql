@@ -82,7 +82,7 @@ create policy "Staff delete events"
   using (public.current_user_role() in ('employee', 'admin'));
 
 -- 5) Make the employee account a staff member so it can use the editor.
--- moresoup11 stays the default 'client' (use it to demo the /manage redirect).
+-- Any other test account stays the default 'client' (use it to demo the /manage redirect).
 update public.profiles p
 set role = 'employee'
 from auth.users u
