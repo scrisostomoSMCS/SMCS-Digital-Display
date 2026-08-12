@@ -86,4 +86,5 @@ create policy "Staff delete events"
 update public.profiles p
 set role = 'employee'
 from auth.users u
-where p.id = u.id and u.email = 'moresoup13@gmail.com';
+-- Set this to a real auth.users account before running; otherwise this seed inserts nothing.
+where p.id = u.id and u.email = 'REPLACE_WITH_TEST_ACCOUNT@example.com';
