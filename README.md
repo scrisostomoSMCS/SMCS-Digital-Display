@@ -1,6 +1,6 @@
 # SMCS Digital Bulletin
 
-![SMCS Live Calendar](docs/dashboardss.png)
+![SMCS Digital Bulletin](docs/dbss.png)
 
 ## What is this
 
