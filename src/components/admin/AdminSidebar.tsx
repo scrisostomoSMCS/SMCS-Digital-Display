@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { SHOW_MY_SCHEDULE } from "@/lib/siteConfig";
 
@@ -25,10 +26,17 @@ export default function AdminSidebar() {
         {/* White logo block flush to the top and side edges of the sidebar */}
         <Link
           href="/"
-          className="block w-full bg-paper py-5 text-center text-lg font-bold tracking-tight text-blue"
+          className="flex w-full items-center justify-center bg-paper px-4 py-5"
           aria-label="SMCS home"
         >
-          SMCS LOGO
+          <Image
+            src="/smcslogo.png"
+            alt="Saint Mary's Community Services"
+            width={1468}
+            height={354}
+            priority
+            className="h-9 w-auto"
+          />
         </Link>
         <nav aria-label="Admin navigation" className="mt-6 flex flex-col">
           {VISIBLE_NAV.map((n) => (
