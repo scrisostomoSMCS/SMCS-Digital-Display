@@ -41,7 +41,7 @@
     "bulletinPreview": {
       "label": "This Week's Bulletin",
       "cta": "View Bulletin",
-      "aria": "Visit smcares.org (opens in a new tab)"
+      "aria": "View the Digital Bulletin"
     },
     "bedPopup": {
       "title": "Live Bed Availability",
