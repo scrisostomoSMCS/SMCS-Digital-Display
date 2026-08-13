@@ -1,15 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 /*
   Live preview of the Digital Bulletin (/information) for the home page hero.
-  The iframe still renders /information, but the card links OUT to the main
-  smcares.org site rather than to /information, so this is a plain external
-  anchor (target=_blank, like the other outbound links on this page) instead of
-  a next/link route change. The bulletin scales its own canvas to fit whatever
-  box it is given, so the iframe simply fills the card: no fixed "wall display"
-  size and no CSS transform are needed to get the signage layout at this size.
+  The iframe renders /information and the card links to the same route, so
+  clicking the preview opens the full-screen bulletin. The bulletin scales its
+  own canvas to fit whatever box it is given, so the iframe simply fills the
+  card: no fixed "wall display" size and no CSS transform are needed to get the
+  signage layout at this size.
 
   The card carries the bulletin's 16:9 aspect ratio so the scaled canvas fills it
   edge to edge with no letterboxing. It is the focus of the hero, so it stretches
@@ -26,10 +26,8 @@ export default function BulletinPreviewCard() {
 
   return (
     <div className="mt-8 w-full max-w-6xl">
-      <a
-        href="https://smcares.org"
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href="/information"
         aria-label={t("aria")}
         className="group block cursor-pointer rounded-2xl border-2 border-paper/70 bg-paper shadow-lg transition duration-300 hover:-translate-y-1 hover:border-teal hover:shadow-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-paper"
       >
@@ -50,7 +48,7 @@ export default function BulletinPreviewCard() {
             {t("cta")} <span aria-hidden="true">→</span>
           </span>
         </div>
-      </a>
+      </Link>
     </div>
   );
 }
