@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 // Shared building blocks for the manage-page editors (info content + slides),
 // so both use the same look and behavior.
@@ -74,6 +74,69 @@ export function Field({
       )}
       {maxLength !== undefined && <CharCount value={value} max={maxLength} />}
     </label>
+  );
+}
+
+/*
+  An English field paired with its Spanish counterpart, which stays collapsed
+  behind an "Edit Spanish manually" expander until staff open it. Spanish is
+  filled in automatically on save (see translateInfoContent.server.ts); this
+  is only for hand-correcting it, so it's hidden in the normal typing flow.
+*/
+export function BilingualField({
+  label,
+  value,
+  onChange,
+  valueEs,
+  onChangeEs,
+  hint,
+  textarea,
+  rows = 2,
+  maxLength,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  valueEs: string;
+  onChangeEs: (v: string) => void;
+  hint?: string;
+  textarea?: boolean;
+  rows?: number;
+  maxLength?: number;
+}) {
+  const [showEs, setShowEs] = useState(false);
+  return (
+    <div>
+      <Field
+        label={label}
+        value={value}
+        onChange={onChange}
+        hint={hint}
+        textarea={textarea}
+        rows={rows}
+        maxLength={maxLength}
+      />
+      <button
+        type="button"
+        onClick={() => setShowEs((s) => !s)}
+        aria-expanded={showEs}
+        className="mt-1.5 text-sm font-semibold text-blue hover:underline"
+      >
+        {showEs ? "▾" : "▸"} Edit Spanish manually
+      </button>
+      {showEs && (
+        <div className="mt-2">
+          <Field
+            label={`${label} (Español)`}
+            value={valueEs}
+            onChange={onChangeEs}
+            textarea={textarea}
+            rows={rows}
+            maxLength={maxLength}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 

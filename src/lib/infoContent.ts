@@ -460,10 +460,29 @@ export async function fetchInfoContent(): Promise<InfoContent> {
   );
 }
 
-// Save the editable content (staff only, enforced by RLS).
+export type SaveInfoContentResult = {
+  error: string | null;
+  warnings: string[];
+  content: InfoContent | null;
+};
+
+/*
+  Save the editable content (staff only, enforced server-side + RLS). Posts to
+  /api/info-content/save instead of writing to Supabase directly, so the
+  Google Translate call in translateInfoContent.server.ts can run with a
+  server-only API key.
+
+  `loaded` is the content as it was fetched (or last saved) — the server
+  diffs against it to auto-translate only English fields that actually
+  changed, so a hand-edited Spanish field is never overwritten by a save that
+  didn't touch its English counterpart. Returns the merged content (including
+  any freshly auto-translated Spanish) so the editor can show it without a
+  refetch, plus any "translation may be too long for this field" warnings.
+*/
 export async function saveInfoContent(
   content: InfoContent,
-): Promise<string | null> {
+  loaded: InfoContent,
+): Promise<SaveInfoContentResult> {
   const normalized: InfoContent = {
     ...content,
     services: {
@@ -474,8 +493,23 @@ export async function saveInfoContent(
       })),
     },
   };
-  const { error } = await supabase
-    .from("info_content")
-    .upsert({ id: 1, content: normalized, updated_at: new Date().toISOString() });
-  return error ? error.message : null;
+  try {
+    const res = await fetch("/api/info-content/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: normalized, loaded }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return {
+        error: data?.error ?? `Save failed (${res.status})`,
+        warnings: [],
+        content: null,
+      };
+    }
+    return { error: null, warnings: data.warnings ?? [], content: data.content ?? null };
+  } catch (err) {
+    console.error("Info content save request failed:", err);
+    return { error: "Network error while saving.", warnings: [], content: null };
+  }
 }

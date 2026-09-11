@@ -16,7 +16,7 @@ import {
 } from "@/lib/infoContent";
 import {
   Field,
-  CharCount,
+  BilingualField,
   CollapsiblePanel,
   inputClass,
   labelClass,
@@ -136,12 +136,16 @@ function ServiceListEditor({
             </div>
           )}
           <div className="grid gap-3 lg:grid-cols-3">
-            <Field
-              label="Name"
-              value={s.name}
-              onChange={(v) => patch(i, { name: v })}
-              maxLength={limits.name}
-            />
+            <div className="lg:col-span-1">
+              <BilingualField
+                label="Name"
+                value={s.name}
+                onChange={(v) => patch(i, { name: v })}
+                valueEs={s.nameEs ?? ""}
+                onChangeEs={(v) => patch(i, { nameEs: v })}
+                maxLength={limits.name}
+              />
+            </div>
             <Field
               label="Location"
               value={s.location ?? ""}
@@ -166,14 +170,6 @@ function ServiceListEditor({
           </div>
           <div className="mt-3">
             <Field
-              label="Name (Español)"
-              value={s.nameEs ?? ""}
-              onChange={(v) => patch(i, { nameEs: v })}
-              maxLength={limits.nameEs}
-            />
-          </div>
-          <div className="mt-3">
-            <Field
               label="Time"
               hint="Put each time on its own line for multiple (e.g. meal times). Shown once (language-neutral)."
               value={s.time ?? ""}
@@ -184,20 +180,12 @@ function ServiceListEditor({
             />
           </div>
           <div className="mt-3">
-            <Field
+            <BilingualField
               label="Short description"
               value={s.description ?? ""}
               onChange={(v) => patch(i, { description: v })}
-              textarea={longDescriptions}
-              rows={4}
-              maxLength={limits.description}
-            />
-          </div>
-          <div className="mt-3">
-            <Field
-              label="Short description (Español)"
-              value={s.descriptionEs ?? ""}
-              onChange={(v) => patch(i, { descriptionEs: v })}
+              valueEs={s.descriptionEs ?? ""}
+              onChangeEs={(v) => patch(i, { descriptionEs: v })}
               textarea={longDescriptions}
               rows={4}
               maxLength={limits.description}
@@ -242,9 +230,14 @@ function ServiceListEditor({
 
 export default function InfoContentEditor() {
   const [content, setContent] = useState<InfoContent | null>(null);
+  // Snapshot last fetched/saved: the server diffs English against this to
+  // decide which fields to auto-translate, so a save that doesn't touch a
+  // field's English never overwrites a hand-edited Spanish value.
+  const [loaded, setLoaded] = useState<InfoContent | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [removedServicePageKeys, setRemovedServicePageKeys] = useState<string[]>([]);
 
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -266,7 +259,10 @@ export default function InfoContentEditor() {
   }, []);
 
   useEffect(() => {
-    fetchInfoContent().then(setContent);
+    fetchInfoContent().then((c) => {
+      setContent(c);
+      setLoaded(c);
+    });
   }, []);
 
   useEffect(() => {
@@ -322,13 +318,14 @@ export default function InfoContentEditor() {
     );
 
   async function handleSave() {
-    if (!content) return;
+    if (!content || !loaded) return;
     setSaving(true);
     setError(null);
     setSaved(false);
-    const err = await saveInfoContent(content);
+    setWarnings([]);
+    const result = await saveInfoContent(content, loaded);
     setSaving(false);
-    if (err) setError(err);
+    if (result.error) setError(result.error);
     else {
       const cleanupErrors = await Promise.all(
         removedServicePageKeys.map(deleteBulletinPageLocations),
@@ -339,6 +336,16 @@ export default function InfoContentEditor() {
         return;
       }
       setRemovedServicePageKeys([]);
+      // The server returns the merged content, including any Spanish it just
+      // auto-translated, so the (collapsed) Spanish fields reflect it right
+      // away without a refetch. It also becomes the new diff baseline.
+      if (result.content) {
+        setContent(result.content);
+        setLoaded(result.content);
+      } else {
+        setLoaded(content);
+      }
+      setWarnings(result.warnings);
       setSaved(true);
       setTimeout(() => setSaved(false), 4000);
     }
@@ -427,20 +434,14 @@ export default function InfoContentEditor() {
             <p className="mb-3 text-sm text-ink/60">
               The heading shown at the top of this services page.
             </p>
-            <Field
+            <BilingualField
               label="Page title"
               value={page.title}
               onChange={(v) => patchServicesPage(idx, { title: v })}
+              valueEs={page.titleEs ?? ""}
+              onChangeEs={(v) => patchServicesPage(idx, { titleEs: v })}
               maxLength={SERVICES_LIMITS.pageTitle}
             />
-            <div className="mt-3">
-              <Field
-                label="Page title (Español)"
-                value={page.titleEs ?? ""}
-                onChange={(v) => patchServicesPage(idx, { titleEs: v })}
-                maxLength={SERVICES_LIMITS.pageTitle}
-              />
-            </div>
           </div>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm font-semibold text-ink/60">
@@ -505,44 +506,30 @@ export default function InfoContentEditor() {
           <NewArrivalsPage content={na} animate={false} />
         </PagePreview>
 
-        <Field
+        <BilingualField
           label="New arrivals page: headline"
           value={na.headline}
           onChange={(v) => setArrivals({ headline: v })}
+          valueEs={na.headlineEs ?? ""}
+          onChangeEs={(v) => setArrivals({ headlineEs: v })}
           maxLength={NEW_ARRIVALS_LIMITS.headline}
         />
-        <Field
-          label="New arrivals page: headline (Español)"
-          value={na.headlineEs ?? ""}
-          onChange={(v) => setArrivals({ headlineEs: v })}
-          maxLength={NEW_ARRIVALS_LIMITS.headline}
-        />
-        <Field
+        <BilingualField
           label="New arrivals page: message"
           value={na.intro}
           onChange={(v) => setArrivals({ intro: v })}
+          valueEs={na.introEs ?? ""}
+          onChangeEs={(v) => setArrivals({ introEs: v })}
           textarea
           rows={3}
           maxLength={NEW_ARRIVALS_LIMITS.intro}
         />
-        <Field
-          label="New arrivals page: message (Español)"
-          value={na.introEs ?? ""}
-          onChange={(v) => setArrivals({ introEs: v })}
-          textarea
-          rows={3}
-          maxLength={NEW_ARRIVALS_LIMITS.intro}
-        />
-        <Field
+        <BilingualField
           label="“Where to start” heading"
           value={na.stepsLabel}
           onChange={(v) => setArrivals({ stepsLabel: v })}
-          maxLength={NEW_ARRIVALS_LIMITS.stepsLabel}
-        />
-        <Field
-          label="“Where to start” heading (Español)"
-          value={na.stepsLabelEs ?? ""}
-          onChange={(v) => setArrivals({ stepsLabelEs: v })}
+          valueEs={na.stepsLabelEs ?? ""}
+          onChangeEs={(v) => setArrivals({ stepsLabelEs: v })}
           maxLength={NEW_ARRIVALS_LIMITS.stepsLabel}
         />
         <div>
@@ -557,33 +544,21 @@ export default function InfoContentEditor() {
                 });
               return (
                 <div key={i} className="border-2 border-placeholder p-4">
-                  <Field
+                  <BilingualField
                     label={`Step ${i + 1}: title`}
                     value={step.title}
                     onChange={(v) => patch({ title: v })}
+                    valueEs={step.titleEs ?? ""}
+                    onChangeEs={(v) => patch({ titleEs: v })}
                     maxLength={NEW_ARRIVALS_LIMITS.stepTitle}
                   />
                   <div className="mt-3">
-                    <Field
-                      label={`Step ${i + 1}: title (Español)`}
-                      value={step.titleEs ?? ""}
-                      onChange={(v) => patch({ titleEs: v })}
-                      maxLength={NEW_ARRIVALS_LIMITS.stepTitle}
-                    />
-                  </div>
-                  <div className="mt-3">
-                    <Field
+                    <BilingualField
                       label={`Step ${i + 1}: detail`}
                       value={step.detail}
                       onChange={(v) => patch({ detail: v })}
-                      maxLength={NEW_ARRIVALS_LIMITS.stepDetail}
-                    />
-                  </div>
-                  <div className="mt-3">
-                    <Field
-                      label={`Step ${i + 1}: detail (Español)`}
-                      value={step.detailEs ?? ""}
-                      onChange={(v) => patch({ detailEs: v })}
+                      valueEs={step.detailEs ?? ""}
+                      onChangeEs={(v) => patch({ detailEs: v })}
                       maxLength={NEW_ARRIVALS_LIMITS.stepDetail}
                     />
                   </div>
@@ -620,66 +595,46 @@ export default function InfoContentEditor() {
             )}
           </div>
         </div>
-        <Field
+        <BilingualField
           label="“Available now” heading"
           value={na.availableLabel}
           onChange={(v) => setArrivals({ availableLabel: v })}
-          maxLength={NEW_ARRIVALS_LIMITS.availableLabel}
-        />
-        <Field
-          label="“Available now” heading (Español)"
-          value={na.availableLabelEs ?? ""}
-          onChange={(v) => setArrivals({ availableLabelEs: v })}
+          valueEs={na.availableLabelEs ?? ""}
+          onChangeEs={(v) => setArrivals({ availableLabelEs: v })}
           maxLength={NEW_ARRIVALS_LIMITS.availableLabel}
         />
         <div>
-          <p className={labelClass}>“Available now” items (English + Español)</p>
+          <p className={labelClass}>“Available now” items</p>
           <div className="mt-2 space-y-2">
             {na.availableNow.map((item, i) => (
               <div
                 key={i}
-                className="flex flex-col gap-2 border-2 border-placeholder p-2 lg:flex-row lg:items-center"
+                className="flex flex-col gap-2 border-2 border-placeholder p-2 lg:flex-row lg:items-start"
               >
                 <div className="min-w-0 flex-1">
-                  <input
-                    className={inputClass}
-                    placeholder="English"
+                  <BilingualField
+                    label={`Item ${i + 1}`}
                     value={item}
-                    maxLength={NEW_ARRIVALS_LIMITS.availableItem}
-                    onChange={(e) =>
+                    onChange={(v) =>
                       setArrivals({
                         availableNow: na.availableNow.map((x, idx) =>
-                          idx === i ? e.target.value : x,
+                          idx === i ? v : x,
                         ),
                       })
                     }
-                  />
-                  <CharCount
-                    value={item}
-                    max={NEW_ARRIVALS_LIMITS.availableItem}
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <input
-                    className={inputClass}
-                    placeholder="Español"
-                    value={(na.availableNowEs ?? [])[i] ?? ""}
-                    maxLength={NEW_ARRIVALS_LIMITS.availableItem}
-                    onChange={(e) => {
+                    valueEs={(na.availableNowEs ?? [])[i] ?? ""}
+                    onChangeEs={(v) => {
                       const next = [...(na.availableNowEs ?? [])];
                       while (next.length < na.availableNow.length) next.push("");
-                      next[i] = e.target.value;
+                      next[i] = v;
                       setArrivals({ availableNowEs: next });
                     }}
-                  />
-                  <CharCount
-                    value={(na.availableNowEs ?? [])[i] ?? ""}
-                    max={NEW_ARRIVALS_LIMITS.availableItem}
+                    maxLength={NEW_ARRIVALS_LIMITS.availableItem}
                   />
                 </div>
                 <button
                   type="button"
-                  className={smallBtn}
+                  className={`${smallBtn} shrink-0`}
                   onClick={() =>
                     setArrivals({
                       availableNow: na.availableNow.filter((_, idx) => idx !== i),
@@ -738,30 +693,20 @@ export default function InfoContentEditor() {
           <DemographicPage content={content.demographic} animate={false} />
         </PagePreview>
 
-        <Field
+        <BilingualField
           label="Featured group page: title"
           value={content.demographic.heading}
           onChange={(v) => setDemographic({ heading: v })}
+          valueEs={content.demographic.headingEs ?? ""}
+          onChangeEs={(v) => setDemographic({ headingEs: v })}
           maxLength={DEMOGRAPHIC_LIMITS.heading}
         />
-        <Field
-          label="Featured group page: title (Español)"
-          value={content.demographic.headingEs ?? ""}
-          onChange={(v) => setDemographic({ headingEs: v })}
-          maxLength={DEMOGRAPHIC_LIMITS.heading}
-        />
-        <Field
+        <BilingualField
           label="Featured group page: message"
           value={content.demographic.intro}
           onChange={(v) => setDemographic({ intro: v })}
-          textarea
-          rows={3}
-          maxLength={DEMOGRAPHIC_LIMITS.intro}
-        />
-        <Field
-          label="Featured group page: message (Español)"
-          value={content.demographic.introEs ?? ""}
-          onChange={(v) => setDemographic({ introEs: v })}
+          valueEs={content.demographic.introEs ?? ""}
+          onChangeEs={(v) => setDemographic({ introEs: v })}
           textarea
           rows={3}
           maxLength={DEMOGRAPHIC_LIMITS.intro}
@@ -819,27 +764,39 @@ export default function InfoContentEditor() {
       </CollapsiblePanel>
 
       {/* --- Save --- */}
-      <div className="flex flex-col items-start gap-4 lg:flex-row lg:items-center">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60"
-        >
-          {saving ? "Saving…" : "Save changes"}
-        </button>
-        {saved && (
-          <span
-            role="status"
-            className="text-lg font-semibold text-blue"
+      <div className="flex flex-col items-start gap-4">
+        <div className="flex flex-col items-start gap-4 lg:flex-row lg:items-center">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60"
           >
-            ✓ Saved. The display is updated.
-          </span>
-        )}
-        {error && (
-          <span role="alert" className="text-lg font-semibold text-blue">
-            Couldn’t save: {error}
-          </span>
+            {saving ? "Saving…" : "Save changes"}
+          </button>
+          {saved && (
+            <span
+              role="status"
+              className="text-lg font-semibold text-blue"
+            >
+              ✓ Saved. The display is updated.
+            </span>
+          )}
+          {error && (
+            <span role="alert" className="text-lg font-semibold text-blue">
+              Couldn’t save: {error}
+            </span>
+          )}
+        </div>
+        {warnings.length > 0 && (
+          <ul
+            role="status"
+            className="max-w-2xl space-y-1 border-l-4 border-teal bg-teal/10 py-2 pl-4 text-sm text-ink/80"
+          >
+            {warnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
