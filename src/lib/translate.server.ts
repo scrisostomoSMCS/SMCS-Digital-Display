@@ -1,10 +1,15 @@
-// Server-only: calls the MyMemory Translation API (api.mymemory.translated.net)
-// in anonymous mode — no API key, no email, no billing. Never import this from
-// a "use client" component; keeping the call server-side avoids exposing the
+// Server-only: calls the MyMemory Translation API (api.mymemory.translated.net).
+// Registered mode (an email passed as `de`) raises the daily quota from
+// ~5,000 words (anonymous) to ~50,000 words. Never import this from a
+// "use client" component; keeping the call server-side avoids exposing the
 // (rate-limited) endpoint to the browser and keeps translate-on-save the only
 // path that reaches it.
 
 const ENDPOINT = "https://api.mymemory.translated.net/get";
+
+// Set in .env.local for registered-mode quota; if unset, requests fall back
+// to anonymous mode rather than failing.
+const REGISTERED_EMAIL = process.env.MYMEMORY_EMAIL?.trim() || undefined;
 
 // MyMemory's documented anonymous per-request cap is ~500 characters. Every
 // bulletin field today has a hard maxLength of 260 or less (see
@@ -26,7 +31,9 @@ const isQuotaWarning = (text: string) =>
   /MYMEMORY WARNING/i.test(text);
 
 async function translateOne(text: string): Promise<string> {
-  const url = `${ENDPOINT}?${new URLSearchParams({ q: text, langpair: "en|es" })}`;
+  const params: Record<string, string> = { q: text, langpair: "en|es" };
+  if (REGISTERED_EMAIL) params.de = REGISTERED_EMAIL;
+  const url = `${ENDPOINT}?${new URLSearchParams(params)}`;
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`MyMemory API HTTP ${res.status}`);
@@ -41,7 +48,7 @@ async function translateOne(text: string): Promise<string> {
     );
   }
   if (isQuotaWarning(translated)) {
-    throw new Error(`MyMemory anonymous quota exhausted: ${translated}`);
+    throw new Error(`MyMemory quota exhausted: ${translated}`);
   }
   return translated;
 }
