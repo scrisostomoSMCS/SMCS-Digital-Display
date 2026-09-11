@@ -211,7 +211,7 @@ function ServiceListEditor({
           onClick={() =>
             onChange([
               ...services,
-              { name: "", time: "", description: "", location: "" },
+              { id: crypto.randomUUID(), name: "", time: "", description: "", location: "" },
             ])
           }
         >
