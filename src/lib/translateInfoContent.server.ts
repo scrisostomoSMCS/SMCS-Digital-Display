@@ -21,11 +21,15 @@ import { translateTexts } from "./translate.server";
   prior translate failure) is still queued, so a failed translation can heal
   itself on the next save instead of leaving a permanent stale/blank value.
 
-  Repeatable arrays (services within a page, steps) are matched by an English
-  key (service name, step title) rather than array position, so reordering
-  them (the services list has up/down arrows) never looks like a text change.
-  This mirrors the SERVICE_ES / STEP_ES_BY_TITLE lookups already in
-  infoContent.ts, which key Spanish defaults by English text the same way.
+  Repeatable arrays are matched by a stable key rather than array position, so
+  reordering them (the services list has up/down arrows) never looks like a
+  text change. Services are matched by `id` (falling back to name for content
+  saved before `id` existed — see InfoService), which lets a rename diff
+  independently from the description: only the name gets retranslated, not
+  both, and an unrelated hand-edited description is never clobbered. Steps are
+  still matched by title, so a step-title rename is treated as a new step and
+  retranslates both title and detail (mirrors STEP_ES_BY_TITLE in
+  infoContent.ts, which keys Spanish defaults by English text the same way).
 
   Reliability: this function never throws. Each field's translation is
   isolated (see translateTexts' use of Promise.allSettled) — one field
@@ -98,9 +102,9 @@ export async function translateChangedFields(
       (es) => (merged.services.pages[pi].titleEs = es),
     );
 
-    const loadedServicesByName = byKey(loadedPage?.services ?? [], (s) => s.name);
+    const loadedServicesById = byKey(loadedPage?.services ?? [], (s) => s.id ?? s.name);
     page.services.forEach((service: InfoService, si) => {
-      const loadedService = loadedServicesByName.get(service.name);
+      const loadedService = loadedServicesById.get(service.id ?? service.name);
       const label = `Services page ${pi + 1}, service ${si + 1}`;
       if (!loadedService) {
         queueNewService(
@@ -111,9 +115,10 @@ export async function translateChangedFields(
           (es) => (merged.services.pages[pi].services[si].descriptionEs = es),
         );
       } else {
-        // Name is the match key, so it can't itself have "changed" here —
-        // this only fires as recovery when nameEs was never set (e.g. a
-        // prior translate failure left it blank/stale).
+        // Matched by stable id, not name, so a rename is a real "changed"
+        // diff here (not just recovery) — only the name gets retranslated,
+        // the description (and its Spanish) is untouched unless it also
+        // changed.
         scalar(
           `${label} name`,
           loadedService.name,
@@ -185,9 +190,9 @@ export async function translateChangedFields(
   scalar("Featured group heading", ldem.heading, dem.heading, dem.headingEs, DEMOGRAPHIC_LIMITS.heading, (es) => (dem.headingEs = es));
   scalar("Featured group message", ldem.intro, dem.intro, dem.introEs, DEMOGRAPHIC_LIMITS.intro, (es) => (dem.introEs = es));
 
-  const loadedDemByName = byKey(ldem.services, (s) => s.name);
+  const loadedDemById = byKey(ldem.services, (s) => s.id ?? s.name);
   dem.services.forEach((service: InfoService, si) => {
-    const loadedService = loadedDemByName.get(service.name);
+    const loadedService = loadedDemById.get(service.id ?? service.name);
     const label = `Featured group service ${si + 1}`;
     if (!loadedService) {
       queueNewService(

@@ -40,6 +40,12 @@ import {
   fields are optional, so existing saved content and the defaults keep working.
 */
 export type InfoService = {
+  // Stable identity for matching this service across a save, independent of
+  // its (editable) name — see translateChangedFields, which diffs name and
+  // description separately and needs a key that doesn't change when the
+  // name does. Backfilled on read for content saved before this field
+  // existed (see fillServiceEs); always present in practice.
+  id?: string;
   name: string;
   nameEs?: string;
   time?: string; // may be multi-line (language-neutral, shown once)
@@ -149,6 +155,7 @@ export type InfoContent = {
 // Collapse a coded Service into the editable shape (details/schedule → time).
 function toInfoService(s: Service): InfoService {
   return {
+    id: s.name,
     name: s.name,
     time: s.details ? s.details.join("\n") : s.schedule,
     description: s.description,
@@ -391,14 +398,16 @@ function mergeWithDefaults(saved: SavedInfoContent | null): InfoContent {
   };
 }
 
-// Fill a service's Spanish from the known-name lookup when it's missing.
+// Fill a service's Spanish from the known-name lookup when it's missing, and
+// backfill `id` for content saved before that field existed (see InfoService).
 function fillServiceEs(s: InfoService): InfoService {
-  const es = SERVICE_ES[s.name];
-  if (!es) return s;
+  const withId = s.id ? s : { ...s, id: crypto.randomUUID() };
+  const es = SERVICE_ES[withId.name];
+  if (!es) return withId;
   return {
-    ...s,
-    nameEs: s.nameEs || es.nameEs,
-    descriptionEs: s.descriptionEs || es.descriptionEs,
+    ...withId,
+    nameEs: withId.nameEs || es.nameEs,
+    descriptionEs: withId.descriptionEs || es.descriptionEs,
   };
 }
 
