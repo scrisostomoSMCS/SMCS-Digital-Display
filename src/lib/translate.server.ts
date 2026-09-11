@@ -102,15 +102,25 @@ async function translateText(text: string): Promise<string> {
   return translatedParts.join(" ");
 }
 
+export type TranslateResult =
+  | { ok: true; text: string }
+  | { ok: false; error: string };
+
 /*
   Translates a list of English strings to Spanish via MyMemory (one anonymous
   GET request per string, run concurrently — MyMemory has no batch endpoint).
-  Throws on any failure (network, bad status, or an exhausted anonymous quota
-  disguised as a 200); callers decide how to degrade (see
-  translateChangedFields, which saves English-only rather than blocking on a
-  translate error).
+  Each string's result is isolated (Promise.allSettled, not Promise.all): one
+  bad/exhausted-quota/network failure only fails that string's result, it
+  never discards translations that already succeeded alongside it. Callers
+  (see translateChangedFields) apply the ok results and report the failed
+  ones as warnings rather than silently dropping them.
 */
-export async function translateTexts(texts: string[]): Promise<string[]> {
+export async function translateTexts(texts: string[]): Promise<TranslateResult[]> {
   if (texts.length === 0) return [];
-  return Promise.all(texts.map(translateText));
+  const settled = await Promise.allSettled(texts.map(translateText));
+  return settled.map((r) =>
+    r.status === "fulfilled"
+      ? { ok: true, text: r.value }
+      : { ok: false, error: r.reason instanceof Error ? r.reason.message : String(r.reason) },
+  );
 }
