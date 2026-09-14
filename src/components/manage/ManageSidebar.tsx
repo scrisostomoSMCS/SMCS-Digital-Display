@@ -126,6 +126,11 @@ export default function ManageSidebar() {
     label: `This Week's Services — Page ${i + 1}`,
   }));
 
+  // Anchors the spy watches. Only LEAF anchors belong here: a section wrapper
+  // (#digital-schedule, #custom-slides) contains these and so always sits
+  // higher in the band, which would make it win the topmost test forever and
+  // hide the panel-level highlight. The group titles derive from the active
+  // leaf instead (see dspActive / customActive below).
   const spyIds = [
     "calendar",
     "display-locations",
@@ -136,15 +141,28 @@ export default function ManageSidebar() {
           ? [b.anchor]
           : [],
     ),
+    ...slides.map((s) => `slide-${s.id}`),
   ];
   const spyKey = spyIds.join("|");
   useEffect(() => {
+    // The observer only reports anchors whose intersection CHANGED, so the set
+    // of currently-visible ones is tracked across callbacks. Without this a
+    // fast scroll past a collapsed (~48px) panel leaves the sidebar stale.
+    const visible = new Set<string>();
     const observer = new IntersectionObserver(
       (entries) => {
-        const top = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (top) setActive(top.target.id);
+        entries.forEach((e) => {
+          if (e.isIntersecting) visible.add(e.target.id);
+          else visible.delete(e.target.id);
+        });
+        const top = [...visible]
+          .map((id) => document.getElementById(id))
+          .filter((el): el is HTMLElement => !!el)
+          .sort(
+            (a, b) =>
+              a.getBoundingClientRect().top - b.getBoundingClientRect().top,
+          )[0];
+        if (top) setActive(top.id);
       },
       { rootMargin: "-15% 0px -75% 0px", threshold: 0 },
     );
