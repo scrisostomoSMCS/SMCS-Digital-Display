@@ -195,12 +195,26 @@ export default function ManageSidebar() {
     setActive(id);
   }
 
-  // Custom slides live in the inline editor; the hash tells it to expand + scroll.
+  // Plain navigation: scroll to the slide and leave it however it was. No hash
+  // is set, because the hash is what tells CustomSlidesEditor to expand, and
+  // browsing the list should not force every slide it passes open.
   function jumpToSlide(id: string) {
-    window.location.hash = `slide-${id}`;
     document
       .getElementById(`slide-${id}`)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActive(`slide-${id}`);
+  }
+
+  // The menu's Edit action, which does mean "open this one": the hash is the
+  // signal CustomSlidesEditor listens for.
+  function editSlide(id: string) {
+    // Assigning an unchanged hash fires no hashchange, so Edit on the slide
+    // already in the hash would do nothing. Clear it first, via replaceState so
+    // the extra step stays out of the back button.
+    if (window.location.hash === `#slide-${id}`) {
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+    window.location.hash = `slide-${id}`;
     setActive(`slide-${id}`);
   }
 
@@ -377,7 +391,7 @@ export default function ManageSidebar() {
                     {s.title.trim() || "Untitled slide"}
                   </button>
                   <SlideMenu
-                    onEdit={() => jumpToSlide(s.id)}
+                    onEdit={() => editSlide(s.id)}
                     onDelete={() => removeCustom(s)}
                   />
                 </li>
