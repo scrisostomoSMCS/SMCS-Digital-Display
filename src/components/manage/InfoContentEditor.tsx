@@ -365,6 +365,12 @@ export default function InfoContentEditor() {
 
   const na = content.newArrivals;
 
+  // Reference equality is enough: every edit path rebuilds `content`
+  // immutably, and both load and save reset the two to the same object.
+  // Removing a services page also queues a location cleanup, which is
+  // unsaved work even though it already shows up as a content change.
+  const dirty = content !== loaded || removedServicePageKeys.length > 0;
+
   // Repeatable "This Week's Services" pages (each up to MAX_SERVICES_PER_PAGE).
   // Every page carries its own title/titleEs plus its list of services.
   const servicesPages = content.services.pages;
@@ -763,17 +769,32 @@ export default function InfoContentEditor() {
         </p>
       </CollapsiblePanel>
 
-      {/* --- Save --- */}
-      <div className="flex flex-col items-start gap-4">
-        <div className="flex flex-col items-start gap-4 lg:flex-row lg:items-center">
+      {/* --- Save ---
+          Sticky to the bottom of the viewport: these panels are long and this
+          is the ONE save covering all of them, so it has to stay reachable
+          without scrolling to the end. Being the last child of the tall editor
+          div, it pins while the editor is on screen and settles into the flow
+          at its end. Deliberately scoped to this editor rather than the whole
+          manage page, the calendar, display locations and custom slides each
+          save themselves, so a page-wide bar would offer to save nothing. */}
+      <div className="sticky bottom-0 z-10 flex flex-col items-start gap-3 border-t-2 border-blue/20 bg-paper/95 py-3 backdrop-blur">
+        <div className="flex flex-col items-start gap-3 lg:flex-row lg:items-center">
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving}
-            className="border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60"
+            disabled={saving || !dirty}
+            className="border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60 disabled:hover:bg-blue disabled:hover:text-paper"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>
+          {dirty && !saving && (
+            <span className="text-lg font-semibold text-ink/70">
+              Unsaved changes
+            </span>
+          )}
+          {!dirty && !saved && !error && (
+            <span className="text-lg text-ink/50">No unsaved changes</span>
+          )}
           {saved && (
             <span
               role="status"
