@@ -48,7 +48,7 @@ export default async function ManagePage() {
     // why the variables are applied here rather than inside the preview itself.
     // Declaring the variables does not change this page's own typography — only
     // .font-display / .font-body consume them.
-    <div className={`${bulletinFontClass} mx-auto max-w-7xl px-0 lg:px-6`}>
+    <div className={`${bulletinFontClass} mx-auto max-w-[1600px] px-0 lg:px-6`}>
       {/* The nav bar's "Home" leaves for smcares.org, so staff need an explicit
           way back to this site's home page from the editor. */}
       <div className="flex justify-end px-6 pt-6 lg:px-0">
@@ -66,7 +66,13 @@ export default async function ManagePage() {
         <ManageSidebar />
 
         <div className="min-w-0 flex-1">
-          <Section id="calendar" title="Calendar" className="scroll-mt-6">
+          <Section
+            id="calendar"
+            title="Calendar"
+            className="scroll-mt-6"
+            wide
+            dense
+          >
             <p className="max-w-3xl text-lg">
               Add and edit the schedule here. Click a time slot to create an
               event; drag to move it, or drag an edge to resize. Click an event
@@ -97,7 +103,7 @@ export default async function ManagePage() {
               <QuickEventForm />
             </div>
 
-            <div className="mt-8 h-[68dvh] min-h-[460px] lg:h-[80vh] lg:min-h-[560px]">
+            <div className="mt-8 h-[68dvh] min-h-[460px] lg:h-[70vh] lg:min-h-[560px]">
               <ManageCalendar />
             </div>
           </Section>
@@ -106,6 +112,8 @@ export default async function ManagePage() {
             id="digital-schedule"
             title="Digital Bulletin pages"
             className="scroll-mt-6"
+            wide
+            dense
           >
             <p className="max-w-3xl text-lg">
               The pages that rotate on the public Digital Bulletin screens. Edit
@@ -130,6 +138,8 @@ export default async function ManagePage() {
             id="custom-slides"
             title="Custom slides"
             className="scroll-mt-6"
+            wide
+            dense
           >
             <p className="max-w-3xl text-lg">
               Slides you&rsquo;ve added to the rotation. Expand one to edit its
