@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   fetchSlides,
@@ -82,6 +82,12 @@ export default function ManageSidebar() {
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
   const [servicesPageCount, setServicesPageCount] = useState(1);
   const [active, setActive] = useState("calendar");
+  // Set when a sidebar link is clicked, and held until the reader scrolls for
+  // themselves. Sections near the end of the page cannot reach the spy's
+  // trigger line (the page runs out of scroll first), so without this the spy
+  // would immediately take the highlight back off whatever was just clicked
+  // and hand it to the last section that did cross the line.
+  const clickedRef = useRef<string | null>(null);
 
   useEffect(() => {
     const loadSlides = async () => {
@@ -152,8 +158,16 @@ export default function ManageSidebar() {
     // highlight stuck on the last anchor that happened to exist at mount.
     // Looking the ids up on each pass means late-rendered panels just work.
     let frame = 0;
+    // Set once the smooth scroll a click started has come to rest, so the next
+    // movement can be attributed to the reader rather than to that animation.
+    let settled = false;
     const update = () => {
       frame = 0;
+      if (clickedRef.current) {
+        if (!settled) return;
+        clickedRef.current = null;
+        settled = false;
+      }
       // A section counts as current once its top passes a line a quarter of
       // the way down the viewport; the last one past it wins.
       const line = window.innerHeight * 0.25;
@@ -186,9 +200,27 @@ export default function ManageSidebar() {
       if (!frame) frame = requestAnimationFrame(update);
     };
 
+    // scrollend marks the end of the click's animation; the scroll after it is
+    // the reader's, and that is what hands the highlight back to the spy.
+    const onScrollEnd = () => {
+      if (clickedRef.current) settled = true;
+    };
+    // Fallback for browsers without scrollend: direct input is unambiguously
+    // the reader moving, so it releases immediately. The smooth scroll a click
+    // starts produces none of these, and so cannot cancel its own highlight.
+    const release = () => {
+      clickedRef.current = null;
+      settled = false;
+      onScroll();
+    };
+
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
+    window.addEventListener("scrollend", onScrollEnd);
+    window.addEventListener("wheel", release, { passive: true });
+    window.addEventListener("touchmove", release, { passive: true });
+    window.addEventListener("keydown", release);
     // The panels render after their fetches resolve and change height as they
     // expand, both of which move every anchor below them.
     const resize = new ResizeObserver(onScroll);
@@ -196,30 +228,44 @@ export default function ManageSidebar() {
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      window.removeEventListener("scrollend", onScrollEnd);
+      window.removeEventListener("wheel", release);
+      window.removeEventListener("touchmove", release);
+      window.removeEventListener("keydown", release);
       resize.disconnect();
       if (frame) cancelAnimationFrame(frame);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spyKey]);
 
-  // Services-page links target a section inside a collapsible panel, so set the
-  // hash to open it (InfoContentEditor reacts to the hash) before scrolling.
-  function jumpToServicesPage(anchor: string) {
-    window.location.hash = anchor;
-    document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setActive(anchor);
-  }
-
+  // Plain navigation to a bulletin page, the same deal as the custom slides:
+  // scroll to the panel and leave it as it was. No hash, because the hash is
+  // what tells InfoContentEditor to expand, and browsing the list should not
+  // force open every page it passes. Use the menu's Edit to open one.
   function jumpToBulletinPage(anchor: string) {
-    window.location.hash = anchor;
     document
       .getElementById(anchor)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    clickedRef.current = anchor;
+    setActive(anchor);
+  }
+
+  // Edit does mean "open this one": the hash is InfoContentEditor's signal.
+  function editBulletinPage(anchor: string) {
+    // Assigning an unchanged hash fires no hashchange, so Edit on the panel
+    // already in the hash would do nothing. Clear it first, via replaceState so
+    // the extra step stays out of the back button.
+    if (window.location.hash === `#${anchor}`) {
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+    window.location.hash = anchor;
+    clickedRef.current = anchor;
     setActive(anchor);
   }
 
   function jump(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    clickedRef.current = id;
     setActive(id);
   }
 
@@ -230,6 +276,7 @@ export default function ManageSidebar() {
     document
       .getElementById(`slide-${id}`)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    clickedRef.current = `slide-${id}`;
     setActive(`slide-${id}`);
   }
 
@@ -243,6 +290,7 @@ export default function ManageSidebar() {
       history.replaceState(null, "", window.location.pathname + window.location.search);
     }
     window.location.hash = `slide-${id}`;
+    clickedRef.current = `slide-${id}`;
     setActive(`slide-${id}`);
   }
 
@@ -361,7 +409,7 @@ export default function ManageSidebar() {
                   <li key={link.anchor} className="flex items-center pr-1">
                     <button
                       type="button"
-                      onClick={() => jumpToServicesPage(link.anchor)}
+                      onClick={() => jumpToBulletinPage(link.anchor)}
                       // Not truncated (unlike other links) so the page number
                       // is always visible; wraps to a second line if needed.
                       className={`flex-1 border-l-4 px-4 py-2 text-left text-base font-semibold leading-snug ${
@@ -388,7 +436,7 @@ export default function ManageSidebar() {
                   <SlideMenu
                     onEdit={
                       b.anchor
-                        ? () => jumpToBulletinPage(b.anchor as string)
+                        ? () => editBulletinPage(b.anchor as string)
                         : undefined
                     }
                     editNote="Auto-updates from calendar"
