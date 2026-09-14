@@ -126,11 +126,11 @@ export default function ManageSidebar() {
     label: `This Week's Services — Page ${i + 1}`,
   }));
 
-  // Anchors the spy watches. Only LEAF anchors belong here: a section wrapper
-  // (#digital-schedule, #custom-slides) contains these and so always sits
-  // higher in the band, which would make it win the topmost test forever and
-  // hide the panel-level highlight. The group titles derive from the active
-  // leaf instead (see dspActive / customActive below).
+  // Anchors the spy watches, in page order. Only LEAF anchors belong here: a
+  // section wrapper (#digital-schedule, #custom-slides) starts above the panels
+  // it contains, so it would always be the last one past the line while you are
+  // anywhere inside it and would hide the panel-level highlight. The group
+  // titles derive from the active leaf instead (see dspActive / customActive).
   const spyIds = [
     "calendar",
     "display-locations",
@@ -145,32 +145,60 @@ export default function ManageSidebar() {
   ];
   const spyKey = spyIds.join("|");
   useEffect(() => {
-    // The observer only reports anchors whose intersection CHANGED, so the set
-    // of currently-visible ones is tracked across callbacks. Without this a
-    // fast scroll past a collapsed (~48px) panel leaves the sidebar stale.
-    const visible = new Set<string>();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) visible.add(e.target.id);
-          else visible.delete(e.target.id);
-        });
-        const top = [...visible]
-          .map((id) => document.getElementById(id))
-          .filter((el): el is HTMLElement => !!el)
-          .sort(
-            (a, b) =>
-              a.getBoundingClientRect().top - b.getBoundingClientRect().top,
-          )[0];
-        if (top) setActive(top.id);
-      },
-      { rootMargin: "-15% 0px -75% 0px", threshold: 0 },
-    );
-    spyIds.forEach((id) => {
-      const el = id && document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
+    // Read on scroll rather than with IntersectionObserver. The editors below
+    // fetch their content before rendering ("Loading editor…"), so the bulletin
+    // panels and slide anchors do not exist yet when this effect first runs.
+    // observe() would silently skip them and never pick them up, which left the
+    // highlight stuck on the last anchor that happened to exist at mount.
+    // Looking the ids up on each pass means late-rendered panels just work.
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      // A section counts as current once its top passes a line a quarter of
+      // the way down the viewport; the last one past it wins.
+      const line = window.innerHeight * 0.25;
+      // Sorted by where they actually sit, so "last one past the line" does not
+      // depend on spyIds happening to match the render order.
+      const rendered = spyIds
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => !!el)
+        .sort(
+          (a, b) =>
+            a.getBoundingClientRect().top - b.getBoundingClientRect().top,
+        );
+      if (rendered.length === 0) return;
+
+      let current = rendered[0];
+      for (const el of rendered) {
+        if (el.getBoundingClientRect().top <= line) current = el;
+      }
+
+      // At the end of the page nothing further down can ever reach the line,
+      // so the tail sections would never light up. Hand it to the last anchor.
+      const atBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 2;
+      if (atBottom) current = rendered[rendered.length - 1];
+
+      setActive(current.id);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    // The panels render after their fetches resolve and change height as they
+    // expand, both of which move every anchor below them.
+    const resize = new ResizeObserver(onScroll);
+    resize.observe(document.body);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      resize.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spyKey]);
 
