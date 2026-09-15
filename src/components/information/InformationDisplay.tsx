@@ -11,6 +11,7 @@ import {
   type InfoContent,
 } from "@/lib/infoContent";
 import { fetchSlides, type Slide, type SlideBackground } from "@/lib/slides";
+import { resolveSlideBackground } from "@/lib/slideBackgrounds";
 import { fetchHiddenBuiltins, type BuiltinKey } from "@/lib/displaySettings";
 import {
   fetchBulletinLocationId,
@@ -64,13 +65,6 @@ function NavArrow({ dir }: { dir: "left" | "right" }) {
 }
 
 
-// Fills the letterbox bars around the scaled canvas with the current slide's own
-// background, so an odd-shaped container reads as one field of color.
-const STAGE_BG: Record<SlideBackground, string> = {
-  paper: "bg-paper",
-  blue: "bg-blue",
-  teal: "bg-teal",
-};
 
 /*
   Rotation controller: auto-advances on a continuous loop, each page shown for
@@ -277,7 +271,11 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
     // clips. Its only job is to center and scale the canvas.
     <div
       ref={measureStage}
-      className={`font-body relative h-full w-full overflow-hidden text-ink ${STAGE_BG[currentBg]}`}
+      className="font-body relative h-full w-full overflow-hidden text-ink"
+      /* Fills the letterbox bars around the scaled canvas with the current
+         slide's own background, so an odd-shaped container reads as one field
+         of color. Inline because a custom slide's color is free-form. */
+      style={{ backgroundColor: resolveSlideBackground(currentBg) }}
     >
       {/* Canvas: always exactly CANVAS_WIDTH x CANVAS_HEIGHT, so every slide
           lays out identically no matter how big the stage is, then scaled as a

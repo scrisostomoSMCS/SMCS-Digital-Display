@@ -40,7 +40,7 @@ export default function DemographicPage({
         animate="show"
         className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
-        <InfoEyebrow tone="ink" />
+        <InfoEyebrow bg="teal" />
         <h1 className="font-display mt-1 max-w-[68%] flex flex-wrap items-baseline gap-x-4 leading-none">
           <span className="text-4xl @min-[40rem]:text-5xl @min-[64rem]:text-6xl">{content.heading}</span>
           {content.headingEs && (

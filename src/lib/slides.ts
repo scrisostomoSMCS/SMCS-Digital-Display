@@ -1,4 +1,8 @@
 import { supabase } from "./supabase";
+import {
+  DEFAULT_SLIDE_BACKGROUND,
+  resolveSlideBackground,
+} from "./slideBackgrounds";
 
 /*
   Custom slides for the /information display. Data-driven: the public display
@@ -30,13 +34,13 @@ export const SLIDE_TEMPLATES: { key: SlideTemplate; label: string; hint: string 
     { key: "title-list", label: "Title + list", hint: "A headline and a bullet list." },
   ];
 
-export type SlideBackground = "blue" | "teal" | "paper";
-
-export const SLIDE_BACKGROUNDS: { key: SlideBackground; label: string }[] = [
-  { key: "blue", label: "Blue" },
-  { key: "teal", label: "Teal" },
-  { key: "paper", label: "White" },
-];
+/*
+  A slide's background is a free-form color the employee picks. It is a hex
+  string ("#0054a4"); rows written before the picker existed still hold the keys
+  "blue" | "teal" | "paper". Always read it through resolveSlideBackground (or
+  slideTheme) in lib/slideBackgrounds rather than comparing the raw value.
+*/
+export type SlideBackground = string;
 
 /*
   Every text field has an English value and a Spanish counterpart (…Es). The
@@ -101,7 +105,7 @@ function fromRow(r: SlideRow): Slide {
   return {
     id: r.id,
     template: (r.template as SlideTemplate) ?? "title-body",
-    background: (r.background as SlideBackground) ?? "blue",
+    background: r.background ?? DEFAULT_SLIDE_BACKGROUND,
     title: r.title,
     titleEs: r.title_es ?? "",
     body: r.body ?? "",
@@ -175,7 +179,9 @@ export async function setSlideHidden(
 function toRow(input: SlideInput) {
   return {
     template: input.template,
-    background: input.background,
+    // Normalized on the way in so the column only ever gains hex values; the
+    // legacy keys already in the table keep working through fromRow.
+    background: resolveSlideBackground(input.background),
     title: input.title,
     title_es: input.titleEs,
     body: input.body,

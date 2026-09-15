@@ -12,10 +12,14 @@ export default function RotatingLeaf({
   size = 30,
   className = "text-teal",
   duration = 18,
+  color,
 }: {
   size?: number;
   className?: string;
   duration?: number;
+  // Explicit stroke color, for pages whose palette is derived at runtime from a
+  // custom slide background rather than fixed in a Tailwind class.
+  color?: string;
 }) {
   const reduce = useReducedMotion();
   return (
@@ -28,7 +32,7 @@ export default function RotatingLeaf({
       animate={reduce ? undefined : { rotateY: 360 }}
       transition={{ duration, repeat: Infinity, ease: "linear" }}
     >
-      <Leaf size={size} strokeWidth={2} className={className} />
+      <Leaf size={size} strokeWidth={2} color={color} className={className} />
     </motion.span>
   );
 }

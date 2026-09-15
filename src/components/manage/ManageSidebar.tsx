@@ -10,6 +10,7 @@ import {
   createSlide,
   type Slide,
 } from "@/lib/slides";
+import { DEFAULT_SLIDE_BACKGROUND } from "@/lib/slideBackgrounds";
 import {
   fetchHiddenBuiltins,
   setHiddenBuiltins,
@@ -299,7 +300,7 @@ export default function ManageSidebar() {
   async function addSlide() {
     await createSlide({
       template: "title-body",
-      background: "blue",
+      background: DEFAULT_SLIDE_BACKGROUND,
       title: "New slide",
       titleEs: "",
       body: "",
