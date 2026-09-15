@@ -6,11 +6,14 @@ import {
   uploadSlideImage,
   slideImageUrl,
   SLIDE_TEMPLATES,
-  SLIDE_BACKGROUNDS,
   type Slide,
   type SlideTemplate,
-  type SlideBackground,
 } from "@/lib/slides";
+import {
+  SLIDE_BACKGROUND_PRESETS,
+  resolveSlideBackground,
+} from "@/lib/slideBackgrounds";
+import ColorPicker from "./ColorPicker";
 import SlideTemplateView from "@/components/information/SlideTemplateView";
 import BulletinCanvasPreview from "@/components/information/BulletinCanvasPreview";
 import { SLIDE_LIMITS, slideBodyLimit } from "@/lib/bulletinLimits";
@@ -19,10 +22,12 @@ import { Field, StringListEditor, labelClass, smallBtn } from "./editorFields";
 
 /*
   Structured editor for one custom slide, used inline on the manage page. Employees
-  pick a layout + brand color, fill in text, and upload an image into a fitted
-  slot, no free positioning, no font/color control. The live preview renders the
-  EXACT display component (SlideTemplateView) scaled down, so it always matches
-  the wall screen. Saves to Supabase; the rotation updates via realtime.
+  pick a layout, any background color, fill in text, and upload an image into a
+  fitted slot, no free positioning and no font control. Text and accent colors
+  are derived from the background rather than chosen, so a slide stays readable
+  whatever color is picked. The live preview renders the EXACT display component
+  (SlideTemplateView) scaled down, so it always matches the wall screen. Saves to
+  Supabase; the rotation updates via realtime.
 */
 
 // Which fields each template uses.
@@ -127,27 +132,21 @@ export default function SlideEditor({
           </div>
         </div>
 
+        {/* Any color, same picker the calendar uses for event colors. Text,
+            eyebrow, leaf, and list markers are derived from the choice (see
+            lib/slideBackgrounds), so nothing here can be made unreadable. The
+            value is resolved first because slides saved before this picker
+            existed store a brand name rather than a hex. */}
         <div>
-          <p className={labelClass}>Background color</p>
-          <div className="mt-2 flex flex-wrap gap-2 lg:flex-nowrap">
-            {SLIDE_BACKGROUNDS.map((b) => (
-              <button
-                key={b.key}
-                type="button"
-                onClick={() => set("background", b.key as SlideBackground)}
-                className={`flex items-center gap-2 border-2 px-3 py-2 text-base font-semibold ${
-                  draft.background === b.key ? "border-blue" : "border-ink/30"
-                }`}
-              >
-                <span
-                  className={`inline-block h-5 w-5 border border-ink/20 ${
-                    b.key === "blue" ? "bg-blue" : b.key === "teal" ? "bg-teal" : "bg-paper"
-                  }`}
-                />
-                {b.label}
-              </button>
-            ))}
-          </div>
+          <ColorPicker
+            label="Background color"
+            value={resolveSlideBackground(draft.background)}
+            onChange={(v) => set("background", v)}
+            presets={SLIDE_BACKGROUND_PRESETS}
+          />
+          <p className="mt-1 text-sm text-ink/60">
+            The preview below shows the exact colors the display will use.
+          </p>
         </div>
 
         <fieldset>

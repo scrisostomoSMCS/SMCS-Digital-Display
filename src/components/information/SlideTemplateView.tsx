@@ -7,6 +7,7 @@ import RotatingLeaf from "./RotatingLeaf";
 import { staggerContainer, riseItem, headerIn } from "./motion";
 import { BED_PANEL_CLEARANCE } from "@/components/BedAvailabilitySlide";
 import { slideImageUrl, type Slide } from "@/lib/slides";
+import { slideTheme } from "@/lib/slideBackgrounds";
 
 /*
   Renders a custom slide in one of the on-brand layout templates. This SAME
@@ -66,10 +67,10 @@ export default function SlideTemplateView({
   slide: Slide;
   animate?: boolean;
 }) {
+  // The employee picks any background color, so every other color on the slide
+  // is derived from it for contrast rather than fixed per brand background.
   const bg = slide.background;
-  const eyebrowTone = bg === "blue" ? "white" : bg === "teal" ? "ink" : "blue";
-  const leafColor = bg === "teal" ? "text-paper/30" : "text-teal/25";
-  const marker = bg === "teal" ? "bg-blue" : "bg-teal";
+  const theme = slideTheme(bg);
   const placeholderTone = "border-current/20 text-current/40";
   const img = slideImageUrl(slide.imagePath);
   const init = animate ? "hidden" : false;
@@ -81,7 +82,7 @@ export default function SlideTemplateView({
       animate="show"
       className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
     >
-      <InfoEyebrow tone={eyebrowTone} />
+      <InfoEyebrow bg={bg} />
       <h1 className="font-display mt-2 max-w-[68%] text-4xl leading-none @min-[40rem]:text-5xl @min-[64rem]:text-7xl">
         {slide.title}
       </h1>
@@ -95,7 +96,7 @@ export default function SlideTemplateView({
 
   const Leaf = (
     <div className="pointer-events-none absolute bottom-8 right-14 hidden @min-[64rem]:block">
-      <RotatingLeaf size={190} className={leafColor} duration={25} />
+      <RotatingLeaf size={190} color={theme.watermark} duration={25} />
     </div>
   );
 
@@ -115,7 +116,7 @@ export default function SlideTemplateView({
             the red card. The image takes the rest of the canvas from there. */}
         <div className="relative z-10 flex h-full min-h-0 flex-col">
           <div className={`shrink-0 ${BED_PANEL_CLEARANCE}`}>
-            <InfoEyebrow tone={eyebrowTone} />
+            <InfoEyebrow bg={bg} />
           </div>
           {/* Negative margins cancel InfoPageShell's own side padding at each
               breakpoint, so the image runs edge to edge on the canvas instead of
@@ -188,7 +189,8 @@ export default function SlideTemplateView({
               className="font-body flex items-start gap-4"
             >
               <span
-                className={`mt-2 h-4 w-4 shrink-0 ${marker}`}
+                className="mt-2 h-4 w-4 shrink-0"
+                style={{ backgroundColor: theme.accent }}
                 aria-hidden="true"
               />
               <div>

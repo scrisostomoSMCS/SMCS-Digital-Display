@@ -40,7 +40,7 @@ export default function NewArrivalsPage({
         animate="show"
         className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
-        <InfoEyebrow tone="white" />
+        <InfoEyebrow bg="blue" />
         <h1 className="font-display mt-1 max-w-[68%] flex flex-wrap items-baseline gap-x-4 leading-[0.95]">
           <span className="text-4xl @min-[40rem]:text-5xl @min-[64rem]:text-7xl">{content.headline}</span>
           {content.headlineEs && (
