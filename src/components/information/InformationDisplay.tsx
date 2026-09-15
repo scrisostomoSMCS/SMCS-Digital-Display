@@ -35,6 +35,20 @@ import BedAvailabilitySlide from "@/components/BedAvailabilitySlide";
 const NAV_CLASS = "text-ink hover:text-blue";
 
 /*
+  Backstop refresh interval. Realtime (below) is the fast path and normally
+  delivers edits within a second; this timer exists only for the case where the
+  socket has silently died — a dropped connection that never recovers, an
+  expired token, a paused project. Without it the screen keeps showing whatever
+  it held when the socket stopped, indefinitely and with no visible symptom,
+  because nothing else ever re-reads Supabase.
+
+  Ten minutes is the worst-case staleness we accept in that degraded state. It
+  does NOT repair the socket, it only works around it: instant updates stay
+  broken until the page reloads.
+*/
+const REFRESH_INTERVAL = 600_000; // 10 minutes
+
+/*
   Paging arrow: a stem plus a head, drawn rather than typed. A text glyph ("←")
   ties length and weight together — the typeface decides both, and text-* scales
   them as one. Here they are separate knobs: strokeWidth sets thickness, and the
@@ -155,7 +169,18 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       .on("postgres_changes", { event: "*", schema: "public", table: "bulletin_locations" }, loadTargeting)
       .on("postgres_changes", { event: "*", schema: "public", table: "display_settings" }, loadHidden)
       .subscribe();
+    // Backstop only (see REFRESH_INTERVAL): re-runs the same four loaders
+    // realtime calls above, so there is no second copy of the fetch logic to
+    // drift. A poll that lands on unchanged data is a no-op to the viewer —
+    // the slide keeps its key, so nothing remounts or re-animates.
+    const poll = setInterval(() => {
+      loadContent();
+      loadSlides();
+      loadHidden();
+      loadTargeting();
+    }, REFRESH_INTERVAL);
     return () => {
+      clearInterval(poll);
       supabase.removeChannel(channel);
     };
   }, [locationSlug]);
