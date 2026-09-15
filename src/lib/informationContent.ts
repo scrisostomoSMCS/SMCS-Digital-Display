@@ -1,6 +1,6 @@
 /*
   Content + timing for the auto-rotating /information wall display.
-  Placeholder/sample data for now, structured so the services lists can later
+  data structured so the services lists can later
   come from Supabase without changing the page components. Edit copy here.
 */
 
