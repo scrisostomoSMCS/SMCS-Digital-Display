@@ -108,7 +108,6 @@ reference.
 | `/admin` | User and role management | admin |
 | `/schedule` | The signed-in user's personal schedule | Any signed-in user |
 | `/login`, `/signup` | Auth. Sign-up is gated to `@smcares.org` addresses. | Public |
-| `/bed-test` | Scratch page showing the bed panel alone | Public |
 | `/api/beds` | Bed availability JSON, proxied from WordPress | Public |
 
 Auth is layered: `src/middleware.ts` gates `/schedule`, `/manage`, `/admin`;
@@ -360,7 +359,6 @@ src/app/
   information/page.tsx             DIGITAL BULLETIN. Full screen, reads ?location=
   dashboard/page.tsx               Live Calendar wall display
   admin/page.tsx                   User and role manager
-  bed-test/page.tsx                Bed panel in isolation
   api/beds/route.ts                The only API route
 
 src/components/
