@@ -13,6 +13,11 @@
   --color-paper: #ffffff; /* default background */
   --color-placeholder: #d4d4d4; /* neutral gray image placeholder */
 
+  /* Not an accent — reserved for attention/alert surfaces only (the bed
+     availability panel, broken-config warnings on the manage page). Same value
+     as BED_RED in components/BedAvailabilitySlide, which predates this token. */
+  --color-red: #c1121f;
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
