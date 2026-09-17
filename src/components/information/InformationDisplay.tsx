@@ -97,6 +97,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   const [content, setContent] = useState<InfoContent>(defaultInfoContent);
   const [contentLoaded, setContentLoaded] = useState(false);
   const [slides, setSlides] = useState<Slide[]>([]);
+  const [slidesLoaded, setSlidesLoaded] = useState(false);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
   const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
   const [locationId, setLocationId] = useState<string | null>(null);
@@ -138,7 +139,10 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       setContent(await fetchInfoContent());
       setContentLoaded(true);
     };
-    const loadSlides = async () => setSlides(await fetchSlides(locationSlug));
+    const loadSlides = async () => {
+      setSlides(await fetchSlides(locationSlug));
+      setSlidesLoaded(true);
+    };
     const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
     const loadTargeting = async () => {
       if (!locationSlug) {
@@ -192,10 +196,18 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
     return targets.length === 0 || (locationId !== null && targets.includes(locationId));
   };
 
-  // Builds the rotation for this display. `ignoreTargeting` drops the
-  // per-location filter, which is how the never-blank fallback below reuses this
-  // exact code path instead of assembling a second, divergent page list.
-  const buildRotation = (ignoreTargeting: boolean) => {
+  /*
+    Builds the rotation for this display. The two flags each drop one filter,
+    which is how the never-blank ladder below reuses this exact code path
+    instead of assembling a second, divergent page list:
+      ignoreTargeting - drop the per-location filter
+      ignoreHidden    - drop the staff "hidden built-ins" filter
+    Both default to off, so the normal rotation is buildRotation({}).
+  */
+  const buildRotation = ({
+    ignoreTargeting = false,
+    ignoreHidden = false,
+  }: { ignoreTargeting?: boolean; ignoreHidden?: boolean }) => {
     // "This Week's Services" is a repeatable, numbered page type: one bulletin
     // page per non-empty services page. Filter before numbering so a location
     // that receives only one service page sees "Page 1 of 1," not a gap.
@@ -248,7 +260,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       },
     ];
     const builtins = builtinDefs.filter((page) => {
-      if (hidden.includes(page.key)) return false;
+      if (!ignoreHidden && hidden.includes(page.key)) return false;
       return pageIsVisible(page.pageKey, ignoreTargeting);
     });
 
@@ -261,17 +273,36 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   };
 
   /*
-    Never blank: once loading has settled, a rotation that came out empty falls
-    back to the untargeted one. That covers a location slug matching no row in
-    bulletin_locations (a mistyped or renamed URL on a wall screen) and a real
-    location that every page happens to be targeted away from. A screen showing
-    the general bulletin is right in a way an empty white screen never is.
-    Built-ins staff have explicitly hidden stay hidden — that is a deliberate
-    setting, not a mismatch.
+    Never blank, in three rungs. Each is used only if the one above it produced
+    no pages at all; a single visible page stops the ladder at the top, so none
+    of this changes a display that has something to show.
+
+    1. The rotation as configured.
+    2. Drop per-location targeting. Covers a location slug matching no row in
+       bulletin_locations (a mistyped or renamed URL on a wall screen) and a
+       real location that every page happens to be targeted away from.
+    3. Drop the hidden-built-ins filter too. Only reachable when staff have
+       hidden every built-in AND no custom slide is visible anywhere — the
+       rotation is genuinely empty and the alternative is a white screen. The
+       manage page flags this state separately (see locationRotationIsEmpty),
+       because from here the TV looks fine while the config is still broken.
+
+    `settled` waits for the loaders whose initial value could read as empty.
+    slides starts [] and is the real hazard: if hidden lands before the slides
+    query returns, a location carried entirely by custom slides looks empty for
+    a frame and would flash rung 3 before settling. content and hidden start at
+    non-empty defaults, so they cannot produce that false reading.
   */
-  const targeted = buildRotation(false);
-  const settled = !locationSlug || (targetingLoaded && contentLoaded);
-  const all = targeted.length > 0 || !settled ? targeted : buildRotation(true);
+  const targeted = buildRotation({});
+  const settled =
+    slidesLoaded && (!locationSlug || (targetingLoaded && contentLoaded));
+  let all = targeted;
+  if (targeted.length === 0 && settled) {
+    all = buildRotation({ ignoreTargeting: true });
+    if (all.length === 0) {
+      all = buildRotation({ ignoreTargeting: true, ignoreHidden: true });
+    }
+  }
   const pages = all.map((p) => p.node);
   const backgrounds = all.map((p) => p.bg);
 
