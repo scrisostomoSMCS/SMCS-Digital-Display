@@ -8,6 +8,7 @@ import CustomSlidesEditor from "@/components/manage/CustomSlidesEditor";
 import QuickEventForm from "@/components/manage/QuickEventForm";
 import ManageSidebar from "@/components/manage/ManageSidebar";
 import BulletinLocationsManager from "@/components/manage/BulletinLocationsManager";
+import AnnouncementLauncher from "@/components/manage/AnnouncementLauncher";
 import { bulletinFontClass } from "@/lib/bulletinFonts";
 
 export const metadata = {
@@ -66,6 +67,15 @@ export default async function ManagePage() {
         <ManageSidebar />
 
         <div className="min-w-0 flex-1">
+          {/* Announcements interrupt every wall screen at once and are used
+              under time pressure, so the control sits at the top of the content
+              column, above the first section rather than inside one. px-6
+              matches Section's own padding so it aligns with the headings
+              below it. */}
+          <div className="px-6 pt-6">
+            <AnnouncementLauncher />
+          </div>
+
           <Section
             id="calendar"
             title="Calendar"

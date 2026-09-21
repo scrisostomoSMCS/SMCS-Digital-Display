@@ -27,6 +27,7 @@ import DemographicPage from "./DemographicPage";
 import EventsTodayPage from "./EventsTodayPage";
 import CustomSlidePage from "./CustomSlidePage";
 import BedAvailabilitySlide from "@/components/BedAvailabilitySlide";
+import AnnouncementBar from "./AnnouncementBar";
 
 // Prev/next arrows: bare glyphs, no button chrome — deliberately unlike the
 // circled back button at the top, which is a different kind of control (it
@@ -367,6 +368,25 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
             via BED_PANEL_CLEARANCE on their header band — widening the panel
             here means re-checking that constant. */}
         <BedAvailabilitySlide className="absolute right-5 top-5 z-20 w-[29rem]" />
+
+        {/* Staff announcement, overlaid across the top of the canvas.
+
+            GEOMETRY. Purely an overlay: absolutely positioned, above everything
+            at z-30 (the ladder below it is slide → dots z-10 → bed panel, back
+            button and arrows z-20), and outside the AnimatePresence stage, so
+            it neither pushes nor resizes anything. The page underneath keeps
+            its exact layout and is simply covered.
+
+            left-16 is the 64px gutter InfoPageShell gives every slide, so the
+            bubble lines up with the page's own margins. It stops at right-[36rem]
+            (1344px on the 1920 canvas) rather than spanning full width: the back
+            button's left edge is at 1376px and the bed panel's at 1436px, and
+            covering live bed counts to show an announcement would be the wrong
+            trade on this screen. That leaves a 32px gap before the back button.
+
+            It is NOT inside the <AnimatePresence> above, so it stays put across
+            slide changes instead of fading out and back in every rotation. */}
+        <AnnouncementBar className="absolute left-16 right-[36rem] top-5 z-30" />
 
         {/* Back button, shrunk to a bare left arrow and parked immediately left of
             the bed panel (right-5 + w-[29rem] = 30.25rem, plus a 0.75rem gap) —
