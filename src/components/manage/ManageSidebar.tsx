@@ -17,6 +17,7 @@ import {
   type BuiltinKey,
 } from "@/lib/displaySettings";
 import { fetchInfoContent } from "@/lib/infoContent";
+import { openAnnouncementModal } from "@/lib/announcements";
 import SlideMenu from "./SlideMenu";
 
 /*
@@ -369,6 +370,25 @@ export default function ManageSidebar() {
   return (
     <nav aria-label="Manage sections" className="hidden w-56 shrink-0 lg:block">
       <div className="sticky top-6">
+        {/* Announcement. Sits above Calendar because it is the most urgent
+            action on this page. Unlike every other item here it does not jump
+            to a section — there is nothing on the page to scroll to — it opens
+            the same modal as the button at the top, so it has no scroll-spy
+            anchor and never takes the active highlight. */}
+        <div className="mb-6">
+          <ul className="space-y-1">
+            <li>
+              <button
+                type="button"
+                onClick={openAnnouncementModal}
+                className={linkClass(false)}
+              >
+                Announcement
+              </button>
+            </li>
+          </ul>
+        </div>
+
         {/* Calendar */}
         <GroupTitle onClick={() => jump("calendar")} active={calendarActive}>
           Calendar

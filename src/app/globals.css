@@ -18,6 +18,11 @@
      as BED_RED in components/BedAvailabilitySlide, which predates this token. */
   --color-red: #c1121f;
 
+  /* Not an accent either — the one "push this to every screen" action, on the
+     announcement modal's submit button. Dark enough that white sits on it at
+     6.19:1 (WCAG AA); the lighter, friendlier greens all fail. */
+  --color-green: #0f7038;
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
