@@ -16,7 +16,7 @@ on:
   workflow_dispatch:        # lets you run it manually from the Actions tab
 
 env:
-  PING_TABLE: announcements   # <-- change me
+  PING_TABLE: announcements   events
 
 jobs:
   ping:
