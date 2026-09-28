@@ -22,14 +22,14 @@ export const BED_RED = '#c1121f';
   BED_PANEL_CLEARANCE
                     a min-height applied to each slide's header band so slide
                     content always starts BELOW the panel. Sized from the
-                    rendered panel height (~220px) plus the canvas's own top
+                    rendered panel height (~263px) plus the canvas's own top
                     padding and a gap. Only applies on the wall display
                     (@min-[64rem]); narrow embeds stack normally.
 
   If the panel's type or padding changes, re-measure it and update the
   clearance to match, otherwise slides will start creeping underneath it.
 */
-export const BED_PANEL_CLEARANCE = '@min-[64rem]:min-h-[12.5rem]';
+export const BED_PANEL_CLEARANCE = '@min-[64rem]:min-h-[15rem]';
 
 export default function BedAvailabilitySlide({ className = '' }: { className?: string }) {
   const data = useBedAvailability();
