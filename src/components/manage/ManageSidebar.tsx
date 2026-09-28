@@ -535,8 +535,9 @@ export default function ManageSidebar() {
             the same modal as the button at the top, so it has no scroll-spy
             anchor and never takes the active highlight. */}
         <div className="mb-6">
+          <GroupTitle onClick={openAnnouncementModal}>Announcements</GroupTitle>
           <ul className="space-y-1">
-            <li>
+            <li className="flex">
               <button
                 type="button"
                 onClick={openAnnouncementModal}

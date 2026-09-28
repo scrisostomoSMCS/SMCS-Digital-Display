@@ -539,7 +539,7 @@ export default function InfoContentEditor() {
         <button
           type="button"
           onClick={addServicesPage}
-          className="flex items-center gap-2 border-2 border-green-600 bg-green-600 px-5 py-2.5 text-base font-semibold text-paper hover:bg-paper hover:text-green-600"
+          className="flex items-center gap-2 rounded-full border-2 border-green-600 bg-green-600 px-6 py-2.5 text-base font-semibold text-paper hover:bg-paper hover:text-green-600"
         >
           <Plus size={18} aria-hidden="true" />
           Add service page
@@ -845,7 +845,7 @@ export default function InfoContentEditor() {
             type="button"
             onClick={handleSave}
             disabled={saving || !dirty}
-            className="border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60 disabled:hover:bg-blue disabled:hover:text-paper"
+            className="rounded-full border-2 border-blue bg-blue px-7 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60 disabled:hover:bg-blue disabled:hover:text-paper"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>

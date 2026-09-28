@@ -56,7 +56,7 @@ export default async function ManagePage() {
       <div className="flex justify-end px-6 pt-6 lg:px-0">
         <Link
           href="/"
-          className="inline-block border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper"
+          className="inline-block rounded-full border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper"
         >
           ← Back to Digital Bulletin Home
         </Link>

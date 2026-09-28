@@ -126,7 +126,7 @@ export default function QuickEventForm() {
         <button
           type="submit"
           disabled={saving || invalid}
-          className="border-2 border-blue bg-blue px-6 py-2 text-base font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60"
+          className="rounded-full border-2 border-blue bg-blue px-7 py-2 text-base font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60"
         >
           {saving ? "Adding…" : "Add event"}
         </button>

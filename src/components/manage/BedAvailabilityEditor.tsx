@@ -162,7 +162,7 @@ export default function BedAvailabilityEditor() {
           type="button"
           onClick={handleUpdate}
           disabled={saving || !allValid}
-          className="border-2 border-blue bg-blue px-6 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60 disabled:hover:bg-blue disabled:hover:text-paper"
+          className="rounded-full border-2 border-blue bg-blue px-7 py-3 text-lg font-semibold text-paper hover:bg-paper hover:text-blue disabled:opacity-60 disabled:hover:bg-blue disabled:hover:text-paper"
         >
           {saving ? "Updating…" : "Update"}
         </button>
