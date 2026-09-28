@@ -1,5 +1,7 @@
 # SMCS Digital Bulletin
 
+<!-- sync test: verifying this commit reaches both connected remotes -->
+
 ![SMCS Digital Bulletin](docs/dbss.png)
 
 ## What is this
