@@ -47,6 +47,10 @@ export type SidebarNames = Record<string, string>;
 
 export const customSlideNameKey = (id: string) => `slide:${id}`;
 
+// Fired on window after a rename saves, so the panel headings in this tab
+// update without waiting for realtime.
+export const SIDEBAR_NAMES_EVENT = "smcs:sidebar-names-change";
+
 export async function fetchSidebarNames(): Promise<SidebarNames> {
   const { data, error } = await supabase
     .from("display_settings")
@@ -69,7 +73,9 @@ export async function setSidebarName(
   const { error } = await supabase
     .from("display_settings")
     .upsert({ id: 1, sidebar_names: next, updated_at: new Date().toISOString() });
-  return error ? error.message : null;
+  if (error) return error.message;
+  window.dispatchEvent(new Event(SIDEBAR_NAMES_EVENT));
+  return null;
 }
 
 /*

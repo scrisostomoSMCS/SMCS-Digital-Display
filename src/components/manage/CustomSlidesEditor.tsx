@@ -9,6 +9,8 @@ import type { BulletinLocation } from "@/lib/bulletinLocations";
 import SlideEditor from "./SlideEditor";
 import LocationBadges, { useBulletinLocations } from "./LocationBadges";
 import { smallBtn } from "./editorFields";
+import { useSidebarNames } from "./useSidebarNames";
+import { customSlideNameKey } from "@/lib/displaySettings";
 
 /*
   Inline editors for employee-created slides, one collapsible panel per slide
@@ -20,6 +22,7 @@ import { smallBtn } from "./editorFields";
 
 function SlidePanel({
   slide,
+  name,
   locations,
   index,
   count,
@@ -29,6 +32,8 @@ function SlidePanel({
   onDragEnd,
 }: {
   slide: Slide;
+  // The sidebar rename, if any; the slide's own title otherwise.
+  name?: string;
   locations: BulletinLocation[];
   index: number;
   count: number;
@@ -67,7 +72,7 @@ function SlidePanel({
             {open ? "▾" : "▸"}
           </span>
           <span className="truncate text-xl font-bold text-blue">
-            {slide.title.trim() || "Untitled slide"}
+            {name || slide.title.trim() || "Untitled slide"}
           </span>
           <LocationBadges
             locationIds={slide.locationIds}
@@ -114,6 +119,7 @@ export default function CustomSlidesEditor() {
   const slidesRef = useRef<Slide[]>([]);
   slidesRef.current = slides;
   const locations = useBulletinLocations("custom-slides-editor");
+  const names = useSidebarNames("custom-slides-editor");
 
   const expand = (id: string) => setOpen((p) => new Set(p).add(id));
   const toggle = (id: string) =>
@@ -219,6 +225,7 @@ export default function CustomSlidesEditor() {
         <SlidePanel
           key={s.id}
           slide={s}
+          name={names[customSlideNameKey(s.id)]}
           locations={locations}
           index={i}
           count={slides.length}

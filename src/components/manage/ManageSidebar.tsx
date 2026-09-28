@@ -47,8 +47,9 @@ import SlideMenu from "./SlideMenu";
   page must always remain, so the last one has no Delete option.
 
   Double-clicking any slide name renames it. The name is stored in
-  display_settings.sidebar_names and only labels the sidebar; it never changes
-  what the wall display shows. Clearing the name restores the default.
+  display_settings.sidebar_names and labels the sidebar and the matching panel
+  headings on this page (see useSidebarNames); it never changes what the wall
+  display shows. Clearing the name restores the default.
 */
 const BUILTINS: {
   key: BuiltinKey;

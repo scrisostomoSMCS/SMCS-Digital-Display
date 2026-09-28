@@ -41,6 +41,7 @@ import {
 } from "@/lib/bulletinLocations";
 import BulletinPageLocationSelector from "./BulletinPageLocationSelector";
 import LocationBadges, { useBulletinLocations } from "./LocationBadges";
+import { useSidebarNames } from "./useSidebarNames";
 
 /*
   Employee/admin editor for the /information display's three messaging pages.
@@ -252,6 +253,8 @@ export default function InfoContentEditor() {
   // Location targeting for the header badges. The per-panel selectors write to
   // builtin_page_locations, so realtime keeps the badges in step with them.
   const locations = useBulletinLocations("info-content-editor");
+  // Sidebar renames (double-click a sidebar name) also title the panels here.
+  const names = useSidebarNames("info-content-editor");
   const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
 
   const loadPageLocations = useCallback(async () => {
@@ -449,7 +452,10 @@ export default function InfoContentEditor() {
         <CollapsiblePanel
           key={page.id}
           id={`services-page-${idx + 1}`}
-          title={`This Week's Services — Page ${idx + 1}`}
+          title={
+            names[servicePageKey(page.id)] ||
+            `This Week's Services — Page ${idx + 1}`
+          }
           badge={locationBadge(
             servicePageKey(page.id),
             `services-page-${idx + 1}`,
@@ -530,7 +536,9 @@ export default function InfoContentEditor() {
       {/* --- New arrivals page --- */}
       <CollapsiblePanel
         id="new-arrivals"
-        title="New arrivals page"
+        title={
+          names[FIXED_BULLETIN_PAGE_KEYS.newArrivals] || "New arrivals page"
+        }
         badge={locationBadge(
           FIXED_BULLETIN_PAGE_KEYS.newArrivals,
           "new-arrivals",
@@ -717,7 +725,10 @@ export default function InfoContentEditor() {
       {/* --- Demographic page --- */}
       <CollapsiblePanel
         id="demographic"
-        title="Featured group page (currently expecting mothers)"
+        title={
+          names[FIXED_BULLETIN_PAGE_KEYS.demographic] ||
+          "Featured group page (currently expecting mothers)"
+        }
         badge={locationBadge(
           FIXED_BULLETIN_PAGE_KEYS.demographic,
           "demographic",
@@ -778,7 +789,9 @@ export default function InfoContentEditor() {
       {/* --- Events today page (content comes from the calendar) --- */}
       <CollapsiblePanel
         id="events-today"
-        title="Events happening today"
+        title={
+          names[FIXED_BULLETIN_PAGE_KEYS.eventsToday] || "Events happening today"
+        }
         badge={locationBadge(
           FIXED_BULLETIN_PAGE_KEYS.eventsToday,
           "events-today",
