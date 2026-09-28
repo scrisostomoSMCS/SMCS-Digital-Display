@@ -16,7 +16,15 @@ import {
   setHiddenBuiltins,
   type BuiltinKey,
 } from "@/lib/displaySettings";
-import { fetchInfoContent } from "@/lib/infoContent";
+import {
+  fetchInfoContent,
+  saveInfoContent,
+  type InfoContent,
+} from "@/lib/infoContent";
+import {
+  deleteBulletinPageLocations,
+  servicePageKey,
+} from "@/lib/bulletinLocations";
 import { openAnnouncementModal } from "@/lib/announcements";
 import SlideMenu from "./SlideMenu";
 
@@ -27,12 +35,11 @@ import SlideMenu from "./SlideMenu";
   page's existing editor; custom Edit opens the structured template editor.
 
   New arrivals, the featured-group (pregnant women) page, and events today can
-  all be deleted from the rotation like a custom slide. Services pages are the
-  one default that cannot (no Delete option), since they are the repeatable
-  page type and are removed individually, one page at a time, from within
-  their own editor instead. Every removal here is RECOVERABLE: hidden
-  built-ins and soft-deleted custom slides appear under "Recently deleted" with
-  a Restore action, so nothing is lost by accident.
+  all be deleted from the rotation like a custom slide, RECOVERABLE via
+  "Recently deleted" with a Restore action. Services pages are the repeatable
+  type: each numbered page gets its own three-dot Delete (permanent, no
+  restore, matching "Remove this page" inside the editor), but at least one
+  page must always remain, so the last one has no Delete option.
 */
 const BUILTINS: { key: BuiltinKey; label: string; anchor: string | null }[] = [
   { key: "services", label: "Services pages", anchor: "services" },
@@ -84,7 +91,7 @@ export default function ManageSidebar() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [deleted, setDeleted] = useState<Slide[]>([]);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
-  const [servicesPageCount, setServicesPageCount] = useState(1);
+  const [infoContent, setInfoContent] = useState<InfoContent | null>(null);
   const [active, setActive] = useState("calendar");
   // Set when a sidebar link is clicked, and held until the reader scrolls for
   // themselves. Sections near the end of the page cannot reach the spy's
@@ -99,14 +106,10 @@ export default function ManageSidebar() {
       setDeleted(await fetchDeletedSlides());
     };
     const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
-    const loadServices = async () => {
-      const c = await fetchInfoContent();
-      const n = c.services.pages.filter((p) => p.services.length > 0).length;
-      setServicesPageCount(Math.max(1, n));
-    };
+    const loadInfoContent = async () => setInfoContent(await fetchInfoContent());
     loadSlides();
     loadHidden();
-    loadServices();
+    loadInfoContent();
     const channel = supabase
       .channel("sidebar-slides")
       .on("postgres_changes", { event: "*", schema: "public", table: "slides" }, loadSlides)
@@ -118,7 +121,7 @@ export default function ManageSidebar() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "info_content" },
-        loadServices,
+        loadInfoContent,
       )
       .subscribe();
     return () => {
@@ -130,8 +133,12 @@ export default function ManageSidebar() {
   const hiddenBuiltins = BUILTINS.filter((b) => hidden.includes(b.key));
   const totalVisible = visibleBuiltins.length + slides.length;
 
-  // The single "services" builtin expands into one link per numbered page.
-  const serviceLinks = Array.from({ length: servicesPageCount }, (_, i) => ({
+  // The single "services" builtin expands into one link per numbered page,
+  // unfiltered and in order so anchors line up 1:1 with InfoContentEditor's
+  // own panel ids ("services-page-N" keyed off the same array index).
+  const servicesPages = infoContent?.services.pages ?? [];
+  const serviceLinks = servicesPages.map((page, i) => ({
+    id: page.id,
     anchor: `services-page-${i + 1}`,
     label: `This Week's Services — Page ${i + 1}`,
   }));
@@ -332,6 +339,37 @@ export default function ManageSidebar() {
     await setHiddenBuiltins([...hidden, key]);
   }
 
+  // Permanent (no restore), matching the "Remove this page" button inside
+  // InfoContentEditor's own panel — this is the same action, just reachable
+  // from the sidebar too. Always at least one page must remain, so this is
+  // only offered while there's more than one (see the SlideMenu call below).
+  async function removeServicesPage(idx: number) {
+    if (!infoContent) return;
+    const pages = infoContent.services.pages;
+    if (pages.length <= 1) return;
+    const page = pages[idx];
+    if (
+      !window.confirm(
+        `Remove "This Week's Services — Page ${idx + 1}"? Its services will be deleted.`,
+      )
+    )
+      return;
+    const next: InfoContent = {
+      ...infoContent,
+      services: {
+        ...infoContent.services,
+        pages: pages.filter((_, i) => i !== idx),
+      },
+    };
+    const result = await saveInfoContent(next, infoContent);
+    if (result.error) {
+      window.alert(`Couldn't remove the page: ${result.error}`);
+      return;
+    }
+    await deleteBulletinPageLocations(servicePageKey(page.id));
+    setInfoContent(result.content ?? next);
+  }
+
   // Soft delete, moves the slide to "Recently deleted" (recoverable).
   async function removeCustom(slide: Slide) {
     if (!guardLastSlide()) return;
@@ -428,7 +466,7 @@ export default function ManageSidebar() {
             {visibleBuiltins.flatMap((b) => {
               // The repeatable services type shows one numbered link per page.
               if (b.key === "services") {
-                return serviceLinks.map((link) => (
+                return serviceLinks.map((link, idx) => (
                   <li key={link.anchor} className="flex items-center pr-1">
                     <button
                       type="button"
@@ -443,6 +481,14 @@ export default function ManageSidebar() {
                     >
                       {link.label}
                     </button>
+                    <SlideMenu
+                      onEdit={() => editBulletinPage(link.anchor)}
+                      onDelete={
+                        serviceLinks.length > 1
+                          ? () => removeServicesPage(idx)
+                          : undefined
+                      }
+                    />
                   </li>
                 ));
               }

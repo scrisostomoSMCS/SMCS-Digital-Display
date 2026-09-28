@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -263,6 +263,40 @@ export default function InfoContentEditor() {
       setContent(c);
       setLoaded(c);
     });
+  }, []);
+
+  // Kept current with changes made elsewhere on the manage page (e.g. deleting
+  // a services page from ManageSidebar's three-dot menu writes straight to
+  // Supabase, outside this editor's own state). Only refetches while there are
+  // no unsaved edits here, so it never clobbers something the employee is mid
+  // typing; refs avoid re-subscribing every keystroke.
+  const contentRef = useRef(content);
+  contentRef.current = content;
+  const loadedRef = useRef(loaded);
+  loadedRef.current = loaded;
+  const removedKeysRef = useRef(removedServicePageKeys);
+  removedKeysRef.current = removedServicePageKeys;
+  useEffect(() => {
+    const reload = async () => {
+      const isDirty =
+        contentRef.current !== loadedRef.current ||
+        removedKeysRef.current.length > 0;
+      if (isDirty) return;
+      const c = await fetchInfoContent();
+      setContent(c);
+      setLoaded(c);
+    };
+    const channel = supabase
+      .channel("info-content-content")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "info_content" },
+        reload,
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
