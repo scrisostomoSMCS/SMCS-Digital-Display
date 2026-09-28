@@ -1,0 +1,59 @@
+# Keeps the Supabase free-tier project from pausing due to inactivity.
+# Location in repo: .github/workflows/supabase-keepalive.yml
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL       e.g. https://abcdefgh.supabase.co   (PRODUCTION project)
+#   SUPABASE_ANON_KEY  the anon/public key (same one the bulletin already uses)
+#
+# Change PING_TABLE to a small table the anon role can read under RLS.
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "17 15 * * *"   # daily, ~8:17am Pacific (cron is UTC; off-the-hour avoids GitHub's :00 backlog)
+  workflow_dispatch:        # lets you run it manually from the Actions tab
+
+env:
+  PING_TABLE: events   # <-- change me
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          # Strip all whitespace/newlines and any trailing slashes pasted into the secrets
+          URL=$(printf '%s' "$SUPABASE_URL" | tr -d '[:space:]"' | sed 's:/*$::')
+          KEY=$(printf '%s' "$SUPABASE_ANON_KEY" | tr -d '[:space:]"')
+          TABLE=$(printf '%s' "$PING_TABLE" | tr -d '[:space:]')
+
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::SUPABASE_URL or SUPABASE_ANON_KEY secret is missing"
+            exit 1
+          fi
+
+          # Safe diagnostics (never prints the actual values)
+          echo "URL length: ${#URL}, key length: ${#KEY}, table: $TABLE"
+          case "$URL" in
+            https://*.supabase.co) echo "URL format looks right." ;;
+            *) echo "::error::SUPABASE_URL should look like https://<project-ref>.supabase.co (check it isn't swapped with the key, and has no path after .supabase.co)"; exit 1 ;;
+          esac
+
+          status=$(curl -sS -o /tmp/body.json -w "%{http_code}" \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            "$URL/rest/v1/$TABLE?select=*&limit=1" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY")
+
+          echo "HTTP $status"
+          if [ "$status" != "200" ]; then
+            echo "::error::Supabase ping failed with HTTP $status"
+            cat /tmp/body.json
+            exit 1
+          fi
+          echo "Supabase is awake."
