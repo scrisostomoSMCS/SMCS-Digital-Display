@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
-  fetchInfoContent,
+  fetchInfoContentWithMeta,
   saveInfoContent,
   SERVICE_ICONS,
   MAX_SERVICES_PER_PAGE,
@@ -22,6 +22,7 @@ import {
   labelClass,
   smallBtn,
 } from "./editorFields";
+import UpdatedAt from "./UpdatedAt";
 import BulletinCanvasPreview from "@/components/information/BulletinCanvasPreview";
 import ServicesOverviewPage from "@/components/information/ServicesOverviewPage";
 import NewArrivalsPage from "@/components/information/NewArrivalsPage";
@@ -240,6 +241,14 @@ export default function InfoContentEditor() {
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [removedServicePageKeys, setRemovedServicePageKeys] = useState<string[]>([]);
+  /*
+    When these pages were last saved, shown to staff only. ONE value for the
+    whole group, not one per panel: every built-in page lives in the same
+    info_content row (a single JSON blob), so the database has no per-page
+    history and a per-panel time would be invented. It sits with the group
+    heading for that reason.
+  */
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
 
   const [open, setOpen] = useState<Set<string>>(new Set());
   const toggle = (id: string) =>
@@ -262,9 +271,10 @@ export default function InfoContentEditor() {
   }, []);
 
   useEffect(() => {
-    fetchInfoContent().then((c) => {
+    fetchInfoContentWithMeta().then(({ content: c, updatedAt: at }) => {
       setContent(c);
       setLoaded(c);
+      setUpdatedAt(at);
     });
   }, []);
 
@@ -383,6 +393,11 @@ export default function InfoContentEditor() {
         setLoaded(content);
       }
       setWarnings(result.warnings);
+      // The save response carries the merged content but not the row's new
+      // updated_at, and nothing refetches this editor. Stamping it here is what
+      // makes the label read "Updated just now" instead of still showing the
+      // previous edit.
+      setUpdatedAt(new Date().toISOString());
       setSaved(true);
       setTimeout(() => setSaved(false), 4000);
     }
@@ -443,6 +458,9 @@ export default function InfoContentEditor() {
         automatically from the calendar. Its display locations can still be
         selected below.
       </p>
+      {/* One timestamp for all the pages below, because they share one saved
+          record. Renders nothing at all until there is a real save to report. */}
+      <UpdatedAt at={updatedAt} className="block" />
 
       {/* --- Services pages (one panel per numbered page) --- */}
       {/* Each services page is its own collapsible panel, matching the sidebar

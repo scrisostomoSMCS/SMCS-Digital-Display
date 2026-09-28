@@ -55,9 +55,12 @@ export async function POST(req: Request) {
     },
   };
 
+  // updated_at is stamped by the trigger in migration 0023, not passed here:
+  // the manage page shows staff when this was last saved, and that time has to
+  // come from the database rather than from whichever machine ran the save.
   const { error } = await supabase
     .from("info_content")
-    .upsert({ id: 1, content: normalized, updated_at: new Date().toISOString() });
+    .upsert({ id: 1, content: normalized });
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });

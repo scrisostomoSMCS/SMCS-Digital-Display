@@ -8,6 +8,7 @@ import { fetchSlides, persistSlideOrder, type Slide } from "@/lib/slides";
 import type { BulletinLocation } from "@/lib/bulletinLocations";
 import SlideEditor from "./SlideEditor";
 import LocationBadges, { useBulletinLocations } from "./LocationBadges";
+import UpdatedAt from "./UpdatedAt";
 import { smallBtn } from "./editorFields";
 import { useSidebarNames } from "./useSidebarNames";
 import { customSlideNameKey } from "@/lib/displaySettings";
@@ -18,6 +19,9 @@ import { customSlideNameKey } from "@/lib/displaySettings";
   dragging the grip handle OR the ↑/↓ buttons; the new order persists to Supabase
   (position) and drives the rotation. Reactive: a newly added slide's panel
   appears and auto-expands. Each panel is a jump target (id "slide-<id>").
+
+  Each header also reports when that slide's content last changed, for staff
+  only. The public Digital Bulletin never shows it.
 */
 
 function SlidePanel({
@@ -27,9 +31,11 @@ function SlidePanel({
   index,
   count,
   open,
+  savedAt,
   onToggle,
   onMove,
   onDragEnd,
+  onSaved,
 }: {
   slide: Slide;
   // The sidebar rename, if any; the slide's own title otherwise.
@@ -38,9 +44,13 @@ function SlidePanel({
   index: number;
   count: number;
   open: boolean;
+  // Set the moment this slide saves, so the header reads "Updated just now"
+  // without waiting for the realtime round trip. See CustomSlidesEditor.
+  savedAt: string | null;
   onToggle: () => void;
   onMove: (dir: -1 | 1) => void;
   onDragEnd: () => void;
+  onSaved: () => void;
 }) {
   const controls = useDragControls();
   return (
@@ -79,6 +89,10 @@ function SlidePanel({
             locations={locations}
             expanded={open}
           />
+          {/* Prefer the just-saved time over the row's: a save the realtime
+              refresh has not delivered yet would otherwise still show the
+              PREVIOUS edit's timestamp, which reads as a failed save. */}
+          <UpdatedAt at={savedAt ?? slide.updatedAt} />
         </button>
         <div className="flex shrink-0 gap-2">
           <button
@@ -103,7 +117,7 @@ function SlidePanel({
       </div>
       {open && (
         <div className="p-3 lg:p-5">
-          <SlideEditor slide={slide} />
+          <SlideEditor slide={slide} onSaved={onSaved} />
         </div>
       )}
     </Reorder.Item>
@@ -118,6 +132,13 @@ export default function CustomSlidesEditor() {
   const firstLoadDone = useRef(false);
   const slidesRef = useRef<Slide[]>([]);
   slidesRef.current = slides;
+  /*
+    Per-slide "saved at" times, held only until the realtime refresh brings the
+    row's own updated_at back. Keyed by slide id rather than a single value
+    because each panel saves on its own, and saving one must not relabel
+    another. Cleared for a slide once its refreshed row is at least as new.
+  */
+  const [savedAt, setSavedAt] = useState<Record<string, string>>({});
   const locations = useBulletinLocations("custom-slides-editor");
   const names = useSidebarNames("custom-slides-editor");
 
@@ -143,6 +164,22 @@ export default function CustomSlidesEditor() {
     known.current = new Set(next.map((s) => s.id));
     setSlides(next);
     setLoaded(true);
+    // Hand a slide back to its own updated_at as soon as the database's value
+    // has caught up, so the header stops showing a client-clock time.
+    setSavedAt((prev) => {
+      const remaining = Object.fromEntries(
+        Object.entries(prev).filter(([id, at]) => {
+          const row = next.find((s) => s.id === id);
+          if (!row?.updatedAt) return true;
+          // Parsed, not string-compared: Postgres returns "+00:00" offsets and
+          // toISOString() returns "Z", so the two formats do not sort together.
+          return Date.parse(row.updatedAt) < Date.parse(at);
+        }),
+      );
+      return Object.keys(remaining).length === Object.keys(prev).length
+        ? prev
+        : remaining;
+    });
     if (added) {
       expand(added.id);
       setTimeout(
@@ -230,9 +267,13 @@ export default function CustomSlidesEditor() {
           index={i}
           count={slides.length}
           open={open.has(s.id)}
+          savedAt={savedAt[s.id] ?? null}
           onToggle={() => toggle(s.id)}
           onMove={(dir) => move(i, dir)}
           onDragEnd={persistOrder}
+          onSaved={() =>
+            setSavedAt((p) => ({ ...p, [s.id]: new Date().toISOString() }))
+          }
         />
       ))}
     </Reorder.Group>

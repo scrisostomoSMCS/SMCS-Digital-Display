@@ -32,9 +32,11 @@ export async function fetchHiddenBuiltins(): Promise<BuiltinKey[]> {
 export async function setHiddenBuiltins(
   hidden: BuiltinKey[],
 ): Promise<string | null> {
+  // updated_at is stamped by the trigger in migration 0023 (see the note in
+  // the info_content save route), so it is not sent from the browser.
   const { error } = await supabase
     .from("display_settings")
-    .upsert({ id: 1, hidden_builtins: hidden, updated_at: new Date().toISOString() });
+    .upsert({ id: 1, hidden_builtins: hidden });
   return error ? error.message : null;
 }
 

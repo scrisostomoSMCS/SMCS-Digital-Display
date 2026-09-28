@@ -452,21 +452,43 @@ function backfillSpanish(c: InfoContent): InfoContent {
   };
 }
 
-// Read the editable content (falls back to defaults when nothing is saved yet).
-export async function fetchInfoContent(): Promise<InfoContent> {
+/*
+  The content plus when it was last saved. All of the built-in bulletin pages
+  live in this ONE row, so `updatedAt` covers them together, there is no
+  per-page history to report. The manage page presents it that way; the public
+  display never shows it.
+
+  updatedAt is null when nothing has been saved yet (the defaults are being
+  shown, so there is no edit to date) or when the row cannot be read.
+*/
+export type InfoContentWithMeta = {
+  content: InfoContent;
+  updatedAt: string | null;
+};
+
+export async function fetchInfoContentWithMeta(): Promise<InfoContentWithMeta> {
   const { data, error } = await supabase
     .from("info_content")
-    .select("content")
+    .select("content, updated_at")
     .eq("id", 1)
     .maybeSingle();
   if (error) {
     // Expected before migration 0006 runs (no table yet), fall back quietly.
     console.warn("Info content unavailable, using defaults:", error.message);
-    return defaultInfoContent;
+    return { content: defaultInfoContent, updatedAt: null };
   }
-  return backfillSpanish(
-    mergeWithDefaults((data?.content ?? null) as SavedInfoContent | null),
-  );
+  return {
+    content: backfillSpanish(
+      mergeWithDefaults((data?.content ?? null) as SavedInfoContent | null),
+    ),
+    // No saved row means the defaults are on screen, which is not an edit.
+    updatedAt: data ? ((data.updated_at as string | null) ?? null) : null,
+  };
+}
+
+// Read the editable content (falls back to defaults when nothing is saved yet).
+export async function fetchInfoContent(): Promise<InfoContent> {
+  return (await fetchInfoContentWithMeta()).content;
 }
 
 export type SaveInfoContentResult = {

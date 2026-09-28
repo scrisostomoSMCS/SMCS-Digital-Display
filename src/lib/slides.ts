@@ -63,6 +63,13 @@ export type Slide = {
   position: number;
   hidden: boolean; // soft-deleted (recoverable), not shown on the display
   locationIds: string[]; // empty = shown at every bulletin location
+  /*
+    When this slide's CONTENT last changed, stamped by the database (migration
+    0023). Only the manage page shows it. null for slides last written before
+    that migration, which have no real history to report. Reordering, soft
+    deleting, and changing display locations deliberately do not move it.
+  */
+  updatedAt: string | null;
 };
 
 export type SlideInput = {
@@ -95,6 +102,7 @@ type SlideRow = {
   image_path: string | null;
   position: number;
   hidden: boolean | null;
+  updated_at: string | null;
   slide_locations: { location_id: string }[] | null;
 };
 
@@ -117,12 +125,13 @@ function fromRow(r: SlideRow): Slide {
     imagePath: r.image_path,
     position: r.position,
     hidden: r.hidden ?? false,
+    updatedAt: r.updated_at,
     locationIds: (r.slide_locations ?? []).map((x) => x.location_id),
   };
 }
 
 const COLUMNS =
-  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, position, hidden, slide_locations(location_id)";
+  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, position, hidden, updated_at, slide_locations(location_id)";
 
 // Visible slides (shown on the display and as normal sidebar entries).
 export async function fetchSlides(locationSlug?: string): Promise<Slide[]> {
