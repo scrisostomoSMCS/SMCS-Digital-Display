@@ -26,9 +26,11 @@ import SlideMenu from "./SlideMenu";
   rotation gets a three-dots Edit/Delete menu. Built-in Edit jumps to that
   page's existing editor; custom Edit opens the structured template editor.
 
-  Default pages that are always needed, Services, New arrivals, Events today,
-  cannot be deleted (no Delete option). Only the featured-group (pregnant women)
-  page and custom slides can be removed, and removals are RECOVERABLE: hidden
+  New arrivals, the featured-group (pregnant women) page, and events today can
+  all be deleted from the rotation like a custom slide. Services pages are the
+  one default that cannot (no Delete option), since they are the repeatable
+  page type and are removed individually, one page at a time, from within
+  their own editor instead. Every removal here is RECOVERABLE: hidden
   built-ins and soft-deleted custom slides appear under "Recently deleted" with
   a Restore action, so nothing is lost by accident.
 */
@@ -40,7 +42,7 @@ const BUILTINS: { key: BuiltinKey; label: string; anchor: string | null }[] = [
 ];
 
 // Default pages that can never be deleted from the rotation.
-const PROTECTED: BuiltinKey[] = ["services", "new-arrivals", "events-today"];
+const PROTECTED: BuiltinKey[] = ["services"];
 
 const linkClass = (active: boolean) =>
   `flex-1 truncate border-l-4 px-4 py-2 text-left text-lg font-semibold ${
