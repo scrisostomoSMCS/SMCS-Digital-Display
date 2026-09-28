@@ -1,6 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { translateChangedFields } from "@/lib/translateInfoContent.server";
-import { MAX_SERVICES_PER_PAGE, type InfoContent } from "@/lib/infoContent";
+import {
+  MAX_SERVICES_PER_PAGE,
+  stampPageUpdates,
+  type InfoContent,
+} from "@/lib/infoContent";
 
 const STAFF_ROLES = ["employee", "admin"];
 
@@ -55,16 +59,29 @@ export async function POST(req: Request) {
     },
   };
 
-  // updated_at is stamped by the trigger in migration 0023, not passed here:
-  // the manage page shows staff when this was last saved, and that time has to
-  // come from the database rather than from whichever machine ran the save.
+  /*
+    Record WHICH pages this save actually changed, diffed against the editor's
+    snapshot of the last saved state. All the built-in pages share this one
+    row, so the table's updated_at cannot tell them apart; the per-page stamps
+    ride inside the content itself. Stamped here rather than in the browser so
+    the time is the server's, not a staff laptop's.
+  */
+  const stamped = stampPageUpdates(
+    body.loaded,
+    normalized,
+    new Date().toISOString(),
+  );
+
+  // The row's own updated_at is stamped by the trigger in migration 0023.
   const { error } = await supabase
     .from("info_content")
-    .upsert({ id: 1, content: normalized });
+    .upsert({ id: 1, content: stamped });
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 
-  return Response.json({ content: normalized, warnings });
+  // Returning the stamped content is what makes the panels the employee just
+  // saved read "Updated just now" without a refetch.
+  return Response.json({ content: stamped, warnings });
 }

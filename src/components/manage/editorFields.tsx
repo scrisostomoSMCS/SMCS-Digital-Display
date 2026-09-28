@@ -170,6 +170,7 @@ export function CollapsiblePanel({
   id,
   title,
   badge,
+  meta,
   open,
   onToggle,
   children,
@@ -177,6 +178,8 @@ export function CollapsiblePanel({
   id?: string;
   title: string;
   badge?: ReactNode;
+  // Secondary header text (e.g. "Updated 5 min ago"), shown after the badge.
+  meta?: ReactNode;
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
@@ -194,6 +197,7 @@ export function CollapsiblePanel({
         </span>
         <span className="truncate text-xl font-bold text-blue">{title}</span>
         {badge}
+        {meta}
       </button>
       {open && <div className="space-y-5 p-4 lg:p-5">{children}</div>}
     </section>

@@ -14,6 +14,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { supabase } from "./supabase";
+import { FIXED_BULLETIN_PAGE_KEYS, servicePageKey } from "./bulletinLocations";
 import {
   servicesPage,
   weeklyServices,
@@ -128,6 +129,21 @@ export type InfoServicesContent = {
   pages: InfoServicePage[];
 };
 
+/*
+  Per-page "last updated" stamps, shown on the manage page only.
+
+  Every built-in page lives in this ONE info_content row, so the table's own
+  updated_at column cannot say WHICH page an edit touched. This map can. It is
+  keyed by the same page keys used for location targeting (servicePageKey and
+  FIXED_BULLETIN_PAGE_KEYS), so a page keeps its stamp when it is retitled or
+  reordered, and drops out of the map when the page itself is deleted.
+
+  A page is simply absent until an edit to that page is saved, and the manage
+  page then shows nothing for it. That is the honest answer for content whose
+  history predates this feature: we know the row was saved, not which page.
+*/
+export type PageUpdatedMap = Record<string, string>;
+
 export type InfoContent = {
   services: InfoServicesContent;
   newArrivals: {
@@ -150,6 +166,8 @@ export type InfoContent = {
     introEs?: string;
     services: InfoService[];
   };
+  // Written by stampPageUpdates on save; never rendered by /information.
+  pageUpdatedAt?: PageUpdatedMap;
 };
 
 // Collapse a coded Service into the editable shape (details/schedule → time).
@@ -395,6 +413,9 @@ function mergeWithDefaults(saved: SavedInfoContent | null): InfoContent {
     services: normalizeServices(saved.services),
     newArrivals: { ...d.newArrivals, ...(saved.newArrivals ?? {}) },
     demographic: { ...d.demographic, ...(saved.demographic ?? {}) },
+    // Rebuilt from known keys, so this has to be carried over explicitly or
+    // every page would lose its stamp on the next read.
+    ...(saved.pageUpdatedAt ? { pageUpdatedAt: saved.pageUpdatedAt } : {}),
   };
 }
 
@@ -452,43 +473,103 @@ function backfillSpanish(c: InfoContent): InfoContent {
   };
 }
 
+/* --- per-page "last updated" stamps (manage page only) ------------------ */
+
 /*
-  The content plus when it was last saved. All of the built-in bulletin pages
-  live in this ONE row, so `updatedAt` covers them together, there is no
-  per-page history to report. The manage page presents it that way; the public
-  display never shows it.
+  What each page's content IS, for change detection. Keyed by the same page
+  keys as location targeting, so identity survives a retitle or a reorder.
 
-  updatedAt is null when nothing has been saved yet (the defaults are being
-  shown, so there is no edit to date) or when the row cannot be read.
+  "Events happening today" is deliberately absent: it has no editable content
+  of its own (the calendar drives it), so there is nothing about it that could
+  be "updated" here, and it correctly shows no timestamp.
 */
-export type InfoContentWithMeta = {
-  content: InfoContent;
-  updatedAt: string | null;
-};
+function editablePages(c: InfoContent): { key: string; value: unknown }[] {
+  return [
+    ...c.services.pages.map((page) => ({
+      key: servicePageKey(page.id),
+      // `id` is identity, not content, so it is not compared: moving a page in
+      // the running order is not an edit to it.
+      value: {
+        title: page.title,
+        titleEs: page.titleEs,
+        services: page.services,
+      },
+    })),
+    { key: FIXED_BULLETIN_PAGE_KEYS.newArrivals, value: c.newArrivals },
+    { key: FIXED_BULLETIN_PAGE_KEYS.demographic, value: c.demographic },
+  ];
+}
 
-export async function fetchInfoContentWithMeta(): Promise<InfoContentWithMeta> {
+/*
+  Order-independent serialization for that comparison. The editor, the
+  translate step, and the defaults each build these objects in their own key
+  order, so a plain JSON.stringify would report identical pages as different
+  and stamp every page on every save.
+*/
+function stableJson(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value ?? null) ?? "null";
+  }
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, v]) => v !== undefined)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return `{${entries
+    .map(([k, v]) => `${JSON.stringify(k)}:${stableJson(v)}`)
+    .join(",")}}`;
+}
+
+/*
+  Stamp `at` onto each page whose content actually changed between `before`
+  (the editor's snapshot of the last saved state) and `after` (what is about to
+  be written). Pages that did not change keep the stamp they already had, and a
+  page that never had one still gets none, so saving the New Arrivals page does
+  not relabel three untouched services pages as just-edited.
+
+  A newly added page counts as changed. A deleted page falls out of the map,
+  because the result is rebuilt from the keys present in `after`.
+
+  Called from the save route, so `at` is the application server's clock: one
+  machine, not whichever staff laptop happened to press Save.
+*/
+export function stampPageUpdates(
+  before: InfoContent,
+  after: InfoContent,
+  at: string,
+): InfoContent {
+  const previous: PageUpdatedMap = {
+    ...(before.pageUpdatedAt ?? {}),
+    ...(after.pageUpdatedAt ?? {}),
+  };
+  const beforeByKey = new Map(
+    editablePages(before).map((p) => [p.key, stableJson(p.value)]),
+  );
+
+  const pageUpdatedAt: PageUpdatedMap = {};
+  for (const { key, value } of editablePages(after)) {
+    const prior = beforeByKey.get(key);
+    const changed = prior === undefined || prior !== stableJson(value);
+    const stamp = changed ? at : previous[key];
+    if (stamp) pageUpdatedAt[key] = stamp;
+  }
+  return { ...after, pageUpdatedAt };
+}
+
+// Read the editable content (falls back to defaults when nothing is saved yet).
+export async function fetchInfoContent(): Promise<InfoContent> {
   const { data, error } = await supabase
     .from("info_content")
-    .select("content, updated_at")
+    .select("content")
     .eq("id", 1)
     .maybeSingle();
   if (error) {
     // Expected before migration 0006 runs (no table yet), fall back quietly.
     console.warn("Info content unavailable, using defaults:", error.message);
-    return { content: defaultInfoContent, updatedAt: null };
+    return defaultInfoContent;
   }
-  return {
-    content: backfillSpanish(
-      mergeWithDefaults((data?.content ?? null) as SavedInfoContent | null),
-    ),
-    // No saved row means the defaults are on screen, which is not an edit.
-    updatedAt: data ? ((data.updated_at as string | null) ?? null) : null,
-  };
-}
-
-// Read the editable content (falls back to defaults when nothing is saved yet).
-export async function fetchInfoContent(): Promise<InfoContent> {
-  return (await fetchInfoContentWithMeta()).content;
+  return backfillSpanish(
+    mergeWithDefaults((data?.content ?? null) as SavedInfoContent | null),
+  );
 }
 
 export type SaveInfoContentResult = {
