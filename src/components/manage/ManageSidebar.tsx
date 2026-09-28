@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
   fetchSlides,
@@ -80,6 +81,8 @@ const BUILTINS: {
   },
 ];
 
+const DSP_OPEN_KEY = "manage-sidebar-dsp-open";
+
 // Default pages that can never be deleted from the rotation.
 const PROTECTED: BuiltinKey[] = ["services"];
 
@@ -91,28 +94,42 @@ const linkClass = (active: boolean) =>
   }`;
 
 // Section header that marks a break between the sidebar's groups. Clickable:
-// jumps to that section of the page.
+// jumps to that section of the page. Passing `expanded` makes it a disclosure
+// toggle for the list named by `controls` instead, with a chevron.
 function GroupTitle({
   children,
   onClick,
   active,
+  expanded,
+  controls,
 }: {
   children: ReactNode;
   onClick: () => void;
   active?: boolean;
+  expanded?: boolean;
+  controls?: string;
 }) {
+  const collapsible = expanded !== undefined;
   return (
     <button
       type="button"
       onClick={onClick}
-      className="block w-full px-4 pb-2 text-left"
+      aria-expanded={expanded}
+      aria-controls={controls}
+      className="block w-full px-4 pb-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
     >
       <h2
         className={`text-lg font-bold uppercase tracking-wide hover:text-blue ${
           active ? "text-blue" : "text-ink"
-        }`}
+        } ${collapsible ? "flex items-center gap-1" : ""}`}
       >
         {children}
+        {collapsible && (
+          <ChevronRight
+            aria-hidden="true"
+            className={`h-5 w-5 shrink-0 ${expanded ? "rotate-90" : ""}`}
+          />
+        )}
       </h2>
       <span aria-hidden="true" className="mt-1 block h-0.5 w-8 bg-teal" />
     </button>
@@ -194,6 +211,26 @@ export default function ManageSidebar() {
   // would immediately take the highlight back off whatever was just clicked
   // and hand it to the last section that did cross the line.
   const clickedRef = useRef<string | null>(null);
+  // Digital Bulletin Pages group: open by default and only ever closed by the
+  // reader, remembered for the session, and reopened when the spy lands on one
+  // of its pages.
+  const [dspOpen, setDspOpenState] = useState(true);
+  function setDspOpen(open: boolean) {
+    setDspOpenState(open);
+    try {
+      sessionStorage.setItem(DSP_OPEN_KEY, open ? "1" : "0");
+    } catch {
+      // Storage blocked; the state just won't survive a reload.
+    }
+  }
+  // Read after mount so the server render and first client render match.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(DSP_OPEN_KEY) === "0") setDspOpenState(false);
+    } catch {
+      // Storage blocked; keep the open default.
+    }
+  }, []);
 
   useEffect(() => {
     const loadSlides = async () => {
@@ -528,6 +565,12 @@ export default function ManageSidebar() {
     ].includes(active);
   const customActive = active.startsWith("slide-");
 
+  // Open the bulletin group when the reader arrives in its section. Only on
+  // arrival, so collapsing it by hand while there sticks until they leave.
+  useEffect(() => {
+    if (dspActive) setDspOpen(true);
+  }, [dspActive]);
+
   return (
     <nav aria-label="Manage sections" className="hidden w-56 shrink-0 lg:block">
       <div className="sticky top-6">
@@ -591,12 +634,14 @@ export default function ManageSidebar() {
         {/* Digital Bulletin Pages */}
         <div className="mt-6">
           <GroupTitle
-            onClick={() => jump("digital-schedule")}
+            onClick={() => setDspOpen(!dspOpen)}
             active={dspActive}
+            expanded={dspOpen}
+            controls="sidebar-dsp-list"
           >
             Digital Bulletin Pages
           </GroupTitle>
-          <ul className="space-y-1">
+          <ul id="sidebar-dsp-list" hidden={!dspOpen} className="space-y-1">
             <li className="flex items-center pr-1">
               <button
                 type="button"
