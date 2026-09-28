@@ -46,19 +46,13 @@ running against the same `.next` directory.
 ## How it fits together
 
 **Supabase is the single source of truth.** Bulletin content, custom slides,
-events, user roles, and display settings all live there. The browser talks to
-it directly with the public anon key; Row Level Security, not key secrecy, is
-the authorization boundary.
-
-**WordPress is a secondary source, for bed counts only.** Staff update bed
-numbers in WordPress admin. This app reads them through one server-side API
-route and never writes back.
+events, live bed counts, user roles, and display settings all live there. The
+browser talks to it directly with the public anon key; Row Level Security, not
+key secrecy, is the authorization boundary.
 
 ```mermaid
 flowchart LR
-    WP["WordPress admin<br/>bed counts"] -->|REST| API["/api/beds<br/>revalidate 60s"]
-    API -->|poll 60s| BUL["Digital Bulletin<br/>/information"]
-    SB[("Supabase<br/>Postgres, Auth,<br/>Realtime, Storage")] <-->|read + Realtime| BUL
+    SB[("Supabase<br/>Postgres, Auth,<br/>Realtime, Storage")] <-->|read + Realtime| BUL["Digital Bulletin<br/>/information"]
     SB <-->|staff writes| MAN["/manage, /admin"]
     BUL -->|16:9 iframe| WPPAGE["WordPress page<br/>Blank template"]
     BUL -->|full screen| YOD["Yodeck TV"]
@@ -110,7 +104,6 @@ reference.
 | `/admin` | User and role management | admin |
 | `/schedule` | The signed-in user's personal schedule | Any signed-in user |
 | `/login`, `/signup` | Auth. Sign-up is gated to `@smcares.org` addresses. | Public |
-| `/api/beds` | Bed availability JSON, proxied from WordPress | Public |
 
 Auth is layered: `src/middleware.ts` gates `/schedule`, `/manage`, `/admin`;
 those pages re-check role server-side; **RLS in Postgres is the real
@@ -118,14 +111,13 @@ enforcement.** UI guards are convenience, never the boundary.
 
 ## Environment variables
 
-All three are required. Copy `.env.example` to `.env.local` and fill it in.
+Both are required. Copy `.env.example` to `.env.local` and fill it in.
 Next.js reads env only at startup, so restart the dev server after editing.
 
 | Variable | Purpose | Exposure | Where to get it |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL, e.g. `https://your-ref.supabase.co` | Public, ships to browser | Supabase, Settings > API, "Project URL" |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Publishable/anon key for browser and server clients | Public, ships to browser | Supabase, Settings > API, "Publishable key" |
-| `BED_DATA_URL` | WordPress REST endpoint returning live bed counts | **Server only**, read inside `/api/beds` | The SMCS WordPress site |
 
 - The two public values are public on purpose. Access is restricted by RLS.
 - **Never** put a `service_role` or secret key in a `NEXT_PUBLIC_` variable. It
@@ -146,22 +138,28 @@ The web deploy and the database are separate. Apply `supabase/migrations/*.sql`
 
 ### Bed availability, end to end
 
-1. Staff update the count in **WordPress admin**, exposed at a REST endpoint.
-2. **`GET /api/beds`** fetches `BED_DATA_URL` server-side and caches it for
-   **60 seconds** (`revalidate = 60`).
-3. **`useBedAvailability()`** polls `/api/beds` **every 60 seconds** from the
-   browser.
+1. Staff edit the counts in **Live Bed Availability** at the bottom of
+   `/manage` and press **Update**. Update writes every row, even unchanged
+   ones, so it also moves the public "as of" date to today.
+2. The counts live in **`public.bed_availability`** (migration `0024`): one row
+   per displayed count, grouped into programs by `program_key`. Anyone can
+   read; only `employee`/`admin` can update, and only the `count` column. A
+   trigger stamps `updated_at` and `updated_by` from the database, never the
+   browser. Program names and labels change only through a migration.
+3. **`useBedAvailability()`** reads the table and keeps it live with a Realtime
+   subscription plus a 10-minute backstop poll, the same mechanism as the rest
+   of the bulletin. One subscription is shared by every panel in a tab.
 4. **The panel renders**: `BedAvailabilitySlide` (red, top-right of the
-   bulletin) and `BedAvailabilityPopup` (home page).
+   bulletin, compact wording) and `BedAvailabilityPopup` (home page, full
+   wording). The reserve number and the Family Lodge intake line are constants
+   in `src/lib/bedAvailability.ts`.
 
-Two 60-second layers means a WordPress change lands in roughly 60 seconds, up
-to about 2 minutes worst case.
+An Update reaches the screens in about a second.
 
-Failure behavior is deliberate. A failed upstream fetch returns
-`{ ok: false }` with HTTP 200, the client ignores it, and the last good numbers
-stay on screen. If nothing has ever loaded, the panel renders nothing at all
-rather than show a number it is unsure of. A program at `total: 0` shows a
-"Full" badge, not a zero.
+Failure behavior is deliberate. A failed read is ignored and the last good
+numbers stay on screen. If nothing has ever loaded, the panel renders nothing
+at all rather than show a number it is unsure of. A program whose counts total
+0 shows a "Full" badge, not a zero.
 
 **Watch out:** the panel floats over the canvas, so every slide reserves space
 for it via `BED_PANEL_CLEARANCE` in `BedAvailabilitySlide.tsx`. Change the
@@ -200,30 +198,14 @@ Deletes are recoverable. Hidden built-ins and soft-deleted slides appear under
 
 ## API routes
 
-There is exactly one.
+There is one.
 
-| Route | Method | Returns | Caching |
+| Route | Method | What it does | Access |
 | --- | --- | --- | --- |
-| `/api/beds` | `GET` | `{ ok: true, programs, reserve_phone, updated_at_display }` on success; `{ ok: false }` with **HTTP 200** on any upstream failure | `revalidate = 60` on the route and the fetch |
+| `/api/info-content/save` | `POST` | Saves the built-in bulletin pages, auto-translating changed English into Spanish server-side | employee, admin |
 
-```json
-{
-  "ok": true,
-  "programs": [
-    { "key": "family", "label": "Family Shelter",
-      "counts": { "male": { "label": "Male beds available", "count": 4 } },
-      "total": 4 }
-  ],
-  "reserve_phone": "(209) 555-0123",
-  "updated_at_display": "Updated 9:15 AM"
-}
-```
-
-> **TODO: verify.** The shape above is reconstructed from the `BedData` type in
-> `src/lib/useBedAvailability.ts`, not from a captured response. Confirm the
-> real field names and program list against the WordPress endpoint.
-
-Everything else goes browser-to-Supabase directly through `src/lib/*`.
+Everything else, including bed counts, goes browser-to-Supabase directly
+through `src/lib/*`.
 
 ## Deployment
 
@@ -232,15 +214,14 @@ Vercel config, so assume no custom regions, redirects, or build settings.
 
 1. Import the repo into Vercel. Framework preset Next.js, install `npm ci`,
    build `npm run build`.
-2. Add the three environment variables under Settings > Environment Variables,
+2. Add the two environment variables under Settings > Environment Variables,
    for Production **and** Preview.
-3. Deploy, then smoke-test `/`, `/information`, `/dashboard`, `/manage`, and
-   `/api/beds`.
+3. Deploy, then smoke-test `/`, `/information`, `/dashboard`, and `/manage`.
 
 ### Production handoff checklist
 
-- [ ] Three env vars set in Vercel (Production and Preview).
-- [ ] Migrations `0001` to `0020` applied; `slide-images` bucket exists and is public.
+- [ ] Both env vars set in Vercel (Production and Preview).
+- [ ] Migrations `0001` to `0024` applied; `slide-images` bucket exists and is public; `bed_availability` has its rows.
 - [ ] Supabase Auth site URL and redirect URLs point at the Vercel domain.
 - [ ] At least one `admin` profile exists. The first one must be promoted directly in Supabase.
 - [ ] **WordPress iframe `src` updated** to the Vercel URL, with the right `?location=` slug.
@@ -302,8 +283,8 @@ must re-point that screen in Yodeck.
 
 | Symptom | Fix |
 | --- | --- |
-| Bed counts stale | Open `/api/beds`. If `{ ok: false }`, the upstream fetch failed: check `BED_DATA_URL` in Vercel and that WordPress responds. Otherwise wait ~2 min for both 60s layers. |
-| Bed panel missing entirely | `programs` was absent from the response, so the panel renders nothing rather than an uncertain number. Check the upstream payload. |
+| Bed counts stale | Check the rows in `bed_availability` in Supabase. If they are right, confirm the table is in the `supabase_realtime` publication (migration `0024`); the backstop poll still catches up within 10 minutes. |
+| Bed panel missing entirely | Nothing has loaded yet, so the panel renders nothing rather than an uncertain number. Check that migration `0024` is applied and the table has rows. |
 | Bed panel covers slide text | The panel size changed. Re-measure it and update `BED_PANEL_CLEARANCE` in `BedAvailabilitySlide.tsx`. |
 | Bulletin looks like a phone layout in the iframe | A slide is keying off the viewport. Replace `vw`/`vh` and `sm:`/`md:`/`lg:` with `cqw`/`cqh` and container queries. |
 | Iframe blank, "Refused to display in a frame" | `frame-ancestors` or `X-Frame-Options` excludes the WordPress origin. Fix the header in `next.config.ts`. |
@@ -361,7 +342,7 @@ src/app/
   information/page.tsx             DIGITAL BULLETIN. Full screen, reads ?location=
   dashboard/page.tsx               Live Calendar wall display
   admin/page.tsx                   User and role manager
-  api/beds/route.ts                The only API route
+  api/info-content/save/route.ts   The only API route (translate-on-save)
 
 src/components/
   information/
@@ -385,7 +366,8 @@ src/lib/
   informationContent.ts            Fallback copy + PAGE_DURATION
   displaySettings.ts               Which built-ins are hidden
   bulletinLocations.ts             Locations and targeting
-  useBedAvailability.ts            Polls /api/beds. Shared by both bed panels.
+  bedAvailability.ts               Bed counts: read, group, save (Supabase)
+  useBedAvailability.ts            Live bed counts hook. Shared by both bed panels.
   events.ts, manageEvents.ts, useLiveEvents.ts
   supabase.ts                      Browser client
   supabase-server.ts               Server client for RSC and route handlers

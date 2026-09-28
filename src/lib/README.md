@@ -36,8 +36,11 @@ the data layer.
   upload to the `slide-images` Storage bucket.
 - `displaySettings.ts`, which built-in pages are hidden from the rotation.
 - `bulletinLocations.ts`, display locations and per-page/per-slide targeting.
-- `useBedAvailability.ts`, hook polling `/api/beds` for live bed counts. Shared
-  by the bulletin panel and the home-page popup so both fail the same way.
+- `bedAvailability.ts`, live bed counts in `bed_availability`: read, group into
+  programs, save (staff), plus the reserve and Family Lodge phone numbers.
+- `useBedAvailability.ts`, hook keeping bed counts live via Realtime, with one
+  subscription shared by the bulletin panel, the manage previews, and the
+  home-page popup so they all fail the same way.
 
 ## Users and site config
 

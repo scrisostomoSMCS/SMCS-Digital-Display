@@ -71,12 +71,12 @@ export default function BedAvailabilityPopup() {
     <aside
       role="region"
       aria-labelledby="bed-popup-title"
-      className={`fixed bottom-4 left-4 z-50 flex max-h-[75vh] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl text-paper shadow-2xl transition-all duration-300 ease-out ${
+      className={`fixed bottom-4 left-4 z-50 flex max-h-[calc(100dvh-2rem)] w-[34rem] max-w-[calc(100vw-2rem)] flex-col overflow-y-auto rounded-2xl text-paper shadow-2xl transition-all duration-300 ease-out ${
         shown ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
       }`}
       style={{ backgroundColor: BED_RED }}
     >
-      <header className="flex items-start justify-between gap-3 px-5 pb-3 pt-4">
+      <header className="flex items-start justify-between gap-3 px-5 pb-2 pt-3">
         <div>
           <h2 id="bed-popup-title" className="text-xl font-bold leading-tight">
             {t("title")}
@@ -97,17 +97,19 @@ export default function BedAvailabilityPopup() {
         </button>
       </header>
 
-      {/* One program per row: a single stacked column, unlike the bulletin's
-          two-column panel, at roughly double its type size and with the full
-          wording ("5 Male beds available"). Label and counts share a line when
-          they fit; long counts (Pathways) wrap onto their own line. */}
-      <ul className="flex-1 divide-y divide-paper/20 overflow-y-auto px-5 pb-2">
+      {/* One program per row, with the full wording ("5 Male beds
+          available"). Everything must be readable WITHOUT scrolling, so the
+          card is wide enough (34rem) for the longest line, Pathways, to sit
+          beside its label, and the rows are tight. There is no inner scroll
+          area; the card's own max-h/overflow is only a last resort for a very
+          short phone screen, where the rows wrap instead. */}
+      <ul className="divide-y divide-paper/20 px-5 pb-1">
         {data.programs.map((p) => {
           const full = p.total === 0;
           return (
             <li
               key={p.key}
-              className="flex flex-wrap items-baseline justify-between gap-x-3 py-2.5"
+              className="flex flex-wrap items-baseline justify-between gap-x-3 py-1.5"
             >
               <span className="text-base font-semibold leading-snug">
                 {p.label}
@@ -121,7 +123,7 @@ export default function BedAvailabilityPopup() {
                   {Object.entries(p.counts).map(([k, c], i) => (
                     <span key={k} className="whitespace-nowrap">
                       {i > 0 && ", "}
-                      <b className="text-xl text-paper">{c.count}</b> {c.label}
+                      <b className="text-lg text-paper">{c.count}</b> {c.label}
                     </span>
                   ))}
                 </span>
@@ -131,7 +133,7 @@ export default function BedAvailabilityPopup() {
         })}
       </ul>
 
-      <div className="space-y-2 bg-black/20 px-5 py-3 text-base">
+      <div className="space-y-1 bg-black/20 px-5 py-2.5 text-base">
         <p className="font-semibold">
           {t("reserve")}{" "}
           <a
