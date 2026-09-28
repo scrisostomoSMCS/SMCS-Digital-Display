@@ -34,8 +34,9 @@ import { openAnnouncementModal } from "@/lib/announcements";
 import SlideMenu from "./SlideMenu";
 
 /*
-  Sticky manage-page navigation, grouped to mirror the page's four sections:
-  Calendar, Digital Bulletin Pages, Custom Slides, and Live Bed Availability.
+  Sticky manage-page navigation: the Announcement action, then groups that
+  mirror the page's four sections: Beds (live bed availability), Calendar,
+  Digital Bulletin Pages, and Custom Slides.
   Every slide in the rotation gets a three-dots Edit/Delete menu. Built-in Edit jumps to that
   page's existing editor; custom Edit opens the structured template editor.
 
@@ -185,7 +186,8 @@ export default function ManageSidebar() {
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
   const [infoContent, setInfoContent] = useState<InfoContent | null>(null);
   const [names, setNames] = useState<SidebarNames>({});
-  const [active, setActive] = useState("calendar");
+  // The first section on the page; the spy corrects it on mount.
+  const [active, setActive] = useState("bed-availability");
   // Set when a sidebar link is clicked, and held until the reader scrolls for
   // themselves. Sections near the end of the page cannot reach the spy's
   // trigger line (the page runs out of scroll first), so without this the spy
@@ -267,6 +269,7 @@ export default function ManageSidebar() {
   // anywhere inside it and would hide the panel-level highlight. The group
   // titles derive from the active leaf instead (see dspActive / customActive).
   const spyIds = [
+    "bed-availability",
     "calendar",
     "display-locations",
     ...visibleBuiltins.flatMap((b) =>
@@ -277,7 +280,6 @@ export default function ManageSidebar() {
           : [],
     ),
     ...slides.map((s) => `slide-${s.id}`),
-    "bed-availability",
   ];
   const spyKey = spyIds.join("|");
   useEffect(() => {
@@ -529,7 +531,7 @@ export default function ManageSidebar() {
   return (
     <nav aria-label="Manage sections" className="hidden w-56 shrink-0 lg:block">
       <div className="sticky top-6">
-        {/* Announcement. Sits above Calendar because it is the most urgent
+        {/* Announcement. Sits first because it is the most urgent
             action on this page. Unlike every other item here it does not jump
             to a section — there is nothing on the page to scroll to — it opens
             the same modal as the button at the top, so it has no scroll-spy
@@ -544,6 +546,27 @@ export default function ManageSidebar() {
                 className={linkClass(false)}
               >
                 Announcement
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        {/* Beds. Matches the bed counts' place as the page's first section. */}
+        <div className="mb-6">
+          <GroupTitle
+            onClick={() => jump("bed-availability")}
+            active={active === "bed-availability"}
+          >
+            Beds
+          </GroupTitle>
+          <ul className="space-y-1">
+            <li>
+              <button
+                type="button"
+                onClick={() => jump("bed-availability")}
+                className={linkClass(active === "bed-availability")}
+              >
+                Live bed availability
               </button>
             </li>
           </ul>
@@ -674,28 +697,6 @@ export default function ManageSidebar() {
               Add new slide
             </button>
           </div>
-        </div>
-
-        {/* Live Bed Availability. Last, matching its place at the bottom of
-            the page; the spy's at-bottom rule hands it the highlight there. */}
-        <div className="mt-6">
-          <GroupTitle
-            onClick={() => jump("bed-availability")}
-            active={active === "bed-availability"}
-          >
-            Live Bed Availability
-          </GroupTitle>
-          <ul className="space-y-1">
-            <li>
-              <button
-                type="button"
-                onClick={() => jump("bed-availability")}
-                className={linkClass(active === "bed-availability")}
-              >
-                Bed counts
-              </button>
-            </li>
-          </ul>
         </div>
 
         {/* Recovery: restore hidden built-ins or soft-deleted custom slides. */}

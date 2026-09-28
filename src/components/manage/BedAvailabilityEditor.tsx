@@ -9,7 +9,6 @@ import {
   saveBedCounts,
   type BedRow,
 } from "@/lib/bedAvailability";
-import { labelClass } from "./editorFields";
 import UpdatedAt from "./UpdatedAt";
 
 /*
@@ -107,22 +106,37 @@ export default function BedAvailabilityEditor() {
   const programs = groupBedPrograms(rows);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <p className="text-lg">
         <UpdatedAt at={latestBedUpdate(rows)} className="text-lg" />
       </p>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {/* Compact so every location fits on one laptop screen. auto-fill rather
+          than breakpoints because the column's width depends on whether the
+          sidebar is showing: 4 across at ~1440px, fewer as it narrows. The
+          13.25rem minimum keeps a two-count card (TAY, Pathways) wide enough
+          for both inputs side by side. */}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(13.25rem,1fr))] gap-2">
         {programs.map((p) => (
-          <fieldset key={p.key} className="border-2 border-placeholder p-4">
-            <legend className="px-1 text-xl font-bold text-blue">{p.label}</legend>
-            <div className="flex flex-wrap gap-4">
+          <fieldset key={p.key} className="border-2 border-placeholder px-2.5 pt-1 pb-3">
+            <legend className="px-1 text-base leading-snug font-bold text-blue">
+              {p.label}
+            </legend>
+            <div
+              className={
+                Object.keys(p.counts).length > 1 ? "grid grid-cols-2 gap-2" : ""
+              }
+            >
               {Object.entries(p.counts).map(([id, c]) => {
                 const value = drafts[id] ?? "";
                 const invalid = !isValidCount(value);
                 return (
-                  <label key={id} className="block">
-                    <span className={labelClass}>{c.label}</span>
+                  // justify-end: a label that wraps to two lines pushes its
+                  // input down, so both inputs in a card stay level.
+                  <label key={id} className="flex flex-col justify-end">
+                    <span className="block text-sm leading-tight font-semibold">
+                      {c.label}
+                    </span>
                     <input
                       type="number"
                       inputMode="numeric"
@@ -140,7 +154,7 @@ export default function BedAvailabilityEditor() {
                           e.preventDefault();
                         }
                       }}
-                      className={`mt-1 w-28 border-2 px-3 py-2 text-2xl font-bold tabular-nums focus:border-blue focus:outline-none ${
+                      className={`mt-1 h-10 w-[5.5rem] border-2 px-2 text-base font-semibold tabular-nums focus:border-blue focus:outline-none ${
                         invalid ? "border-blue" : "border-ink/30"
                       }`}
                     />

@@ -25,8 +25,8 @@ const STAFF_ROLES = ["employee", "admin"];
   view-only Live Calendar never renders editing controls.
 
   Layout: sticky section sidebar (jump links + slide menus) alongside four
-  clearly-separated areas, the calendar, the built-in information pages, the
-  custom slides, and the live bed counts.
+  clearly-separated areas, the live bed counts, the calendar, the built-in
+  information pages, and the custom slides.
 */
 export default async function ManagePage() {
   const supabase = await createSupabaseServerClient();
@@ -76,6 +76,19 @@ export default async function ManagePage() {
           <div className="px-6 pt-6">
             <AnnouncementLauncher />
           </div>
+
+          {/* Bed counts are the first section, and the editor is compact
+              enough to fit on one laptop screen. */}
+          <Section
+            id="bed-availability"
+            title="Live Bed Availability"
+            className="scroll-mt-6"
+            wide
+            dense
+          >
+            <BedAvailabilityEditor />
+          </Section>
+
 
           <Section
             id="calendar"
@@ -159,25 +172,6 @@ export default async function ManagePage() {
             </p>
             <div className="mt-6">
               <CustomSlidesEditor />
-            </div>
-          </Section>
-
-          <Section
-            id="bed-availability"
-            title="Live Bed Availability"
-            className="scroll-mt-6"
-            wide
-            dense
-          >
-            <p className="max-w-3xl text-lg">
-              The counts on the red Bed Availability panel on every bulletin
-              screen and on the home page. Change any number, then press
-              Update. Pressing Update with no changes still moves the
-              &ldquo;as of&rdquo; date to today, so press it whenever you check
-              the counts.
-            </p>
-            <div className="mt-6">
-              <BedAvailabilityEditor />
             </div>
           </Section>
         </div>
