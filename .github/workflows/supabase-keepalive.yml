@@ -1,19 +1,48 @@
 
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
+# Keeps the Supabase free-tier project from pausing due to inactivity.
+# Location in repo: .github/workflows/supabase-keepalive.yml
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL       e.g. https://abcdefgh.supabase.co   (PRODUCTION project)
+#   SUPABASE_ANON_KEY  the anon/public key (same one the bulletin already uses)
+#
+# Change PING_TABLE to a small table the anon role can read under RLS.
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: "17 15 * * *"   # daily, ~8:17am Pacific (cron is UTC; off-the-hour avoids GitHub's :00 backlog)
+  workflow_dispatch:        # lets you run it manually from the Actions tab
+
+env:
+  PING_TABLE: announcements   # <-- change me
+
 jobs:
-  Explore-GitHub-Actions:
+  ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v6
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
+      - name: Query Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::SUPABASE_URL or SUPABASE_ANON_KEY secret is missing"
+            exit 1
+          fi
+
+          status=$(curl -sS -o /tmp/body.json -w "%{http_code}" \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            "$SUPABASE_URL/rest/v1/$PING_TABLE?select=*&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+          echo "HTTP $status"
+          if [ "$status" != "200" ]; then
+            echo "::error::Supabase ping failed with HTTP $status"
+            cat /tmp/body.json
+            exit 1
+          fi
+          echo "Supabase is awake."
