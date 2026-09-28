@@ -211,9 +211,8 @@ export default function ManageSidebar() {
   // would immediately take the highlight back off whatever was just clicked
   // and hand it to the last section that did cross the line.
   const clickedRef = useRef<string | null>(null);
-  // Digital Bulletin Pages group: open by default and only ever closed by the
-  // reader, remembered for the session, and reopened when the spy lands on one
-  // of its pages.
+  // Digital Bulletin Pages group: open by default, opened and closed only by
+  // the reader, and remembered for the session.
   const [dspOpen, setDspOpenState] = useState(true);
   function setDspOpen(open: boolean) {
     setDspOpenState(open);
@@ -564,12 +563,6 @@ export default function ManageSidebar() {
       "events-today",
     ].includes(active);
   const customActive = active.startsWith("slide-");
-
-  // Open the bulletin group when the reader arrives in its section. Only on
-  // arrival, so collapsing it by hand while there sticks until they leave.
-  useEffect(() => {
-    if (dspActive) setDspOpen(true);
-  }, [dspActive]);
 
   return (
     <nav aria-label="Manage sections" className="hidden w-56 shrink-0 lg:block">
