@@ -39,6 +39,40 @@ export async function setHiddenBuiltins(
 }
 
 /*
+  Staff-chosen names for the manage page's sidebar entries, keyed by page key
+  (the bulletin page keys, or customSlideNameKey). Manage-page labels only, never shown on the display.
+  A missing key means the entry keeps its default name.
+*/
+export type SidebarNames = Record<string, string>;
+
+export const customSlideNameKey = (id: string) => `slide:${id}`;
+
+export async function fetchSidebarNames(): Promise<SidebarNames> {
+  const { data, error } = await supabase
+    .from("display_settings")
+    .select("sidebar_names")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error || !data) return {};
+  return (data.sidebar_names ?? {}) as SidebarNames;
+}
+
+// Pass an empty name to go back to the default.
+export async function setSidebarName(
+  key: string,
+  name: string,
+): Promise<string | null> {
+  const next = { ...(await fetchSidebarNames()) };
+  const trimmed = name.trim();
+  if (trimmed) next[key] = trimmed;
+  else delete next[key];
+  const { error } = await supabase
+    .from("display_settings")
+    .upsert({ id: 1, sidebar_names: next, updated_at: new Date().toISOString() });
+  return error ? error.message : null;
+}
+
+/*
   Does this location render none of its own configured content? True when no
   built-in page reaches it (hidden globally, or targeted at other locations
   only) AND no visible custom slide reaches it.

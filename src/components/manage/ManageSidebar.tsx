@@ -14,7 +14,11 @@ import { DEFAULT_SLIDE_BACKGROUND } from "@/lib/slideBackgrounds";
 import {
   fetchHiddenBuiltins,
   setHiddenBuiltins,
+  fetchSidebarNames,
+  setSidebarName,
+  customSlideNameKey,
   type BuiltinKey,
+  type SidebarNames,
 } from "@/lib/displaySettings";
 import {
   fetchInfoContent,
@@ -24,6 +28,7 @@ import {
 import {
   deleteBulletinPageLocations,
   servicePageKey,
+  FIXED_BULLETIN_PAGE_KEYS,
 } from "@/lib/bulletinLocations";
 import { openAnnouncementModal } from "@/lib/announcements";
 import SlideMenu from "./SlideMenu";
@@ -40,12 +45,37 @@ import SlideMenu from "./SlideMenu";
   type: each numbered page gets its own three-dot Delete (permanent, no
   restore, matching "Remove this page" inside the editor), but at least one
   page must always remain, so the last one has no Delete option.
+
+  Double-clicking any slide name renames it. The name is stored in
+  display_settings.sidebar_names and only labels the sidebar; it never changes
+  what the wall display shows. Clearing the name restores the default.
 */
-const BUILTINS: { key: BuiltinKey; label: string; anchor: string | null }[] = [
-  { key: "services", label: "Services pages", anchor: "services" },
-  { key: "new-arrivals", label: "New arrivals page", anchor: "new-arrivals" },
-  { key: "demographic", label: "Pregnant women page", anchor: "demographic" },
-  { key: "events-today", label: "Events today", anchor: "events-today" },
+const BUILTINS: {
+  key: BuiltinKey;
+  label: string;
+  anchor: string | null;
+  // sidebar_names key; services pages are named per page instead.
+  nameKey: string | null;
+}[] = [
+  { key: "services", label: "Services pages", anchor: "services", nameKey: null },
+  {
+    key: "new-arrivals",
+    label: "New arrivals page",
+    anchor: "new-arrivals",
+    nameKey: FIXED_BULLETIN_PAGE_KEYS.newArrivals,
+  },
+  {
+    key: "demographic",
+    label: "Pregnant women page",
+    anchor: "demographic",
+    nameKey: FIXED_BULLETIN_PAGE_KEYS.demographic,
+  },
+  {
+    key: "events-today",
+    label: "Events today",
+    anchor: "events-today",
+    nameKey: FIXED_BULLETIN_PAGE_KEYS.eventsToday,
+  },
 ];
 
 // Default pages that can never be deleted from the rotation.
@@ -87,11 +117,73 @@ function GroupTitle({
   );
 }
 
+// A sidebar link whose name can be edited in place: double-click to rename,
+// Enter or clicking away saves, Escape cancels.
+function RenamableLink({
+  name,
+  onClick,
+  onRename,
+  className,
+}: {
+  name: string;
+  onClick: () => void;
+  onRename: (name: string) => void;
+  className: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  // Enter and Escape unmount the input, which can also fire a blur; this stops
+  // the blur saving twice or saving a cancelled edit.
+  const doneRef = useRef(false);
+
+  if (editing) {
+    const finish = (save: boolean) => {
+      if (doneRef.current) return;
+      doneRef.current = true;
+      setEditing(false);
+      if (save && draft.trim() !== name) onRename(draft);
+    };
+    return (
+      <input
+        autoFocus
+        aria-label="Slide name"
+        value={draft}
+        maxLength={80}
+        onChange={(e) => setDraft(e.target.value)}
+        onFocus={(e) => e.target.select()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") finish(true);
+          if (e.key === "Escape") finish(false);
+        }}
+        onBlur={() => finish(true)}
+        className="min-w-0 flex-1 border-2 border-blue bg-paper px-3 py-1.5 text-lg font-semibold text-ink"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onDoubleClick={() => {
+        doneRef.current = false;
+        setDraft(name);
+        setEditing(true);
+      }}
+      title="Double-click to rename"
+      className={className}
+    >
+      {name}
+    </button>
+  );
+}
+
 export default function ManageSidebar() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [deleted, setDeleted] = useState<Slide[]>([]);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
   const [infoContent, setInfoContent] = useState<InfoContent | null>(null);
+  const [names, setNames] = useState<SidebarNames>({});
   const [active, setActive] = useState("calendar");
   // Set when a sidebar link is clicked, and held until the reader scrolls for
   // themselves. Sections near the end of the page cannot reach the spy's
@@ -105,7 +197,11 @@ export default function ManageSidebar() {
       setSlides(await fetchSlides());
       setDeleted(await fetchDeletedSlides());
     };
-    const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
+    // display_settings holds both the hidden list and the sidebar names.
+    const loadHidden = async () => {
+      setHidden(await fetchHiddenBuiltins());
+      setNames(await fetchSidebarNames());
+    };
     const loadInfoContent = async () => setInfoContent(await fetchInfoContent());
     loadSlides();
     loadHidden();
@@ -140,8 +236,29 @@ export default function ManageSidebar() {
   const serviceLinks = servicesPages.map((page, i) => ({
     id: page.id,
     anchor: `services-page-${i + 1}`,
+    nameKey: servicePageKey(page.id),
     label: `This Week's Services — Page ${i + 1}`,
   }));
+
+  const nameFor = (key: string | null, fallback: string) =>
+    (key && names[key]) || fallback;
+  const slideName = (s: Slide) =>
+    nameFor(customSlideNameKey(s.id), s.title.trim() || "Untitled slide");
+
+  async function rename(key: string, name: string) {
+    // Show it right away; realtime confirms (or corrects) it.
+    setNames((prev) => {
+      const next = { ...prev };
+      if (name.trim()) next[key] = name.trim();
+      else delete next[key];
+      return next;
+    });
+    const error = await setSidebarName(key, name);
+    if (error) {
+      window.alert(`Couldn't rename: ${error}`);
+      setNames(await fetchSidebarNames());
+    }
+  }
 
   // Anchors the spy watches, in page order. Only LEAF anchors belong here: a
   // section wrapper (#digital-schedule, #custom-slides) starts above the panels
@@ -375,7 +492,7 @@ export default function ManageSidebar() {
     if (!guardLastSlide()) return;
     if (
       !window.confirm(
-        `Remove the slide “${slide.title || "Untitled"}”? You can restore it from “Recently deleted”.`,
+        `Remove the slide “${slideName(slide)}”? You can restore it from “Recently deleted”.`,
       )
     )
       return;
@@ -385,7 +502,7 @@ export default function ManageSidebar() {
   async function deleteForever(slide: Slide) {
     if (
       !window.confirm(
-        `Permanently delete “${slide.title || "Untitled"}”? This cannot be undone.`,
+        `Permanently delete “${slideName(slide)}”? This cannot be undone.`,
       )
     )
       return;
@@ -468,9 +585,10 @@ export default function ManageSidebar() {
               if (b.key === "services") {
                 return serviceLinks.map((link, idx) => (
                   <li key={link.anchor} className="flex items-center pr-1">
-                    <button
-                      type="button"
+                    <RenamableLink
+                      name={nameFor(link.nameKey, link.label)}
                       onClick={() => jumpToBulletinPage(link.anchor)}
+                      onRename={(name) => rename(link.nameKey, name)}
                       // Not truncated (unlike other links) so the page number
                       // is always visible; wraps to a second line if needed.
                       className={`flex-1 border-l-4 px-4 py-2 text-left text-base font-semibold leading-snug ${
@@ -478,9 +596,7 @@ export default function ManageSidebar() {
                           ? "border-blue bg-blue/5 text-blue"
                           : "border-transparent text-ink hover:bg-ink/5 hover:text-blue"
                       }`}
-                    >
-                      {link.label}
-                    </button>
+                    />
                     <SlideMenu
                       onEdit={() => editBulletinPage(link.anchor)}
                       onDelete={
@@ -495,13 +611,12 @@ export default function ManageSidebar() {
               const deletable = !PROTECTED.includes(b.key);
               return (
                 <li key={b.key} className="flex items-center pr-1">
-                  <button
-                    type="button"
+                  <RenamableLink
+                    name={nameFor(b.nameKey, b.label)}
                     onClick={() => b.anchor && jumpToBulletinPage(b.anchor)}
+                    onRename={(name) => b.nameKey && rename(b.nameKey, name)}
                     className={linkClass(!!b.anchor && active === b.anchor)}
-                  >
-                    {b.label}
-                  </button>
+                  />
                   <SlideMenu
                     onEdit={
                       b.anchor
@@ -510,7 +625,9 @@ export default function ManageSidebar() {
                     }
                     editNote="Auto-updates from calendar"
                     onDelete={
-                      deletable ? () => hideBuiltin(b.key, b.label) : undefined
+                      deletable
+                        ? () => hideBuiltin(b.key, nameFor(b.nameKey, b.label))
+                        : undefined
                     }
                   />
                 </li>
@@ -528,13 +645,12 @@ export default function ManageSidebar() {
             <ul className="space-y-1">
               {slides.map((s) => (
                 <li key={s.id} className="flex items-center pr-1">
-                  <button
-                    type="button"
+                  <RenamableLink
+                    name={slideName(s)}
                     onClick={() => jumpToSlide(s.id)}
+                    onRename={(name) => rename(customSlideNameKey(s.id), name)}
                     className={linkClass(active === `slide-${s.id}`)}
-                  >
-                    {s.title.trim() || "Untitled slide"}
-                  </button>
+                  />
                   <SlideMenu
                     onEdit={() => editSlide(s.id)}
                     onDelete={() => removeCustom(s)}
@@ -566,7 +682,9 @@ export default function ManageSidebar() {
             <ul className="space-y-1">
               {hiddenBuiltins.map((b) => (
                 <li key={b.key} className="flex items-center justify-between gap-2 px-4 py-1">
-                  <span className="truncate text-base text-ink/50">{b.label}</span>
+                  <span className="truncate text-base text-ink/50">
+                    {nameFor(b.nameKey, b.label)}
+                  </span>
                   <button
                     type="button"
                     className="shrink-0 text-sm font-semibold text-blue hover:underline"
@@ -579,7 +697,7 @@ export default function ManageSidebar() {
               {deleted.map((s) => (
                 <li key={s.id} className="flex items-center justify-between gap-2 px-4 py-1">
                   <span className="truncate text-base text-ink/50">
-                    {s.title.trim() || "Untitled slide"}
+                    {slideName(s)}
                   </span>
                   <span className="flex shrink-0 gap-2">
                     <button
