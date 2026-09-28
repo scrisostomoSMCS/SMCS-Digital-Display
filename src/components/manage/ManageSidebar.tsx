@@ -34,9 +34,9 @@ import { openAnnouncementModal } from "@/lib/announcements";
 import SlideMenu from "./SlideMenu";
 
 /*
-  Sticky manage-page navigation, grouped to mirror the page's three sections:
-  Calendar, Digital Bulletin Pages, and Custom Slides. Every slide in the
-  rotation gets a three-dots Edit/Delete menu. Built-in Edit jumps to that
+  Sticky manage-page navigation, grouped to mirror the page's four sections:
+  Calendar, Digital Bulletin Pages, Custom Slides, and Live Bed Availability.
+  Every slide in the rotation gets a three-dots Edit/Delete menu. Built-in Edit jumps to that
   page's existing editor; custom Edit opens the structured template editor.
 
   New arrivals, the featured-group (pregnant women) page, and events today can
@@ -277,6 +277,7 @@ export default function ManageSidebar() {
           : [],
     ),
     ...slides.map((s) => `slide-${s.id}`),
+    "bed-availability",
   ];
   const spyKey = spyIds.join("|");
   useEffect(() => {
@@ -672,6 +673,28 @@ export default function ManageSidebar() {
               Add new slide
             </button>
           </div>
+        </div>
+
+        {/* Live Bed Availability. Last, matching its place at the bottom of
+            the page; the spy's at-bottom rule hands it the highlight there. */}
+        <div className="mt-6">
+          <GroupTitle
+            onClick={() => jump("bed-availability")}
+            active={active === "bed-availability"}
+          >
+            Live Bed Availability
+          </GroupTitle>
+          <ul className="space-y-1">
+            <li>
+              <button
+                type="button"
+                onClick={() => jump("bed-availability")}
+                className={linkClass(active === "bed-availability")}
+              >
+                Bed counts
+              </button>
+            </li>
+          </ul>
         </div>
 
         {/* Recovery: restore hidden built-ins or soft-deleted custom slides. */}

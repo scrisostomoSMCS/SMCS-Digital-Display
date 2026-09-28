@@ -1,5 +1,11 @@
 'use client';
-import { shortBedLabel, useBedAvailability } from '@/lib/useBedAvailability';
+import {
+  BED_RESERVE_PHONE,
+  FAMILY_LODGE_INTAKE_PHONE,
+  formatBedDate,
+  shortBedLabel,
+} from '@/lib/bedAvailability';
+import { useBedAvailability } from '@/lib/useBedAvailability';
 
 // Attention panel: always white text on red so live bed counts stand out
 // against the paper-white bulletin. Red is intentional here (outside the
@@ -28,7 +34,11 @@ export const BED_PANEL_CLEARANCE = '@min-[64rem]:min-h-[12.5rem]';
 export default function BedAvailabilitySlide({ className = '' }: { className?: string }) {
   const data = useBedAvailability();
 
-  if (!data?.programs) return null; // Never render a zero we're not sure of
+  if (!data) return null; // Never render a zero we're not sure of
+
+  // English only, like the rest of the wall display, so a TV's own browser
+  // locale never changes the wording.
+  const asOf = formatBedDate(data.updatedAt, 'en-US', 'medium');
 
   // Split into two balanced columns so the panel stays short and wide.
   const mid = Math.ceil(data.programs.length / 2);
@@ -41,9 +51,9 @@ export default function BedAvailabilitySlide({ className = '' }: { className?: s
     >
       <header className="flex items-baseline justify-between gap-3 px-4 pb-1.5 pt-2.5">
         <h2 className="text-xl font-bold leading-tight tracking-tight">Bed Availability</h2>
-        {data.updated_at_display && (
+        {asOf && (
           <p className="shrink-0 text-xs font-semibold uppercase tracking-wide text-white/70">
-            {data.updated_at_display}
+            As of {asOf}
           </p>
         )}
       </header>
@@ -86,12 +96,17 @@ export default function BedAvailabilitySlide({ className = '' }: { className?: s
         ))}
       </div>
 
-      {data.reserve_phone && (
-        <p className="bg-black/15 px-4 py-1.5 text-sm font-semibold">
-          Reserve:{' '}
-          <span className="whitespace-nowrap font-bold">{data.reserve_phone}</span>
+      <div className="bg-black/15 px-4 py-1.5 text-sm leading-snug">
+        <p className="font-semibold">
+          To reserve a bed call{' '}
+          <span className="whitespace-nowrap font-bold">{BED_RESERVE_PHONE}</span>
         </p>
-      )}
+        <p className="text-white/90">
+          <span className="font-semibold">Family Lodge:</span> Call for availability
+          and intake process{' '}
+          <span className="whitespace-nowrap font-bold">{FAMILY_LODGE_INTAKE_PHONE}</span>
+        </p>
+      </div>
     </section>
   );
 }

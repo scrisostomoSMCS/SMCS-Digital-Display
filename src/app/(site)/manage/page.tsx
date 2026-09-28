@@ -9,6 +9,7 @@ import QuickEventForm from "@/components/manage/QuickEventForm";
 import ManageSidebar from "@/components/manage/ManageSidebar";
 import BulletinLocationsManager from "@/components/manage/BulletinLocationsManager";
 import AnnouncementLauncher from "@/components/manage/AnnouncementLauncher";
+import BedAvailabilityEditor from "@/components/manage/BedAvailabilityEditor";
 import { bulletinFontClass } from "@/lib/bulletinFonts";
 
 export const metadata = {
@@ -23,9 +24,9 @@ const STAFF_ROLES = ["employee", "admin"];
   signed-in clients → sent home. Editing lives on this separate route so the
   view-only Live Calendar never renders editing controls.
 
-  Layout: sticky section sidebar (jump links + slide menus) alongside three
-  clearly-separated areas, the calendar, the built-in information pages, and
-  the custom slides.
+  Layout: sticky section sidebar (jump links + slide menus) alongside four
+  clearly-separated areas, the calendar, the built-in information pages, the
+  custom slides, and the live bed counts.
 */
 export default async function ManagePage() {
   const supabase = await createSupabaseServerClient();
@@ -158,6 +159,25 @@ export default async function ManagePage() {
             </p>
             <div className="mt-6">
               <CustomSlidesEditor />
+            </div>
+          </Section>
+
+          <Section
+            id="bed-availability"
+            title="Live Bed Availability"
+            className="scroll-mt-6"
+            wide
+            dense
+          >
+            <p className="max-w-3xl text-lg">
+              The counts on the red Bed Availability panel on every bulletin
+              screen and on the home page. Change any number, then press
+              Update. Pressing Update with no changes still moves the
+              &ldquo;as of&rdquo; date to today, so press it whenever you check
+              the counts.
+            </p>
+            <div className="mt-6">
+              <BedAvailabilityEditor />
             </div>
           </Section>
         </div>

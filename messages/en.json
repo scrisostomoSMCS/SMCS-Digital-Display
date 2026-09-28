@@ -47,7 +47,9 @@
       "title": "Live Bed Availability",
       "close": "Close bed availability",
       "full": "Full",
-      "reserve": "Reserve"
+      "reserve": "To reserve a bed call",
+      "asOf": "Below is our bed availability as of {date}",
+      "familyLodgeNote": "Call for availability and intake process"
     },
     "about": {
       "title": "About Us",

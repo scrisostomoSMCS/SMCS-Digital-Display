@@ -48,7 +48,9 @@
       "title": "Disponibilidad de Camas en Vivo",
       "close": "Cerrar disponibilidad de camas",
       "full": "Lleno",
-      "reserve": "Reservar"
+      "reserve": "Para reservar una cama llame al",
+      "asOf": "A continuación, nuestra disponibilidad de camas al {date}",
+      "familyLodgeNote": "Llame para consultar disponibilidad y el proceso de admisión"
     },
     "about": {
       "title": "Sobre Nosotros",

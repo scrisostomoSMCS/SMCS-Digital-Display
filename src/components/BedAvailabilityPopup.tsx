@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { BED_RED } from "@/components/BedAvailabilitySlide";
-import { shortBedLabel, useBedAvailability } from "@/lib/useBedAvailability";
+import {
+  BED_RESERVE_PHONE,
+  FAMILY_LODGE_INTAKE_PHONE,
+  formatBedDate,
+} from "@/lib/bedAvailability";
+import { useBedAvailability } from "@/lib/useBedAvailability";
 
 /*
   Home-page popup of the live bed counts: a taller, more readable version of
@@ -21,6 +26,7 @@ const DISMISSED_KEY = "smcs:bed-popup-dismissed";
 
 export default function BedAvailabilityPopup() {
   const t = useTranslations("home.bedPopup");
+  const locale = useLocale();
   const data = useBedAvailability();
   const [dismissed, setDismissed] = useState(true); // hidden until the session check runs
   // Drives the slide-in: it starts false so the first paint is off-screen.
@@ -40,7 +46,7 @@ export default function BedAvailabilityPopup() {
 
   // Counts arrive a moment after mount; animate in once there is something to
   // show rather than sliding in an empty card.
-  const ready = !dismissed && !!data?.programs;
+  const ready = !dismissed && !!data;
   useEffect(() => {
     if (!ready) return;
     const id = setTimeout(() => setShown(true), 400);
@@ -56,7 +62,10 @@ export default function BedAvailabilityPopup() {
     return () => window.removeEventListener("keydown", onKey);
   }, [ready]);
 
-  if (!ready || !data?.programs) return null;
+  if (!ready || !data) return null;
+
+  const asOf = formatBedDate(data.updatedAt, locale, "long");
+  const tel = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
 
   return (
     <aside
@@ -72,9 +81,9 @@ export default function BedAvailabilityPopup() {
           <h2 id="bed-popup-title" className="text-xl font-bold leading-tight">
             {t("title")}
           </h2>
-          {data.updated_at_display && (
-            <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-paper/75">
-              {data.updated_at_display}
+          {asOf && (
+            <p className="mt-1 text-sm text-paper/85">
+              {t("asOf", { date: asOf })}
             </p>
           )}
         </div>
@@ -89,15 +98,16 @@ export default function BedAvailabilityPopup() {
       </header>
 
       {/* One program per row: a single stacked column, unlike the bulletin's
-          two-column panel, at roughly double its type size. Label and counts
-          share a line so the whole list fits without scrolling on a laptop. */}
+          two-column panel, at roughly double its type size and with the full
+          wording ("5 Male beds available"). Label and counts share a line when
+          they fit; long counts (Pathways) wrap onto their own line. */}
       <ul className="flex-1 divide-y divide-paper/20 overflow-y-auto px-5 pb-2">
         {data.programs.map((p) => {
           const full = p.total === 0;
           return (
             <li
               key={p.key}
-              className="flex items-baseline justify-between gap-3 py-2.5"
+              className="flex flex-wrap items-baseline justify-between gap-x-3 py-2.5"
             >
               <span className="text-base font-semibold leading-snug">
                 {p.label}
@@ -107,17 +117,13 @@ export default function BedAvailabilityPopup() {
                   {t("full")}
                 </span>
               ) : (
-                <span className="shrink-0 text-right text-sm text-paper/90">
-                  {Object.entries(p.counts).map(([k, c], i) => {
-                    const q = shortBedLabel(c.label);
-                    return (
-                      <span key={k} className="whitespace-nowrap">
-                        {i > 0 && <span className="text-paper/50"> · </span>}
-                        <b className="text-xl text-paper">{c.count}</b>
-                        {q && ` ${q}`}
-                      </span>
-                    );
-                  })}
+                <span className="ml-auto text-right text-sm text-paper/90">
+                  {Object.entries(p.counts).map(([k, c], i) => (
+                    <span key={k} className="whitespace-nowrap">
+                      {i > 0 && ", "}
+                      <b className="text-xl text-paper">{c.count}</b> {c.label}
+                    </span>
+                  ))}
                 </span>
               )}
             </li>
@@ -125,17 +131,27 @@ export default function BedAvailabilityPopup() {
         })}
       </ul>
 
-      {data.reserve_phone && (
-        <p className="bg-black/20 px-5 py-3 text-base font-semibold">
-          {t("reserve")}:{" "}
+      <div className="space-y-2 bg-black/20 px-5 py-3 text-base">
+        <p className="font-semibold">
+          {t("reserve")}{" "}
           <a
-            href={`tel:${data.reserve_phone.replace(/[^\d+]/g, "")}`}
+            href={tel(BED_RESERVE_PHONE)}
             className="whitespace-nowrap font-bold underline underline-offset-2 hover:no-underline"
           >
-            {data.reserve_phone}
+            {BED_RESERVE_PHONE}
           </a>
         </p>
-      )}
+        <p className="text-sm">
+          <span className="font-semibold">Family Lodge:</span>{" "}
+          {t("familyLodgeNote")}{" "}
+          <a
+            href={tel(FAMILY_LODGE_INTAKE_PHONE)}
+            className="whitespace-nowrap font-bold underline underline-offset-2 hover:no-underline"
+          >
+            {FAMILY_LODGE_INTAKE_PHONE}
+          </a>
+        </p>
+      </div>
     </aside>
   );
 }
