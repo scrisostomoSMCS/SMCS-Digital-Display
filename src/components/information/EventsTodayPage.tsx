@@ -75,7 +75,7 @@ export default function EventsTodayPage({
         animate="show"
         className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
-        <InfoEyebrow tone="blue" />
+        <InfoEyebrow bg="paper" />
         {/* Fixed labels are shown bilingually (this page isn't content-edited);
             event names/times come from the calendar as staff entered them. */}
         <h1 className="font-display mt-1 max-w-[68%] flex flex-wrap items-baseline gap-x-4 leading-none">

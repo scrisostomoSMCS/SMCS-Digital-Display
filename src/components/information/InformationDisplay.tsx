@@ -11,6 +11,7 @@ import {
   type InfoContent,
 } from "@/lib/infoContent";
 import { fetchSlides, type Slide, type SlideBackground } from "@/lib/slides";
+import { resolveSlideBackground } from "@/lib/slideBackgrounds";
 import { fetchHiddenBuiltins, type BuiltinKey } from "@/lib/displaySettings";
 import {
   fetchBulletinLocationId,
@@ -26,12 +27,27 @@ import DemographicPage from "./DemographicPage";
 import EventsTodayPage from "./EventsTodayPage";
 import CustomSlidePage from "./CustomSlidePage";
 import BedAvailabilitySlide from "@/components/BedAvailabilitySlide";
+import AnnouncementBar from "./AnnouncementBar";
 
 // Prev/next arrows: bare glyphs, no button chrome — deliberately unlike the
 // circled back button at the top, which is a different kind of control (it
 // leaves the bulletin) and should not be confused with paging. Black on every
 // background by request; note that on the blue slides this is dark-on-dark.
 const NAV_CLASS = "text-ink hover:text-blue";
+
+/*
+  Backstop refresh interval. Realtime (below) is the fast path and normally
+  delivers edits within a second; this timer exists only for the case where the
+  socket has silently died — a dropped connection that never recovers, an
+  expired token, a paused project. Without it the screen keeps showing whatever
+  it held when the socket stopped, indefinitely and with no visible symptom,
+  because nothing else ever re-reads Supabase.
+
+  Ten minutes is the worst-case staleness we accept in that degraded state. It
+  does NOT repair the socket, it only works around it: instant updates stay
+  broken until the page reloads.
+*/
+const REFRESH_INTERVAL = 600_000; // 10 minutes
 
 /*
   Paging arrow: a stem plus a head, drawn rather than typed. A text glyph ("←")
@@ -64,13 +80,6 @@ function NavArrow({ dir }: { dir: "left" | "right" }) {
 }
 
 
-// Fills the letterbox bars around the scaled canvas with the current slide's own
-// background, so an odd-shaped container reads as one field of color.
-const STAGE_BG: Record<SlideBackground, string> = {
-  paper: "bg-paper",
-  blue: "bg-blue",
-  teal: "bg-teal",
-};
 
 /*
   Rotation controller: auto-advances on a continuous loop, each page shown for
@@ -89,6 +98,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   const [content, setContent] = useState<InfoContent>(defaultInfoContent);
   const [contentLoaded, setContentLoaded] = useState(false);
   const [slides, setSlides] = useState<Slide[]>([]);
+  const [slidesLoaded, setSlidesLoaded] = useState(false);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
   const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
   const [locationId, setLocationId] = useState<string | null>(null);
@@ -130,7 +140,10 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       setContent(await fetchInfoContent());
       setContentLoaded(true);
     };
-    const loadSlides = async () => setSlides(await fetchSlides(locationSlug));
+    const loadSlides = async () => {
+      setSlides(await fetchSlides(locationSlug));
+      setSlidesLoaded(true);
+    };
     const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
     const loadTargeting = async () => {
       if (!locationSlug) {
@@ -161,7 +174,18 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       .on("postgres_changes", { event: "*", schema: "public", table: "bulletin_locations" }, loadTargeting)
       .on("postgres_changes", { event: "*", schema: "public", table: "display_settings" }, loadHidden)
       .subscribe();
+    // Backstop only (see REFRESH_INTERVAL): re-runs the same four loaders
+    // realtime calls above, so there is no second copy of the fetch logic to
+    // drift. A poll that lands on unchanged data is a no-op to the viewer —
+    // the slide keeps its key, so nothing remounts or re-animates.
+    const poll = setInterval(() => {
+      loadContent();
+      loadSlides();
+      loadHidden();
+      loadTargeting();
+    }, REFRESH_INTERVAL);
     return () => {
+      clearInterval(poll);
       supabase.removeChannel(channel);
     };
   }, [locationSlug]);
@@ -173,10 +197,18 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
     return targets.length === 0 || (locationId !== null && targets.includes(locationId));
   };
 
-  // Builds the rotation for this display. `ignoreTargeting` drops the
-  // per-location filter, which is how the never-blank fallback below reuses this
-  // exact code path instead of assembling a second, divergent page list.
-  const buildRotation = (ignoreTargeting: boolean) => {
+  /*
+    Builds the rotation for this display. The two flags each drop one filter,
+    which is how the never-blank ladder below reuses this exact code path
+    instead of assembling a second, divergent page list:
+      ignoreTargeting - drop the per-location filter
+      ignoreHidden    - drop the staff "hidden built-ins" filter
+    Both default to off, so the normal rotation is buildRotation({}).
+  */
+  const buildRotation = ({
+    ignoreTargeting = false,
+    ignoreHidden = false,
+  }: { ignoreTargeting?: boolean; ignoreHidden?: boolean }) => {
     // "This Week's Services" is a repeatable, numbered page type: one bulletin
     // page per non-empty services page. Filter before numbering so a location
     // that receives only one service page sees "Page 1 of 1," not a gap.
@@ -229,7 +261,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       },
     ];
     const builtins = builtinDefs.filter((page) => {
-      if (hidden.includes(page.key)) return false;
+      if (!ignoreHidden && hidden.includes(page.key)) return false;
       return pageIsVisible(page.pageKey, ignoreTargeting);
     });
 
@@ -242,17 +274,36 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   };
 
   /*
-    Never blank: once loading has settled, a rotation that came out empty falls
-    back to the untargeted one. That covers a location slug matching no row in
-    bulletin_locations (a mistyped or renamed URL on a wall screen) and a real
-    location that every page happens to be targeted away from. A screen showing
-    the general bulletin is right in a way an empty white screen never is.
-    Built-ins staff have explicitly hidden stay hidden — that is a deliberate
-    setting, not a mismatch.
+    Never blank, in three rungs. Each is used only if the one above it produced
+    no pages at all; a single visible page stops the ladder at the top, so none
+    of this changes a display that has something to show.
+
+    1. The rotation as configured.
+    2. Drop per-location targeting. Covers a location slug matching no row in
+       bulletin_locations (a mistyped or renamed URL on a wall screen) and a
+       real location that every page happens to be targeted away from.
+    3. Drop the hidden-built-ins filter too. Only reachable when staff have
+       hidden every built-in AND no custom slide is visible anywhere — the
+       rotation is genuinely empty and the alternative is a white screen. The
+       manage page flags this state separately (see locationRotationIsEmpty),
+       because from here the TV looks fine while the config is still broken.
+
+    `settled` waits for the loaders whose initial value could read as empty.
+    slides starts [] and is the real hazard: if hidden lands before the slides
+    query returns, a location carried entirely by custom slides looks empty for
+    a frame and would flash rung 3 before settling. content and hidden start at
+    non-empty defaults, so they cannot produce that false reading.
   */
-  const targeted = buildRotation(false);
-  const settled = !locationSlug || (targetingLoaded && contentLoaded);
-  const all = targeted.length > 0 || !settled ? targeted : buildRotation(true);
+  const targeted = buildRotation({});
+  const settled =
+    slidesLoaded && (!locationSlug || (targetingLoaded && contentLoaded));
+  let all = targeted;
+  if (targeted.length === 0 && settled) {
+    all = buildRotation({ ignoreTargeting: true });
+    if (all.length === 0) {
+      all = buildRotation({ ignoreTargeting: true, ignoreHidden: true });
+    }
+  }
   const pages = all.map((p) => p.node);
   const backgrounds = all.map((p) => p.bg);
 
@@ -277,7 +328,11 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
     // clips. Its only job is to center and scale the canvas.
     <div
       ref={measureStage}
-      className={`font-body relative h-full w-full overflow-hidden text-ink ${STAGE_BG[currentBg]}`}
+      className="font-body relative h-full w-full overflow-hidden text-ink"
+      /* Fills the letterbox bars around the scaled canvas with the current
+         slide's own background, so an odd-shaped container reads as one field
+         of color. Inline because a custom slide's color is free-form. */
+      style={{ backgroundColor: resolveSlideBackground(currentBg) }}
     >
       {/* Canvas: always exactly CANVAS_WIDTH x CANVAS_HEIGHT, so every slide
           lays out identically no matter how big the stage is, then scaled as a
@@ -313,6 +368,25 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
             via BED_PANEL_CLEARANCE on their header band — widening the panel
             here means re-checking that constant. */}
         <BedAvailabilitySlide className="absolute right-5 top-5 z-20 w-[29rem]" />
+
+        {/* Staff announcement, overlaid across the top of the canvas.
+
+            GEOMETRY. Purely an overlay: absolutely positioned, above everything
+            at z-30 (the ladder below it is slide → dots z-10 → bed panel, back
+            button and arrows z-20), and outside the AnimatePresence stage, so
+            it neither pushes nor resizes anything. The page underneath keeps
+            its exact layout and is simply covered.
+
+            left-16 is the 64px gutter InfoPageShell gives every slide, so the
+            bubble lines up with the page's own margins. It stops at right-[36rem]
+            (1344px on the 1920 canvas) rather than spanning full width: the back
+            button's left edge is at 1376px and the bed panel's at 1436px, and
+            covering live bed counts to show an announcement would be the wrong
+            trade on this screen. That leaves a 32px gap before the back button.
+
+            It is NOT inside the <AnimatePresence> above, so it stays put across
+            slide changes instead of fading out and back in every rotation. */}
+        <AnnouncementBar className="absolute left-16 right-[36rem] top-5 z-30" />
 
         {/* Back button, shrunk to a bare left arrow and parked immediately left of
             the bed panel (right-5 + w-[29rem] = 30.25rem, plus a 0.75rem gap) —

@@ -3,14 +3,16 @@
 import { EVENT_COLORS } from "@/lib/eventColors";
 
 /*
-  Color chooser for an event. A row of quick preset swatches, plus a "custom"
-  swatch that opens the browser's native color picker so any color can be
-  chosen. Controlled: the parent form owns the selected hex value.
+  Color chooser. A row of quick preset swatches, plus a "custom" swatch that
+  opens the browser's native color picker so any color can be chosen. Controlled:
+  the parent form owns the selected hex value. Used for event colors (the default
+  presets) and for a custom slide's background (its own presets).
 */
 type ColorPickerProps = {
   value: string;
   onChange: (value: string) => void;
   label?: string;
+  presets?: { name: string; value: string }[];
 };
 
 const swatchBase = "h-8 w-8 rounded-sm border-2 transition";
@@ -21,9 +23,10 @@ export default function ColorPicker({
   value,
   onChange,
   label = "Event Color",
+  presets = EVENT_COLORS,
 }: ColorPickerProps) {
   // Is the current value one of the presets, or a custom-picked color?
-  const isPreset = EVENT_COLORS.some(
+  const isPreset = presets.some(
     (c) => c.value.toLowerCase() === value.toLowerCase(),
   );
 
@@ -31,7 +34,7 @@ export default function ColorPicker({
     <div>
       <span className="block text-base font-semibold">{label}</span>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        {EVENT_COLORS.map((c) => {
+        {presets.map((c) => {
           const selected = value.toLowerCase() === c.value.toLowerCase();
           return (
             <button
