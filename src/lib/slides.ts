@@ -189,13 +189,33 @@ export async function fetchDeletedSlides(): Promise<Slide[]> {
   return (data ?? []).map((r) => fromRow(r as SlideRow));
 }
 
+/*
+  Every slide write asks PostgREST to return the ids it touched. Without that,
+  a write RLS filtered out (or one aimed at a slide that is already gone)
+  "succeeds" with no error while changing nothing, and staff never find out.
+*/
+const NO_ROWS =
+  "You don't have permission to change this slide, or it no longer exists.";
+
+// Fired on window after a slide write succeeds, so the manage page reloads in
+// this tab without waiting for realtime (same pattern as SIDEBAR_NAMES_EVENT).
+export const SLIDES_CHANGED_EVENT = "smcs:slides-changed";
+const slidesChanged = () => window.dispatchEvent(new Event(SLIDES_CHANGED_EVENT));
+
 // Soft-delete (hidden=true) or restore (false).
 export async function setSlideHidden(
   id: string,
   hidden: boolean,
 ): Promise<string | null> {
-  const { error } = await supabase.from("slides").update({ hidden }).eq("id", id);
-  return error ? error.message : null;
+  const { data, error } = await supabase
+    .from("slides")
+    .update({ hidden })
+    .eq("id", id)
+    .select("id");
+  if (error) return error.message;
+  if (!data?.length) return NO_ROWS;
+  slidesChanged();
+  return null;
 }
 
 function toRow(input: SlideInput) {
@@ -253,7 +273,9 @@ async function setSlideLocations(
 }
 
 // New slides go to the end of the rotation.
-export async function createSlide(input: SlideInput): Promise<string | null> {
+export async function createSlide(
+  input: SlideInput,
+): Promise<{ id: string | null; error: string | null }> {
   const { data: last } = await supabase
     .from("slides")
     .select("position")
@@ -267,29 +289,39 @@ export async function createSlide(input: SlideInput): Promise<string | null> {
     .insert({ ...toRow(input), position })
     .select("id")
     .single();
-  if (error) {
-    console.error("Create slide failed:", error.message);
-    return null;
-  }
-  const locationError = await setSlideLocations(data.id as string, input.locationIds);
-  if (locationError) {
-    console.error("Set slide locations failed:", locationError);
-  }
-  return data.id as string;
+  if (error) return { id: null, error: error.message };
+  const id = data.id as string;
+  const locationError = await setSlideLocations(id, input.locationIds);
+  slidesChanged();
+  return { id, error: locationError };
 }
 
 export async function updateSlide(
   id: string,
   input: SlideInput,
 ): Promise<string | null> {
-  const { error } = await supabase.from("slides").update(toRow(input)).eq("id", id);
+  const { data, error } = await supabase
+    .from("slides")
+    .update(toRow(input))
+    .eq("id", id)
+    .select("id");
   if (error) return error.message;
-  return setSlideLocations(id, input.locationIds);
+  if (!data?.length) return NO_ROWS;
+  const locationError = await setSlideLocations(id, input.locationIds);
+  slidesChanged();
+  return locationError;
 }
 
 export async function deleteSlide(id: string): Promise<string | null> {
-  const { error } = await supabase.from("slides").delete().eq("id", id);
-  return error ? error.message : null;
+  const { data, error } = await supabase
+    .from("slides")
+    .delete()
+    .eq("id", id)
+    .select("id");
+  if (error) return error.message;
+  if (!data?.length) return NO_ROWS;
+  slidesChanged();
+  return null;
 }
 
 export async function swapSlidePositions(a: Slide, b: Slide): Promise<void> {
@@ -298,12 +330,18 @@ export async function swapSlidePositions(a: Slide, b: Slide): Promise<void> {
 }
 
 // Persist an explicit order (used after drag-reorder): position = index.
-export async function persistSlideOrder(orderedIds: string[]): Promise<void> {
-  await Promise.all(
+export async function persistSlideOrder(
+  orderedIds: string[],
+): Promise<string | null> {
+  const results = await Promise.all(
     orderedIds.map((id, i) =>
-      supabase.from("slides").update({ position: i }).eq("id", id),
+      supabase.from("slides").update({ position: i }).eq("id", id).select("id"),
     ),
   );
+  const failed = results.find((r) => r.error || !r.data?.length);
+  if (failed) return failed.error?.message ?? NO_ROWS;
+  slidesChanged();
+  return null;
 }
 
 /* --- images (Supabase Storage: bucket "slide-images") -------------------- */

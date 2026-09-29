@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   updateSlide,
+  type SlideInput,
   uploadSlideImage,
   slideImageUrl,
   SLIDE_TEMPLATES,
@@ -62,17 +63,61 @@ const USES = {
   "weekly-menu": { title: true, body: false, items: false, image: false, caption: false, menu: true },
 } as const;
 
+// What save() writes, trimmed and cleaned. Also used to compare a draft with
+// the last saved state, so only a real edit counts as unsaved.
+function toInput(s: Slide): SlideInput {
+  return {
+    template: s.template,
+    background: s.background,
+    title: s.title.trim(),
+    titleEs: s.titleEs.trim(),
+    body: s.body.trim(),
+    bodyEs: s.bodyEs.trim(),
+    items: s.items.map((x) => x.trim()).filter(Boolean),
+    itemsEs: s.itemsEs.map((x) => x.trim()).filter(Boolean),
+    caption: s.caption.trim(),
+    captionEs: s.captionEs.trim(),
+    imagePath: s.imagePath,
+    menu: s.menu ? cleanMenu(s.menu) : null,
+    locationIds: s.locationIds,
+  };
+}
+
+const sameContent = (a: Slide, b: Slide) =>
+  JSON.stringify(toInput(a)) === JSON.stringify(toInput(b));
+
 export default function SlideEditor({
   slide,
   onSaved,
+  onDirtyChange,
 }: {
   slide: Slide;
   onSaved?: () => void;
+  // Tells the panel whether closing it would throw away unsaved edits.
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const [draft, setDraft] = useState<Slide>(slide);
+  // The last state known to be in the database: the slide as loaded, then
+  // whatever the most recent successful save wrote.
+  const [baseline, setBaseline] = useState<Slide>(slide);
   // Re-seed only when a genuinely different slide is passed (keeps in-progress
   // edits from being clobbered by realtime refreshes of the same slide).
-  useEffect(() => setDraft(slide), [slide.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    setDraft(slide);
+    setBaseline(slide);
+  }, [slide.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dirty = !sameContent(draft, baseline);
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+  // Closing the tab or navigating away with unsaved edits asks first.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -152,26 +197,17 @@ export default function SlideEditor({
     setSaving(true);
     setSaved(false);
     setError(null);
-    const err = await updateSlide(draft.id, {
-      template: draft.template,
-      background: draft.background,
-      title: draft.title.trim(),
-      titleEs: draft.titleEs.trim(),
-      body: draft.body.trim(),
-      bodyEs: draft.bodyEs.trim(),
-      items: draft.items.map((s) => s.trim()).filter(Boolean),
-      itemsEs: draft.itemsEs.map((s) => s.trim()).filter(Boolean),
-      caption: draft.caption.trim(),
-      captionEs: draft.captionEs.trim(),
-      imagePath: draft.imagePath,
-      menu: draft.menu ? cleanMenu(draft.menu) : null,
-      locationIds: draft.locationIds,
-    });
+    const input = toInput(draft);
+    const err = await updateSlide(draft.id, input);
     setSaving(false);
     if (err) {
-      setError(err);
+      // The draft is left exactly as typed so nothing is lost; try again.
+      setError(`Not saved: ${err}`);
       return;
     }
+    // The draft itself is left alone so keystrokes made during the save
+    // survive; sameContent normalizes both sides the same way.
+    setBaseline({ ...draft, ...input });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
     onSaved?.();
@@ -505,6 +541,9 @@ export default function SlideEditor({
             {saving ? "Saving…" : "Save slide"}
           </button>
           {saved && <span className="text-base font-semibold text-blue">✓ Saved</span>}
+          {dirty && !saving && !saved && !error && (
+            <span className="text-base text-ink/60">Unsaved changes</span>
+          )}
           {error && (
             <span role="alert" className="text-base font-semibold text-blue">
               {error}

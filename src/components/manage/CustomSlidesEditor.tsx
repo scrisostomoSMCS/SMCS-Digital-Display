@@ -4,7 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Reorder, useDragControls } from "framer-motion";
 import { GripVertical } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { fetchSlides, persistSlideOrder, type Slide } from "@/lib/slides";
+import {
+  fetchSlides,
+  persistSlideOrder,
+  SLIDES_CHANGED_EVENT,
+  type Slide,
+} from "@/lib/slides";
 import type { BulletinLocation } from "@/lib/bulletinLocations";
 import SlideEditor from "./SlideEditor";
 import LocationBadges, { useBulletinLocations } from "./LocationBadges";
@@ -36,6 +41,7 @@ function SlidePanel({
   onMove,
   onDragEnd,
   onSaved,
+  onDirtyChange,
 }: {
   slide: Slide;
   // The sidebar rename, if any; the slide's own title otherwise.
@@ -51,6 +57,7 @@ function SlidePanel({
   onMove: (dir: -1 | 1) => void;
   onDragEnd: () => void;
   onSaved: () => void;
+  onDirtyChange: (dirty: boolean) => void;
 }) {
   const controls = useDragControls();
   return (
@@ -117,7 +124,7 @@ function SlidePanel({
       </div>
       {open && (
         <div className="p-3 lg:p-5">
-          <SlideEditor slide={slide} onSaved={onSaved} />
+          <SlideEditor slide={slide} onSaved={onSaved} onDirtyChange={onDirtyChange} />
         </div>
       )}
     </Reorder.Item>
@@ -142,14 +149,30 @@ export default function CustomSlidesEditor() {
   const locations = useBulletinLocations("custom-slides-editor");
   const names = useSidebarNames("custom-slides-editor");
 
+  // Open panels holding edits that have not been saved. Collapsing one
+  // unmounts its editor, which would silently throw those edits away.
+  const dirty = useRef<Set<string>>(new Set());
+  const setDirty = useCallback((id: string, isDirty: boolean) => {
+    if (isDirty) dirty.current.add(id);
+    else dirty.current.delete(id);
+  }, []);
+
   const expand = (id: string) => setOpen((p) => new Set(p).add(id));
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    if (
+      open.has(id) &&
+      dirty.current.has(id) &&
+      !window.confirm("This slide has unsaved changes. Close it and lose them?")
+    )
+      return;
+    dirty.current.delete(id);
     setOpen((p) => {
       const n = new Set(p);
       if (n.has(id)) n.delete(id);
       else n.add(id);
       return n;
     });
+  };
 
   const load = useCallback(async () => {
     const next = await fetchSlides();
@@ -204,8 +227,11 @@ export default function CustomSlidesEditor() {
         load,
       )
       .subscribe();
+    // This tab's own writes reload directly rather than relying on realtime.
+    window.addEventListener(SLIDES_CHANGED_EVENT, load);
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener(SLIDES_CHANGED_EVENT, load);
     };
   }, [load]);
 
@@ -228,9 +254,16 @@ export default function CustomSlidesEditor() {
     return () => window.removeEventListener("hashchange", onHash);
   }, [slides.length]);
 
-  // Persist the current on-screen order (position = index).
-  const persistOrder = () =>
-    persistSlideOrder(slidesRef.current.map((s) => s.id));
+  // Persist an order (position = index). On failure, say so and put the list
+  // back to what the database actually holds.
+  async function saveOrder(ids: string[]) {
+    const error = await persistSlideOrder(ids);
+    if (error) {
+      window.alert(`Couldn't save the new order: ${error}`);
+      load();
+    }
+  }
+  const persistOrder = () => saveOrder(slidesRef.current.map((s) => s.id));
 
   function move(i: number, dir: -1 | 1) {
     const j = i + dir;
@@ -238,7 +271,7 @@ export default function CustomSlidesEditor() {
     const next = [...slides];
     [next[i], next[j]] = [next[j], next[i]];
     setSlides(next);
-    persistSlideOrder(next.map((s) => s.id));
+    saveOrder(next.map((s) => s.id));
   }
 
   if (loaded && slides.length === 0) {
@@ -274,6 +307,7 @@ export default function CustomSlidesEditor() {
           onSaved={() =>
             setSavedAt((p) => ({ ...p, [s.id]: new Date().toISOString() }))
           }
+          onDirtyChange={(d) => setDirty(s.id, d)}
         />
       ))}
     </Reorder.Group>

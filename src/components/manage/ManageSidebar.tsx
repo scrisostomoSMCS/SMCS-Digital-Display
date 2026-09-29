@@ -9,6 +9,7 @@ import {
   setSlideHidden,
   deleteSlide,
   createSlide,
+  SLIDES_CHANGED_EVENT,
   type Slide,
 } from "@/lib/slides";
 import { DEFAULT_SLIDE_BACKGROUND } from "@/lib/slideBackgrounds";
@@ -259,8 +260,11 @@ export default function ManageSidebar() {
         loadInfoContent,
       )
       .subscribe();
+    // This tab's own slide writes reload directly rather than relying on realtime.
+    window.addEventListener(SLIDES_CHANGED_EVENT, loadSlides);
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener(SLIDES_CHANGED_EVENT, loadSlides);
     };
   }, []);
 
@@ -465,7 +469,7 @@ export default function ManageSidebar() {
   // Create a slide with sensible defaults; its inline editor appears (and
   // auto-expands) via realtime, so it's immediately editable.
   async function addSlide() {
-    await createSlide({
+    const { error } = await createSlide({
       template: "title-body",
       background: DEFAULT_SLIDE_BACKGROUND,
       title: "New slide",
@@ -480,6 +484,7 @@ export default function ManageSidebar() {
       menu: null,
       locationIds: [],
     });
+    if (error) window.alert(`Couldn't add the slide: ${error}`);
   }
 
   function guardLastSlide(): boolean {
@@ -537,7 +542,13 @@ export default function ManageSidebar() {
       )
     )
       return;
-    await setSlideHidden(slide.id, true);
+    const error = await setSlideHidden(slide.id, true);
+    if (error) window.alert(`Couldn't delete the slide: ${error}`);
+  }
+
+  async function restoreCustom(slide: Slide) {
+    const error = await setSlideHidden(slide.id, false);
+    if (error) window.alert(`Couldn't restore the slide: ${error}`);
   }
 
   async function deleteForever(slide: Slide) {
@@ -547,7 +558,8 @@ export default function ManageSidebar() {
       )
     )
       return;
-    await deleteSlide(slide.id);
+    const error = await deleteSlide(slide.id);
+    if (error) window.alert(`Couldn't delete the slide: ${error}`);
   }
 
   const hasRecoverable = hiddenBuiltins.length > 0 || deleted.length > 0;
@@ -768,7 +780,7 @@ export default function ManageSidebar() {
                     <button
                       type="button"
                       className="text-sm font-semibold text-blue hover:underline"
-                      onClick={() => setSlideHidden(s.id, false)}
+                      onClick={() => restoreCustom(s)}
                     >
                       Restore
                     </button>
