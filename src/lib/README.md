@@ -34,6 +34,8 @@ the data layer.
   exists, plus `PAGE_DURATION` (how long each page is shown).
 - `slides.ts`, custom-slide types, CRUD, ordering, soft delete, and image
   upload to the `slide-images` Storage bucket.
+- `weeklyMenu.ts`, the "Weekly menu" slide's `menu` jsonb shape, fixed
+  bilingual day/meal labels, safe parsing, and Monday-to-Sunday week math.
 - `displaySettings.ts`, which built-in pages are hidden from the rotation.
 - `bulletinLocations.ts`, display locations and per-page/per-slide targeting.
 - `bedAvailability.ts`, live bed counts in `bed_availability`: read, group into

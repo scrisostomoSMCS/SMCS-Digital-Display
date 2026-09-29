@@ -114,3 +114,24 @@ export const NEW_ARRIVALS_LIMITS = {
   maxSteps: 3,
   maxAvailableNow: 4,
 } as const;
+
+/*
+  "Weekly menu" custom slide: 7 day rows x 3 meal cells. A cell shows its
+  English items on one line joined with " · " and the Spanish under them a
+  step smaller, in a ~500px column with ~95px of row height — room for one
+  English line (~43 characters) and one or two Spanish lines, or two short
+  English lines and one Spanish.
+
+  `cell` caps the whole cell textarea (items one per line, newlines counted),
+  not each item, because the items share one flowing line on the display.
+  Realistic menu text: "Scrambled eggs, toast, fruit" is 28, "Chicken
+  enchiladas, rice, beans, salad" is 38. Spanish runs ~15-20% longer, which is
+  why `cell` stops near one English line rather than two.
+  PROVISIONAL: sized from the layout arithmetic above, not yet re-measured on
+  the canvas with live menus the way the rest of this file was.
+*/
+export const WEEKLY_MENU_LIMITS = {
+  title: 60, // a full auto-filled title is 36; the menu headline runs a step smaller
+  cell: 45,
+  maxItemsPerMeal: 3,
+} as const;

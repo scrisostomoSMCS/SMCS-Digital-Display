@@ -3,6 +3,7 @@ import {
   DEFAULT_SLIDE_BACKGROUND,
   resolveSlideBackground,
 } from "./slideBackgrounds";
+import { parseMenu, type WeeklyMenu } from "./weeklyMenu";
 
 /*
   Custom slides for the /information display. Data-driven: the public display
@@ -16,7 +17,8 @@ export type SlideTemplate =
   | "title-body" // big title + paragraph
   | "title-image-text" // title + image + paragraph
   | "image-focus" // large image + short caption
-  | "title-list"; // title + list of items
+  | "title-list" // title + list of items
+  | "weekly-menu"; // title + a week of Breakfast / Lunch / Dinner (see lib/weeklyMenu)
 
 export const SLIDE_TEMPLATES: { key: SlideTemplate; label: string; hint: string }[] =
   [
@@ -32,6 +34,11 @@ export const SLIDE_TEMPLATES: { key: SlideTemplate; label: string; hint: string 
       hint: "A large image and a short caption.",
     },
     { key: "title-list", label: "Title + list", hint: "A headline and a bullet list." },
+    {
+      key: "weekly-menu",
+      label: "Weekly menu",
+      hint: "Breakfast, lunch, and dinner for Monday to Sunday.",
+    },
   ];
 
 /*
@@ -60,6 +67,9 @@ export type Slide = {
   caption: string;
   captionEs: string;
   imagePath: string | null;
+  // "Weekly menu" content; null for every other template (and for rows written
+  // before migration 0025). Always a complete grid when present — see parseMenu.
+  menu: WeeklyMenu | null;
   position: number;
   hidden: boolean; // soft-deleted (recoverable), not shown on the display
   locationIds: string[]; // empty = shown at every bulletin location
@@ -84,6 +94,7 @@ export type SlideInput = {
   caption: string;
   captionEs: string;
   imagePath: string | null;
+  menu: WeeklyMenu | null;
   locationIds: string[];
 };
 
@@ -100,6 +111,7 @@ type SlideRow = {
   caption: string | null;
   caption_es: string | null;
   image_path: string | null;
+  menu: unknown;
   position: number;
   hidden: boolean | null;
   updated_at: string | null;
@@ -123,6 +135,7 @@ function fromRow(r: SlideRow): Slide {
     caption: r.caption ?? "",
     captionEs: r.caption_es ?? "",
     imagePath: r.image_path,
+    menu: r.menu == null ? null : parseMenu(r.menu),
     position: r.position,
     hidden: r.hidden ?? false,
     updatedAt: r.updated_at,
@@ -131,7 +144,7 @@ function fromRow(r: SlideRow): Slide {
 }
 
 const COLUMNS =
-  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, position, hidden, updated_at, slide_locations(location_id)";
+  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, menu, position, hidden, updated_at, slide_locations(location_id)";
 
 // Visible slides (shown on the display and as normal sidebar entries).
 export async function fetchSlides(locationSlug?: string): Promise<Slide[]> {
@@ -200,6 +213,7 @@ function toRow(input: SlideInput) {
     caption: input.caption,
     caption_es: input.captionEs,
     image_path: input.imagePath,
+    menu: input.menu,
   };
 }
 

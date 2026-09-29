@@ -477,6 +477,7 @@ export default function ManageSidebar() {
       caption: "",
       captionEs: "",
       imagePath: null,
+      menu: null,
       locationIds: [],
     });
   }

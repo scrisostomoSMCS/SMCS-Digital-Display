@@ -16,9 +16,32 @@ import {
 import ColorPicker from "./ColorPicker";
 import SlideTemplateView from "@/components/information/SlideTemplateView";
 import BulletinCanvasPreview from "@/components/information/BulletinCanvasPreview";
-import { SLIDE_LIMITS, slideBodyLimit } from "@/lib/bulletinLimits";
+import {
+  SLIDE_LIMITS,
+  WEEKLY_MENU_LIMITS,
+  slideBodyLimit,
+} from "@/lib/bulletinLimits";
+import {
+  MENU_DAYS,
+  MENU_MEALS,
+  cleanMenu,
+  emptyMenu,
+  mondayOf,
+  weekRangeLabel,
+  weekTitle,
+  weekTitleEs,
+  type MenuDayKey,
+  type MenuMealKey,
+} from "@/lib/weeklyMenu";
 import { useBulletinLocations } from "./LocationBadges";
-import { Field, StringListEditor, labelClass, smallBtn } from "./editorFields";
+import {
+  CharCount,
+  Field,
+  StringListEditor,
+  inputClass,
+  labelClass,
+  smallBtn,
+} from "./editorFields";
 
 /*
   Structured editor for one custom slide, used inline on the manage page. Employees
@@ -32,10 +55,11 @@ import { Field, StringListEditor, labelClass, smallBtn } from "./editorFields";
 
 // Which fields each template uses.
 const USES = {
-  "title-body": { title: true, body: true, items: false, image: false, caption: false },
-  "title-image-text": { title: true, body: true, items: false, image: true, caption: false },
-  "image-focus": { title: false, body: false, items: false, image: true, caption: true },
-  "title-list": { title: true, body: false, items: true, image: false, caption: false },
+  "title-body": { title: true, body: true, items: false, image: false, caption: false, menu: false },
+  "title-image-text": { title: true, body: true, items: false, image: true, caption: false, menu: false },
+  "image-focus": { title: false, body: false, items: false, image: true, caption: true, menu: false },
+  "title-list": { title: true, body: false, items: true, image: false, caption: false, menu: false },
+  "weekly-menu": { title: true, body: false, items: false, image: false, caption: false, menu: true },
 } as const;
 
 export default function SlideEditor({
@@ -55,6 +79,9 @@ export default function SlideEditor({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const locations = useBulletinLocations(`slide-editor-${slide.id}`);
+  // Which language the weekly-menu grid is editing. Spanish is typed by hand
+  // for now, like every other custom slide field.
+  const [menuLang, setMenuLang] = useState<"en" | "es">("en");
 
   const set = <K extends keyof Slide>(k: K, v: Slide[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -62,6 +89,50 @@ export default function SlideEditor({
   // "Title + image + text" gives the paragraph a half-width column, so it holds
   // less than the full-width layouts.
   const bodyLimit = slideBodyLimit(draft.template);
+  const titleLimit = uses.menu ? WEEKLY_MENU_LIMITS.title : SLIDE_LIMITS.title;
+
+  // Weekly menu. A slide switched to this layout starts from an empty grid.
+  const menu = draft.menu ?? emptyMenu();
+
+  // Picking any date snaps to that week's Monday and rewrites both titles
+  // (still editable afterwards). Clearing the date leaves the titles alone.
+  function pickWeek(value: string) {
+    const monday = value ? mondayOf(value) : null;
+    setDraft((d) => {
+      const current = d.menu ?? emptyMenu();
+      if (!monday) return { ...d, menu: { ...current, weekOf: null } };
+      return {
+        ...d,
+        menu: { ...current, weekOf: monday },
+        title: weekTitle(monday),
+        titleEs: weekTitleEs(monday),
+      };
+    });
+  }
+
+  // One item per line. Kept raw (untrimmed, blank lines included) while typing
+  // so Enter and spaces behave normally; cleanMenu tidies it on save. Lines
+  // past the per-meal cap are dropped rather than overflowing the display.
+  function setMealText(day: MenuDayKey, meal: MenuMealKey, text: string) {
+    const lines = text.split("\n").slice(0, WEEKLY_MENU_LIMITS.maxItemsPerMeal);
+    const field = menuLang === "en" ? "items" : "itemsEs";
+    setDraft((d) => {
+      const current = d.menu ?? emptyMenu();
+      return {
+        ...d,
+        menu: {
+          ...current,
+          days: {
+            ...current.days,
+            [day]: {
+              ...current.days[day],
+              [meal]: { ...current.days[day][meal], [field]: lines },
+            },
+          },
+        },
+      };
+    });
+  }
 
   async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -93,6 +164,7 @@ export default function SlideEditor({
       caption: draft.caption.trim(),
       captionEs: draft.captionEs.trim(),
       imagePath: draft.imagePath,
+      menu: draft.menu ? cleanMenu(draft.menu) : null,
       locationIds: draft.locationIds,
     });
     setSaving(false);
@@ -223,19 +295,39 @@ export default function SlideEditor({
             maxLength={SLIDE_LIMITS.title}
           />
         )}
+        {uses.menu && (
+          <label className="block">
+            <span className={labelClass}>Week of</span>
+            <span className="block text-sm text-ink/60">
+              Pick any day of the week. It snaps to that Monday and fills in
+              both titles below.
+            </span>
+            <input
+              type="date"
+              className={`${inputClass} sm:w-auto`}
+              value={menu.weekOf ?? ""}
+              onChange={(e) => pickWeek(e.target.value)}
+            />
+            {menu.weekOf && (
+              <span className="mt-1 block text-sm text-ink/60">
+                Monday to Sunday: {weekRangeLabel(menu.weekOf)}
+              </span>
+            )}
+          </label>
+        )}
         {uses.title && (
           <div className="space-y-2">
             <Field
               label="Title"
               value={draft.title}
               onChange={(v) => set("title", v)}
-              maxLength={SLIDE_LIMITS.title}
+              maxLength={titleLimit}
             />
             <Field
               label="Title (Español)"
               value={draft.titleEs}
               onChange={(v) => set("titleEs", v)}
-              maxLength={SLIDE_LIMITS.title}
+              maxLength={titleLimit}
             />
           </div>
         )}
@@ -304,6 +396,74 @@ export default function SlideEditor({
                 />
               </div>
             </div>
+          </div>
+        )}
+        {uses.menu && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className={labelClass}>Menu</p>
+                <p className="text-sm text-ink/60">
+                  One item per line, up to {WEEKLY_MENU_LIMITS.maxItemsPerMeal}{" "}
+                  per meal. Leave a meal empty if nothing is served.
+                </p>
+              </div>
+              <div role="group" aria-label="Menu language" className="flex">
+                {(["en", "es"] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    aria-pressed={menuLang === lang}
+                    onClick={() => setMenuLang(lang)}
+                    className={`min-h-11 border-2 px-4 py-1 text-base font-semibold ${
+                      menuLang === lang
+                        ? "border-blue bg-blue text-paper"
+                        : "border-ink/30 hover:border-blue"
+                    }`}
+                  >
+                    {lang === "en" ? "English" : "Español"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {menuLang === "es" && (
+              <p className="text-sm text-ink/60">
+                Each Spanish line pairs with the English line in the same
+                place. The grey text is the English to translate; a meal left
+                blank shows English only.
+              </p>
+            )}
+            {MENU_DAYS.map((d) => (
+              <fieldset key={d.key} className="border-2 border-placeholder p-3">
+                <legend className="px-1 text-base font-bold text-blue">
+                  {d.label} · {d.labelEs}
+                </legend>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {MENU_MEALS.map((m) => {
+                    const meal = menu.days[d.key][m.key];
+                    const text = (menuLang === "en" ? meal.items : meal.itemsEs).join("\n");
+                    return (
+                      <label key={m.key} className="block min-w-0">
+                        <span className="block text-sm font-semibold">
+                          {menuLang === "en" ? m.label : m.labelEs}
+                        </span>
+                        <textarea
+                          className={`${inputClass} resize-y`}
+                          rows={3}
+                          value={text}
+                          maxLength={WEEKLY_MENU_LIMITS.cell}
+                          placeholder={
+                            menuLang === "en" ? "One item per line" : meal.items.join("\n")
+                          }
+                          onChange={(e) => setMealText(d.key, m.key, e.target.value)}
+                        />
+                        <CharCount value={text} max={WEEKLY_MENU_LIMITS.cell} />
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ))}
           </div>
         )}
         {uses.image && (

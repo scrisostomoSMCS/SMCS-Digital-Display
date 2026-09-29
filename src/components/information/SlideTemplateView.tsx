@@ -7,7 +7,15 @@ import RotatingLeaf from "./RotatingLeaf";
 import { staggerContainer, riseItem, headerIn } from "./motion";
 import { BED_PANEL_CLEARANCE } from "@/components/BedAvailabilitySlide";
 import { slideImageUrl, type Slide } from "@/lib/slides";
-import { slideTheme } from "@/lib/slideBackgrounds";
+import { slideTheme, type SlideTheme } from "@/lib/slideBackgrounds";
+import {
+  MENU_DAYS,
+  MENU_MEALS,
+  emptyMenu,
+  todayMenuDay,
+  type MenuMeal,
+  type WeeklyMenu,
+} from "@/lib/weeklyMenu";
 
 /*
   Renders a custom slide in one of the on-brand layout templates. This SAME
@@ -60,6 +68,89 @@ function ImageSlot({
   );
 }
 
+/*
+  "Weekly menu": 7 day rows x 3 meal columns. Rows rather than 7 day columns
+  because a menu item is a phrase that reads across — at 1920px, seven columns
+  leave ~18 characters a line and repeat the meal labels 21 times; here each
+  meal label appears once, in the header row. Rows share the space left under
+  the headline equally and every cell clips, so a long cell can only lose its
+  own last line, never push the table off the canvas (the editor's limits in
+  lib/bulletinLimits keep it from getting that far).
+
+  Today's row is tinted and marked with the accent bar when the display's date
+  falls inside the menu's week (see todayMenuDay for the date rule). The
+  rotation remounts each slide as it comes round, so the highlight moves on at
+  midnight without a timer.
+*/
+function MealCell({ meal }: { meal: MenuMeal }) {
+  const en = meal.items.map((s) => s.trim()).filter(Boolean);
+  const es = meal.itemsEs.map((s) => s.trim()).filter(Boolean);
+  if (en.length === 0 && es.length === 0) {
+    return (
+      <div className="min-w-0 self-center text-2xl opacity-40" aria-label="Nothing listed">
+        —
+      </div>
+    );
+  }
+  return (
+    <div className="min-h-0 min-w-0 self-center overflow-hidden break-words">
+      {en.length > 0 && (
+        <p className="text-2xl font-semibold leading-tight">{en.join(" · ")}</p>
+      )}
+      {es.length > 0 && (
+        <p className="text-xl font-medium leading-tight opacity-80">{es.join(" · ")}</p>
+      )}
+    </div>
+  );
+}
+
+function WeeklyMenuTable({ menu, theme }: { menu: WeeklyMenu; theme: SlideTheme }) {
+  const today = todayMenuDay(menu.weekOf);
+  return (
+    <div className="font-body relative z-10 mt-4 grid min-h-0 flex-1 grid-cols-[auto_repeat(3,minmax(0,1fr))] grid-rows-[auto_repeat(7,minmax(0,1fr))] gap-x-6 @min-[64rem]:gap-x-8">
+      <div />
+      {MENU_MEALS.map((m) => (
+        <div
+          key={m.key}
+          className="min-w-0 border-b-4 pb-1 text-2xl"
+          style={{ borderColor: theme.accent }}
+        >
+          <span className="font-bold">{m.label}</span>
+          <span className="font-medium opacity-80"> · {m.labelEs}</span>
+        </div>
+      ))}
+      {MENU_DAYS.map((d) => {
+        const isToday = d.key === today;
+        return (
+          <div
+            key={d.key}
+            className={`relative col-span-4 grid min-h-0 grid-cols-subgrid overflow-hidden border-b-2 border-current/20 py-1 pr-2 pl-4 ${
+              isToday ? "bg-current/10" : ""
+            }`}
+          >
+            {isToday && (
+              <span
+                className="absolute inset-y-0 left-0 w-2"
+                style={{ backgroundColor: theme.accent }}
+                aria-hidden="true"
+              />
+            )}
+            <div className="self-center whitespace-nowrap">
+              <p className={`text-2xl leading-tight ${isToday ? "font-extrabold" : "font-bold"}`}>
+                {d.label}
+              </p>
+              <p className="text-xl font-medium leading-tight opacity-80">{d.labelEs}</p>
+            </div>
+            {MENU_MEALS.map((m) => (
+              <MealCell key={m.key} meal={menu.days[d.key][m.key]} />
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function SlideTemplateView({
   slide,
   animate = true,
@@ -74,6 +165,9 @@ export default function SlideTemplateView({
   const placeholderTone = "border-current/20 text-current/40";
   const img = slideImageUrl(slide.imagePath);
   const init = animate ? "hidden" : false;
+  // The menu table needs every row it can get, so its headline runs a step
+  // smaller (a full week title fits on one line instead of wrapping to two).
+  const isMenu = slide.template === "weekly-menu";
 
   const Header = (
     <motion.header
@@ -83,11 +177,19 @@ export default function SlideTemplateView({
       className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
     >
       <InfoEyebrow bg={bg} />
-      <h1 className="font-display mt-2 max-w-[68%] text-4xl leading-none @min-[40rem]:text-5xl @min-[64rem]:text-7xl">
+      <h1
+        className={`font-display mt-2 max-w-[68%] text-4xl leading-none @min-[40rem]:text-5xl ${
+          isMenu ? "@min-[64rem]:text-6xl" : "@min-[64rem]:text-7xl"
+        }`}
+      >
         {slide.title}
       </h1>
       {slide.titleEs && (
-        <p className="font-display mt-1 max-w-[68%] text-3xl leading-tight opacity-80 @min-[40rem]:text-3xl @min-[64rem]:text-5xl">
+        <p
+          className={`font-display mt-1 max-w-[68%] text-3xl leading-tight opacity-80 @min-[40rem]:text-3xl ${
+            isMenu ? "@min-[64rem]:text-4xl" : "@min-[64rem]:text-5xl"
+          }`}
+        >
           {slide.titleEs}
         </p>
       )}
@@ -167,6 +269,15 @@ export default function SlideTemplateView({
             )}
           </div>
         </div>
+      </InfoPageShell>
+    );
+  }
+
+  if (isMenu) {
+    return (
+      <InfoPageShell bg={bg}>
+        {Header}
+        <WeeklyMenuTable menu={slide.menu ?? emptyMenu()} theme={theme} />
       </InfoPageShell>
     );
   }
