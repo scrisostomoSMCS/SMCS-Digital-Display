@@ -23,6 +23,11 @@
      6.19:1 (WCAG AA); the lighter, friendlier greens all fail. */
   --color-green: #0f7038;
 
+  /* Not an accent — the "Delayed" count on /manage/health, between green
+     (online) and red (offline). Dark enough to read on white at 5:1; the
+     brighter yellow-oranges wash out. */
+  --color-amber: #b45309;
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;

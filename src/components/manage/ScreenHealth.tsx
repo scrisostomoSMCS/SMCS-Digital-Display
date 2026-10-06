@@ -130,12 +130,15 @@ export default function ScreenHealth() {
     return c;
   }, [rows]);
 
-  const summary = [
-    `${counts.online} online`,
-    `${counts.delayed} delayed`,
-    `${counts.offline} offline`,
-    ...(counts.never > 0 ? [`${counts.never} never seen`] : []),
-  ].join(" · ");
+  // Each count in its status color; the words carry the meaning on their own.
+  const summary: { text: string; className: string }[] = [
+    { text: `${counts.online} online`, className: "text-green" },
+    { text: `${counts.delayed} delayed`, className: "text-amber" },
+    { text: `${counts.offline} offline`, className: "text-red" },
+    ...(counts.never > 0
+      ? [{ text: `${counts.never} never seen`, className: "text-ink/60" }]
+      : []),
+  ];
 
   // The selected location can disappear (its last screen moved or deleted).
   const filterIsValid =
@@ -176,8 +179,13 @@ export default function ScreenHealth() {
       ) : (
         <>
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <p className="text-2xl font-bold text-blue" aria-live="polite">
-              {summary}
+            <p className="text-2xl font-bold" aria-live="polite">
+              {summary.map((part, i) => (
+                <span key={part.text}>
+                  {i > 0 && <span className="text-ink/40"> · </span>}
+                  <span className={part.className}>{part.text}</span>
+                </span>
+              ))}
             </p>
             <label className="block w-full sm:w-72">
               <span className="block text-base font-semibold">Location</span>
