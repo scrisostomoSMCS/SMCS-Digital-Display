@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { MonitorCheck } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Section from "@/components/Section";
 import ManageCalendar from "@/components/manage/ManageCalendar";
@@ -53,7 +54,16 @@ export default async function ManagePage() {
     <div className={`${bulletinFontClass} mx-auto max-w-[1600px] px-0 lg:px-6`}>
       {/* The nav bar's "Home" leaves for smcares.org, so staff need an explicit
           way back to this site's home page from the editor. */}
-      <div className="flex justify-end px-6 pt-6 lg:px-0">
+      <div className="flex flex-wrap justify-end gap-3 px-6 pt-6 lg:px-0">
+        {/* Filled, unlike the outlined home link beside it, so the one
+            destination staff check regularly reads as the primary action. */}
+        <Link
+          href="/manage/health"
+          className="inline-flex items-center gap-2 rounded-full border-2 border-blue bg-blue px-5 py-2 text-base font-semibold text-paper hover:bg-paper hover:text-blue"
+        >
+          <MonitorCheck size={20} aria-hidden="true" />
+          Screen health
+        </Link>
         <Link
           href="/"
           className="inline-block rounded-full border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper"

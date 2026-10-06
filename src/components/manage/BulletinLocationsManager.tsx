@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   Building2,
@@ -193,6 +194,16 @@ export default function BulletinLocationsManager() {
 
       {open && (
         <div className="px-4 pb-4 lg:px-6 lg:pb-6">
+        {/* These URLs carry no ?screen=, so a TV loading one shows the right
+            slides but never checks in. They stay for the WordPress embed and
+            previews; wall TVs should use the Screen health URL instead. */}
+        <p className="mb-4 max-w-3xl text-base text-ink/70">
+          Setting up a wall TV? Copy its URL from{" "}
+          <Link href="/manage/health" className="font-semibold text-blue underline hover:text-teal">
+            Screen health
+          </Link>{" "}
+          instead, so it&rsquo;s monitored.
+        </p>
         <form
           onSubmit={addLocation}
           className="grid items-end gap-3 border-y-2 border-placeholder bg-ink/5 p-4 sm:grid-cols-[minmax(0,1fr)_auto]"
