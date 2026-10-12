@@ -48,7 +48,27 @@ export const SLIDE_LIMITS = {
   full-width layouts. Clip points: 525 full width, 376 beside an image.
 */
 export const slideBodyLimit = (template: SlideTemplate): number =>
-  template === "title-image-text" ? 300 : 400;
+  template === "event-flyer"
+    ? EVENT_FLYER_LIMITS.description
+    : template === "title-image-text"
+      ? 300
+      : 400;
+
+// The headline limit for a template; most share SLIDE_LIMITS.title.
+export const slideTitleLimit = (template: SlideTemplate): number =>
+  template === "weekly-menu"
+    ? WEEKLY_MENU_LIMITS.title
+    : template === "event-flyer"
+      ? EVENT_FLYER_LIMITS.title
+      : template === "resource-card"
+        ? RESOURCE_CARD_LIMITS.title
+        : template === "card-grid"
+          ? CARD_GRID_LIMITS.title
+          : template === "weather"
+            ? WEATHER_LIMITS.title
+            : template === "lost-found"
+              ? LOST_FOUND_TITLE_LIMIT
+              : SLIDE_LIMITS.title;
 
 /*
   The caption limit is the one number here NOT set by clipping. On "Image with
@@ -135,3 +155,91 @@ export const WEEKLY_MENU_LIMITS = {
   cell: 45,
   maxItemsPerMeal: 3,
 } as const;
+
+/*
+  "Event / flyer" custom slide. Measured on the canvas (in the manage preview,
+  real fonts, bed panel drawn) with a two-line title, which is the worst case
+  for the space below it.
+
+  The tightest arrangement is WITH an image: the image takes the right ~40%,
+  and the description sits under the when/where block in the left column at
+  text-3xl English / text-2xl Spanish. There, 160 English + 190 Spanish just
+  fits (3 + 4 lines); 180 + 215 clips ~30px. The limit is sized for that case
+  so adding or removing an image never makes saved text too long; without an
+  image the description gets its own column and larger type, and 160 + 190
+  fits with room to spare.
+
+  `location` is the one line in the block that can wrap, and a second line
+  comes straight out of the description's room: 41 characters ("Dining Hall,
+  545 W. Sonora Street, Room 2") already wraps in the image layout. 40 keeps it
+  to one line in both languages; "Dining Hall, 545 W. Sonora St." is 30.
+
+  The title is the shared header headline (text-7xl in 68% of the width, clear
+  of the bed panel): ~30 characters a line, so 60 caps it at the two lines the
+  measurements above assume. "Community Job Fair & Resource Day" is 33.
+*/
+export const EVENT_FLYER_LIMITS = {
+  title: 60,
+  description: 160, // 160 + 190 Spanish fits beside an image; 180 + 215 clips
+  location: 40, // wraps at 41 beside an image
+} as const;
+
+/*
+  "Contact / resource card" custom slide: up to six services in a 3 x 2 grid
+  (3 in one row, 4 as 2 x 2, 5-6 as 3 x 2). Measured on the canvas with a
+  two-line title and all six entries filled with realistic text near these
+  limits (e.g. "Community Dining Room Breakfast", "Mon–Sun, 7:00 AM – 8:30 AM
+  and 11 AM" with its Spanish), which fills the space under the header exactly.
+
+  `phone` is the largest text in each entry and never wraps: at 16 characters
+  ("209-467-0703 x12") it just fits a third of the canvas at the 56px used
+  three across, where text-6xl overflowed by 13px. `title` 50 keeps the
+  headline to the two lines that measurement assumed.
+*/
+export const RESOURCE_CARD_LIMITS = {
+  title: 50,
+  name: 32,
+  phone: 16,
+  hours: 40,
+} as const;
+
+/*
+  "Grid of cards" custom slide. One set of limits for both layouts, so
+  switching a slide between 2 x 2 and 3 x 2 can never leave saved text too
+  long for its card; 2 x 2 uses its wider cards for larger type.
+
+  Measured on the canvas with a two-line slide headline and every visible card
+  filled: 2 x 2 and 3 x 2, at every count from 1 to 6, fill the space under the
+  header exactly. `cardText` 60 is two lines of English in a 3 x 2 card
+  ("Free at the clinic, 9 AM to noon. No appointment needed.") with up to two
+  lines of Spanish ~15-20% longer; at 80 the English ran to three lines and
+  the grid overflowed. `cardTitle` 30 is one line in most cases and two at
+  worst: all six titles wrapping to two lines overflows only 3px, under the
+  ~6px threshold this file ignores.
+*/
+export const CARD_GRID_LIMITS = {
+  title: 50,
+  cardTitle: 30,
+  cardText: 60,
+} as const;
+
+/*
+  "Weather" custom slide. The forecast is drawn from data, so only the
+  headline and the staff note are typed, and both have to leave the forecast
+  its room: on the canvas a two-line headline plus a two-line note pushed the
+  bottom of the forecast under the note band. So each is held to one line:
+  `title` 30 at text-7xl beside the bed panel ("Today's Weather" is 15), and
+  `note` 80, one line of English at text-4xl across the full width, with its
+  Spanish (~15-20% longer) one line at text-3xl.
+*/
+export const WEATHER_LIMITS = {
+  title: 30,
+  note: 80,
+} as const;
+
+/*
+  "Lost & found" custom slide. Its items are not typed into the slide (see
+  lib/lostFound, which holds their limits); only the headline is, held to one
+  line so the list below keeps its rows: "Lost & Found" is the expected title.
+*/
+export const LOST_FOUND_TITLE_LIMIT = 30;

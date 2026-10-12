@@ -18,3 +18,12 @@ export const CONTACT_PHONE = "(209) 467-0703";
 // Annotated `boolean` (not the inferred `false` literal) so flipping the value
 // is genuinely a one-line change with no type errors elsewhere.
 export const SHOW_MY_SCHEDULE: boolean = false;
+
+/*
+  Feature flag for the "Lost & found" Digital Bulletin slide (found items,
+  never names; see lib/lostFound.ts and migrations 0028 + 0029). While false:
+  the layout is not offered in the slide editor, a slide already set to it is
+  left out of the rotation and draws nothing, and nothing reads or writes the
+  lost_found_items table.
+*/
+export const SHOW_LOST_FOUND: boolean = true;

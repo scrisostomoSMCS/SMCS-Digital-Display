@@ -92,14 +92,30 @@ function chunkForTranslation(text: string, max: number): string[] {
   return chunks;
 }
 
+/*
+  MyMemory answers partly from a shared translation memory, and those stored
+  segments sometimes carry punctuation from wherever they were first used: a
+  list dash or bullet in front ("Black backpack" -> "- Mochila negra."), or a
+  closing period the English never had. On a bulletin those read as typos, so
+  they are removed — but only when the English does not have them itself.
+*/
+function tidyTranslation(english: string, spanish: string): string {
+  let out = spanish.trim();
+  if (!/^[-–—•*·]/.test(english)) out = out.replace(/^[-–—•*·]+\s*/, "");
+  if (!/[.。]$/.test(english) && /[^.]\.$/.test(out)) out = out.slice(0, -1);
+  return out.trim() || spanish.trim();
+}
+
 async function translateText(text: string): Promise<string> {
   const trimmed = text.trim();
   if (!trimmed) return "";
-  if (trimmed.length <= MAX_CHARS_PER_REQUEST) return translateOne(trimmed);
+  if (trimmed.length <= MAX_CHARS_PER_REQUEST) {
+    return tidyTranslation(trimmed, await translateOne(trimmed));
+  }
 
   const parts = chunkForTranslation(trimmed, MAX_CHARS_PER_REQUEST);
   const translatedParts = await Promise.all(parts.map(translateOne));
-  return translatedParts.join(" ");
+  return tidyTranslation(trimmed, translatedParts.join(" "));
 }
 
 export type TranslateResult =

@@ -482,6 +482,7 @@ export default function ManageSidebar() {
       captionEs: "",
       imagePath: null,
       menu: null,
+      content: null,
       locationIds: [],
     });
     if (error) window.alert(`Couldn't add the slide: ${error}`);

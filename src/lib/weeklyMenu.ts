@@ -22,6 +22,8 @@
   labels are NOT stored: they are the fixed bilingual strings below.
 */
 
+import { cleanPairedList } from "./slideFields";
+
 export const MENU_DAYS = [
   { key: "mon", label: "Monday", labelEs: "Lunes" },
   { key: "tue", label: "Tuesday", labelEs: "Martes" },
@@ -92,14 +94,15 @@ export function parseMenu(raw: unknown): WeeklyMenu {
 }
 
 // Trim every item and drop blank lines, for saving what the editor's
-// one-item-per-line textareas produced.
+// one-item-per-line textareas produced. English and Spanish are cleaned as a
+// pair so a Spanish line stays beside its English one (see cleanPairedList).
 export function cleanMenu(menu: WeeklyMenu): WeeklyMenu {
-  const clean = (list: string[]) => list.map((s) => s.trim()).filter(Boolean);
   const out = parseMenu(menu);
   for (const d of MENU_DAYS) {
     for (const m of MENU_MEALS) {
       const meal = out.days[d.key][m.key];
-      out.days[d.key][m.key] = { items: clean(meal.items), itemsEs: clean(meal.itemsEs) };
+      const { en, es } = cleanPairedList(meal.items, meal.itemsEs);
+      out.days[d.key][m.key] = { items: en, itemsEs: es };
     }
   }
   return out;

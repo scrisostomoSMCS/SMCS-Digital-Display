@@ -10,8 +10,14 @@ import {
   defaultInfoContent,
   type InfoContent,
 } from "@/lib/infoContent";
-import { fetchSlides, type Slide, type SlideBackground } from "@/lib/slides";
+import { fetchSlidesOrNull, type Slide, type SlideBackground } from "@/lib/slides";
 import { resolveSlideBackground } from "@/lib/slideBackgrounds";
+import { weatherSlideHasContent } from "@/lib/weather";
+import { useWeather } from "@/lib/useWeather";
+import { SHOW_LOST_FOUND } from "@/lib/siteConfig";
+import { itemsFor } from "@/lib/lostFound";
+import { useLostFound } from "@/lib/useLostFound";
+import { BulletinScopeProvider } from "./BulletinScope";
 import { fetchHiddenBuiltins, type BuiltinKey } from "@/lib/displaySettings";
 import {
   fetchBulletinLocationId,
@@ -104,6 +110,13 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   const [locationId, setLocationId] = useState<string | null>(null);
   const [targetingLoaded, setTargetingLoaded] = useState(!locationSlug);
   const observerRef = useRef<ResizeObserver | null>(null);
+  // Polled only while a Weather slide is in the slide list (see useWeather).
+  const forecast = useWeather(slides.some((s) => s.template === "weather"));
+  // Lost & found: only with the flag on, a location to scope it to, and a
+  // lost & found slide in the list. Otherwise nothing is fetched.
+  const lostFoundItems = useLostFound(
+    SHOW_LOST_FOUND && locationId !== null && slides.some((s) => s.template === "lost-found"),
+  );
   // 0 until measured, which keeps the unscaled canvas from flashing at full size
   // on first paint.
   const [scale, setScale] = useState(0);
@@ -140,8 +153,11 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       setContent(await fetchInfoContent());
       setContentLoaded(true);
     };
+    // A failed read keeps the slides already on screen (last known good)
+    // rather than emptying the custom part of the rotation.
     const loadSlides = async () => {
-      setSlides(await fetchSlides(locationSlug));
+      const next = await fetchSlidesOrNull(locationSlug);
+      if (next) setSlides(next);
       setSlidesLoaded(true);
     };
     const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
@@ -265,10 +281,25 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       return pageIsVisible(page.pageKey, ignoreTargeting);
     });
 
-    const custom = slides.map((s) => ({
-      node: <CustomSlidePage key={s.id} slide={s} />,
-      bg: s.background,
-    }));
+    // A Weather slide with no forecast and no note has nothing to show; it
+    // sits out of the rotation until it does, rather than drawing a bare
+    // headline.
+    // Lost & found likewise needs live items for this screen's location;
+    // with the flag off it never shows.
+    const custom = slides
+      .filter((s) => s.template !== "weather" || weatherSlideHasContent(s.content, forecast))
+      .filter(
+        (s) =>
+          s.template !== "lost-found" ||
+          (SHOW_LOST_FOUND &&
+            locationId !== null &&
+            lostFoundItems !== null &&
+            itemsFor(lostFoundItems, locationId).length > 0),
+      )
+      .map((s) => ({
+        node: <CustomSlidePage key={s.id} slide={s} />,
+        bg: s.background,
+      }));
 
     return [...builtins, ...custom];
   };
@@ -350,18 +381,22 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
         {/* mode="wait" plus absolute inset-0: the outgoing slide is unmounted
             before the incoming one mounts, so exactly one slide exists in the
             tree at a time and it always covers the canvas exactly. */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current}
-            className="absolute inset-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-          >
-            {pages[current]}
-          </motion.div>
-        </AnimatePresence>
+        {/* Tells location-bound slides (lost & found) which screen this is:
+            a wall screen scoped to its ?location=, or none without one. */}
+        <BulletinScopeProvider value={{ kind: "screen", locationId }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current}
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              {pages[current]}
+            </motion.div>
+          </AnimatePresence>
+        </BulletinScopeProvider>
 
         {/* Live bed availability: top-right callout, white on red so it stands
             out against the paper-white bulletin. Slides keep this corner clear

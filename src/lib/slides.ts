@@ -18,7 +18,12 @@ export type SlideTemplate =
   | "title-image-text" // title + image + paragraph
   | "image-focus" // large image + short caption
   | "title-list" // title + list of items
-  | "weekly-menu"; // title + a week of Breakfast / Lunch / Dinner (see lib/weeklyMenu)
+  | "weekly-menu" // title + a week of Breakfast / Lunch / Dinner (see lib/weeklyMenu)
+  | "event-flyer" // title + when/where block + optional image (see lib/eventFlyer)
+  | "resource-card" // title + 3-6 services with icon, phone, hours (see lib/resourceCard)
+  | "card-grid" // title + 2x2 or 3x2 short announcement cards (see lib/cardGrid)
+  | "weather" // title + automatic Stockton forecast + staff note (see lib/weather)
+  | "lost-found"; // title + found items, behind SHOW_LOST_FOUND (see lib/lostFound)
 
 export const SLIDE_TEMPLATES: { key: SlideTemplate; label: string; hint: string }[] =
   [
@@ -38,6 +43,31 @@ export const SLIDE_TEMPLATES: { key: SlideTemplate; label: string; hint: string 
       key: "weekly-menu",
       label: "Weekly menu",
       hint: "Breakfast, lunch, and dinner for Monday to Sunday.",
+    },
+    {
+      key: "event-flyer",
+      label: "Event / flyer",
+      hint: "One event: date, time, place, and an optional image.",
+    },
+    {
+      key: "resource-card",
+      label: "Contact / resource card",
+      hint: "3 to 6 services, each with an icon, phone number, and hours.",
+    },
+    {
+      key: "card-grid",
+      label: "Grid of cards",
+      hint: "4 or 6 short announcements, each a title and a line or two.",
+    },
+    {
+      key: "weather",
+      label: "Weather",
+      hint: "Automatic Stockton forecast, plus a note from staff.",
+    },
+    {
+      key: "lost-found",
+      label: "Lost & found",
+      hint: "Found items and the date found. Items come down on their own.",
     },
   ];
 
@@ -70,6 +100,13 @@ export type Slide = {
   // "Weekly menu" content; null for every other template (and for rows written
   // before migration 0025). Always a complete grid when present — see parseMenu.
   menu: WeeklyMenu | null;
+  /*
+    Structured content for the templates added after the weekly menu (migration
+    0027), raw as stored. Its shape depends on `template`, so it is parsed where
+    it is used, by that template's own module (e.g. parseEventFlyer), which
+    reads anything malformed as empty. null for the older templates.
+  */
+  content: unknown;
   position: number;
   hidden: boolean; // soft-deleted (recoverable), not shown on the display
   locationIds: string[]; // empty = shown at every bulletin location
@@ -95,6 +132,7 @@ export type SlideInput = {
   captionEs: string;
   imagePath: string | null;
   menu: WeeklyMenu | null;
+  content: unknown;
   locationIds: string[];
 };
 
@@ -112,11 +150,17 @@ type SlideRow = {
   caption_es: string | null;
   image_path: string | null;
   menu: unknown;
+  content: unknown;
   position: number;
   hidden: boolean | null;
   updated_at: string | null;
   slide_locations: { location_id: string }[] | null;
 };
+
+// "mail-call" was this template's key while it also listed names (before
+// migration 0029); a slide saved then opens as the lost & found it now is.
+const templateOf = (t: string | null): SlideTemplate =>
+  t === "mail-call" ? "lost-found" : ((t as SlideTemplate | null) ?? "title-body");
 
 const asStringArray = (v: unknown): string[] =>
   Array.isArray(v) ? (v as string[]) : [];
@@ -124,7 +168,7 @@ const asStringArray = (v: unknown): string[] =>
 function fromRow(r: SlideRow): Slide {
   return {
     id: r.id,
-    template: (r.template as SlideTemplate) ?? "title-body",
+    template: templateOf(r.template),
     background: r.background ?? DEFAULT_SLIDE_BACKGROUND,
     title: r.title,
     titleEs: r.title_es ?? "",
@@ -136,6 +180,7 @@ function fromRow(r: SlideRow): Slide {
     captionEs: r.caption_es ?? "",
     imagePath: r.image_path,
     menu: r.menu == null ? null : parseMenu(r.menu),
+    content: r.content ?? null,
     position: r.position,
     hidden: r.hidden ?? false,
     updatedAt: r.updated_at,
@@ -144,10 +189,22 @@ function fromRow(r: SlideRow): Slide {
 }
 
 const COLUMNS =
-  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, menu, position, hidden, updated_at, slide_locations(location_id)";
+  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, menu, content, position, hidden, updated_at, slide_locations(location_id)";
 
 // Visible slides (shown on the display and as normal sidebar entries).
+// An unreadable table reads as no slides; see fetchSlidesOrNull for callers
+// that must tell the two apart.
 export async function fetchSlides(locationSlug?: string): Promise<Slide[]> {
+  return (await fetchSlidesOrNull(locationSlug)) ?? [];
+}
+
+/*
+  Same as fetchSlides, but null when the read failed. null is not "no slides":
+  the wall display keeps the slides it already has on null (last known good,
+  the same rule as the bed counts) instead of dropping every custom slide from
+  the rotation until the next successful poll.
+*/
+export async function fetchSlidesOrNull(locationSlug?: string): Promise<Slide[] | null> {
   const { data, error } = await supabase
     .from("slides")
     .select(COLUMNS)
@@ -155,7 +212,7 @@ export async function fetchSlides(locationSlug?: string): Promise<Slide[]> {
     .order("position", { ascending: true });
   if (error) {
     console.warn("Slides unavailable:", error.message);
-    return [];
+    return null;
   }
   const slides = (data ?? []).map((r) => fromRow(r as SlideRow));
   if (!locationSlug) return slides;
@@ -234,6 +291,7 @@ function toRow(input: SlideInput) {
     caption_es: input.captionEs,
     image_path: input.imagePath,
     menu: input.menu,
+    content: input.content ?? null,
   };
 }
 
@@ -342,6 +400,39 @@ export async function persistSlideOrder(
   if (failed) return failed.error?.message ?? NO_ROWS;
   slidesChanged();
   return null;
+}
+
+/*
+  Fill in Spanish for whatever English changed since `loaded` (the last saved
+  state), server-side through /api/slides/translate — see
+  translateSlide.server.ts for the rules. Never fails a save: if the route
+  cannot be reached, the input comes back unchanged with a warning, and the
+  caller saves English with Spanish as typed.
+*/
+export async function translateSlide(
+  loaded: SlideInput,
+  input: SlideInput,
+): Promise<{ input: SlideInput; warnings: string[] }> {
+  const unavailable = (why: string) => ({
+    input,
+    warnings: [
+      `Auto-translate unavailable (${why}): saved with Spanish as typed; you may want to check it by hand.`,
+    ],
+  });
+  try {
+    const res = await fetch("/api/slides/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ loaded, input }),
+    });
+    const json = (await res.json().catch(() => null)) as
+      | { input?: SlideInput; warnings?: string[]; error?: string }
+      | null;
+    if (!res.ok || !json?.input) return unavailable(json?.error ?? `HTTP ${res.status}`);
+    return { input: json.input, warnings: json.warnings ?? [] };
+  } catch (err) {
+    return unavailable(err instanceof Error ? err.message : "network error");
+  }
 }
 
 /* --- images (Supabase Storage: bucket "slide-images") -------------------- */
