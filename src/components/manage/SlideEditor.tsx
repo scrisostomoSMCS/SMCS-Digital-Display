@@ -308,7 +308,7 @@ export default function SlideEditor({
     const err = await updateSlide(submitted.id, input);
     setSaving(false);
     if (err) {
-      // The draft is left exactly as typed so nothing is lost; try again.
+      // The draft is left exactly as typed so nothing is lost
       setError(`Not saved: ${err}`);
       return;
     }
@@ -318,6 +318,7 @@ export default function SlideEditor({
     // Show the new Spanish in the fields and preview. If staff kept typing
     // while the save ran, keep their draft instead (it now differs from the
     // baseline, so it reads as unsaved and the next save translates it).
+
     setDraft((d) => (d === submitted ? savedSlide : d));
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
