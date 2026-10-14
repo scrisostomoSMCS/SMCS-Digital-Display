@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { PAGE_DURATION } from "@/lib/informationContent";
 import { canvasStyle, fitScale } from "@/lib/bulletinCanvas";
 import {
-  fetchInfoContent,
+  fetchInfoContentOrNull,
   defaultInfoContent,
   type InfoContent,
 } from "@/lib/infoContent";
@@ -110,8 +110,14 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   const [locationId, setLocationId] = useState<string | null>(null);
   const [targetingLoaded, setTargetingLoaded] = useState(!locationSlug);
   const observerRef = useRef<ResizeObserver | null>(null);
-  // Polled only while a Weather slide is in the slide list (see useWeather).
-  const forecast = useWeather(slides.some((s) => s.template === "weather"));
+  // Polled only while something shows weather: a Weather slide, or a
+  // services page with its "Show weather" toggle on. Subscribed here, where
+  // it stays mounted, so the poll runs steadily instead of restarting every
+  // time a services page rotates in (see useWeather).
+  const forecast = useWeather(
+    slides.some((s) => s.template === "weather") ||
+      content.services.pages.some((page) => page.services.length > 0 && page.showWeather),
+  );
   // Lost & found: only with the flag on, a location to scope it to, and a
   // lost & found slide in the list. Otherwise nothing is fetched.
   const lostFoundItems = useLostFound(
@@ -149,8 +155,12 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   }, []);
 
   useEffect(() => {
+    // A failed read keeps the content already on screen (last known good),
+    // including each services page's showWeather, rather than swapping in the
+    // coded defaults. With nothing loaded yet, the defaults stay (weather on).
     const loadContent = async () => {
-      setContent(await fetchInfoContent());
+      const next = await fetchInfoContentOrNull();
+      if (next) setContent(next);
       setContentLoaded(true);
     };
     // A failed read keeps the slides already on screen (last known good)
@@ -243,6 +253,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
           services={page.services}
           pageNumber={i + 1}
           totalPages={servicesPages.length}
+          showWeather={page.showWeather}
         />
       ),
       bg: "paper" as SlideBackground,

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import InfoPageShell from "./InfoPageShell";
 import InfoEyebrow from "./InfoEyebrow";
 import ExpandableServiceCard from "./ExpandableServiceCard";
+import ServicesWeatherStrip from "./ServicesWeatherStrip";
 import { staggerContainer, headerIn } from "./motion";
 import { BED_PANEL_CLEARANCE } from "@/components/BedAvailabilitySlide";
 import { type InfoService } from "@/lib/infoContent";
@@ -23,6 +24,7 @@ export default function ServicesOverviewPage({
   pageNumber,
   totalPages,
   animate = true,
+  showWeather = false,
 }: {
   title: string;
   titleEs?: string;
@@ -32,6 +34,9 @@ export default function ServicesOverviewPage({
   // false renders the finished state with no entrance animation, for the
   // manage page's static preview.
   animate?: boolean;
+  // The week's forecast pill under the title. Off by default; the bulletin
+  // and the manage preview turn it on. It never changes the slide's layout.
+  showWeather?: boolean;
 }) {
   const init = animate ? "hidden" : false;
   return (
@@ -40,7 +45,7 @@ export default function ServicesOverviewPage({
         variants={headerIn}
         initial={init}
         animate="show"
-        className={`shrink-0 ${BED_PANEL_CLEARANCE}`}
+        className={`relative shrink-0 ${BED_PANEL_CLEARANCE}`}
       >
         <InfoEyebrow bg="paper" />
         <h1 className="font-display mt-1 max-w-[68%] flex flex-wrap items-baseline gap-x-4 leading-none">
@@ -57,6 +62,7 @@ export default function ServicesOverviewPage({
             {totalPages}
           </p>
         )}
+        {showWeather && <ServicesWeatherStrip />}
       </motion.header>
 
       {/* Up to 4 tall vertical "slabs" side by side. The row is at least ~55% of

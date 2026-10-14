@@ -476,6 +476,23 @@ export default function InfoContentEditor() {
           open={open.has(`services-page-${idx + 1}`)}
           onToggle={() => toggle(`services-page-${idx + 1}`)}
         >
+          {/* Per page, like the page's location targeting. Saved with the
+              shared Save button; the preview below follows it immediately. */}
+          <label className="mb-4 flex items-start gap-3 border-b-2 border-blue/20 pb-4">
+            <input
+              type="checkbox"
+              className="mt-1 h-5 w-5 shrink-0 accent-blue"
+              checked={page.showWeather}
+              onChange={(e) => patchServicesPage(idx, { showWeather: e.target.checked })}
+            />
+            <span>
+              <span className={labelClass}>Show weather</span>
+              <span className="block text-sm text-ink/60">
+                Shows this week&rsquo;s Stockton forecast under the page title.
+              </span>
+            </span>
+          </label>
+
           <BulletinPageLocationSelector pageKey={servicePageKey(page.id)} />
 
           <PagePreview>
@@ -486,6 +503,7 @@ export default function InfoContentEditor() {
               pageNumber={idx + 1}
               totalPages={servicesPages.length}
               animate={false}
+              showWeather={page.showWeather}
             />
           </PagePreview>
 

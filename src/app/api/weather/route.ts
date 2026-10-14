@@ -1,7 +1,8 @@
 import { WEATHER_PLACE, fromOpenMeteo } from "@/lib/weather";
 
 /*
-  Stockton's forecast for the Weather slide, from Open-Meteo (free, no API key,
+  Stockton's forecast for the Weather slide and the strip on the "This Week's
+  Services" slide, from Open-Meteo (free, no API key,
   no account). Fetched here on the server rather than from each TV so that the
   wall displays share one upstream request: `next.revalidate` keeps Open-Meteo's
   response in Next's data cache for 30 minutes, however many screens poll.
@@ -21,7 +22,7 @@ const ENDPOINT =
     daily: "weather_code,temperature_2m_max,temperature_2m_min",
     temperature_unit: "fahrenheit",
     timezone: "America/Los_Angeles",
-    forecast_days: "6",
+    forecast_days: "7",
   });
 
 export async function GET() {

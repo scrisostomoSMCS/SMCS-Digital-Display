@@ -109,12 +109,15 @@ export const DEFAULT_SERVICES_TITLE = servicesPage.title;
 export const DEFAULT_SERVICES_TITLE_ES = "Servicios de Esta Semana";
 
 // One numbered "This Week's Services" page: its OWN title (each page can differ)
-// plus up to MAX_SERVICES_PER_PAGE services.
+// plus up to MAX_SERVICES_PER_PAGE services, and whether the week's forecast
+// pill shows under its title (staff toggle, per page; ON unless turned off,
+// see migration 0030 and normalizeServices).
 export type InfoServicePage = {
   id: string;
   title: string;
   titleEs?: string;
   services: InfoService[];
+  showWeather: boolean;
 };
 
 export const newServicePage = (): InfoServicePage => ({
@@ -122,6 +125,7 @@ export const newServicePage = (): InfoServicePage => ({
   title: DEFAULT_SERVICES_TITLE,
   titleEs: DEFAULT_SERVICES_TITLE_ES,
   services: [],
+  showWeather: true,
 });
 
 export type InfoServicesContent = {
@@ -294,6 +298,7 @@ export const defaultInfoContent: InfoContent = {
       title: DEFAULT_SERVICES_TITLE,
       titleEs: DEFAULT_SERVICES_TITLE_ES,
       services: s,
+      showWeather: true,
     })),
   },
   newArrivals: {
@@ -338,6 +343,7 @@ type SavedServicePage = {
   title?: string;
   titleEs?: string;
   services?: InfoService[];
+  showWeather?: unknown; // anything but literal false reads as ON
 };
 type SavedServicesContent = {
   title?: string; // legacy SHARED title (migrated onto each page)
@@ -370,6 +376,7 @@ function normalizeServices(saved?: SavedServicesContent): InfoServicesContent {
     id: string,
     title?: string,
     titleEs?: string,
+    showWeather?: unknown,
   ): InfoServicePage => ({
     id,
     title: title ?? fallbackTitle,
@@ -378,6 +385,9 @@ function normalizeServices(saved?: SavedServicesContent): InfoServicesContent {
       0,
       MAX_SERVICES_PER_PAGE,
     ),
+    // Only an explicit false turns the forecast off; missing (older shapes,
+    // content saved before 0030) or malformed values keep it on.
+    showWeather: showWeather !== false,
   });
 
   let pages: InfoServicePage[];
@@ -385,7 +395,7 @@ function normalizeServices(saved?: SavedServicesContent): InfoServicesContent {
     pages = saved.pages.map((p, i) =>
       Array.isArray(p)
         ? toPage(p, `saved-${i + 1}`)
-        : toPage(p.services, p.id ?? `saved-${i + 1}`, p.title, p.titleEs),
+        : toPage(p.services, p.id ?? `saved-${i + 1}`, p.title, p.titleEs, p.showWeather),
     );
   } else if (Array.isArray(saved.page1) || Array.isArray(saved.page2)) {
     pages = [
@@ -493,6 +503,7 @@ function editablePages(c: InfoContent): { key: string; value: unknown }[] {
         title: page.title,
         titleEs: page.titleEs,
         services: page.services,
+        showWeather: page.showWeather,
       },
     })),
     { key: FIXED_BULLETIN_PAGE_KEYS.newArrivals, value: c.newArrivals },
@@ -557,15 +568,26 @@ export function stampPageUpdates(
 
 // Read the editable content (falls back to defaults when nothing is saved yet).
 export async function fetchInfoContent(): Promise<InfoContent> {
+  return (await fetchInfoContentOrNull()) ?? defaultInfoContent;
+}
+
+/*
+  Same as fetchInfoContent, but null when the read failed. null is not "nothing
+  saved" (that still reads as the defaults): the wall display keeps the content
+  it already has on null (last known good, the same rule as fetchSlidesOrNull)
+  instead of swapping the real pages, and each page's showWeather, for the
+  coded defaults until the next successful read.
+*/
+export async function fetchInfoContentOrNull(): Promise<InfoContent | null> {
   const { data, error } = await supabase
     .from("info_content")
     .select("content")
     .eq("id", 1)
     .maybeSingle();
   if (error) {
-    // Expected before migration 0006 runs (no table yet), fall back quietly.
-    console.warn("Info content unavailable, using defaults:", error.message);
-    return defaultInfoContent;
+    // Expected before migration 0006 runs (no table yet).
+    console.warn("Info content unavailable:", error.message);
+    return null;
   }
   return backfillSpanish(
     mergeWithDefaults((data?.content ?? null) as SavedInfoContent | null),

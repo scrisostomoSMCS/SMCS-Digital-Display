@@ -17,7 +17,7 @@ import { WEEKDAYS, localYmd, utcDate } from "./bilingualDates";
       "autoNotice": true }
 */
 
-export const WEATHER_PLACE = { en: "Stockton, CA", lat: 37.95, lon: -121.29 };
+export const WEATHER_PLACE = { en: "Stockton, CA", lat: 37.9577, lon: -121.2908 };
 
 /* --- forecast ------------------------------------------------------------- */
 
@@ -101,6 +101,13 @@ export function weekdayLabel(ymd: string): { en: string; es: string } {
   if (!date) return { en: "", es: "" };
   const [en, es] = WEEKDAYS[date.getUTCDay()];
   return { en, es };
+}
+
+// "Mon" / "lun", "Wed" / "mié": the first three letters of each fixed name,
+// for the compact strip on the services slide.
+export function shortWeekdayLabel(ymd: string): { en: string; es: string } {
+  const { en, es } = weekdayLabel(ymd);
+  return { en: en.slice(0, 3), es: es.slice(0, 3) };
 }
 
 /* --- conditions (WMO weather codes, as Open-Meteo reports them) ----------- */
