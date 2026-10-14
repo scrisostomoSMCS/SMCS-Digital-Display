@@ -134,7 +134,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
 
     Attached as a ref callback rather than a mount effect: the stage is absent
     from the tree until there are pages to draw (see the empty-rotation return
-    below), which a location-targeted bulletin always is on its first render
+    below), which every bulletin is on its first render
     while targeting loads. A mount effect would have measured a null stage once,
     never run again, and left scale at 0 — an invisible canvas on a paper-white
     stage, i.e. a permanently blank screen.
@@ -165,28 +165,29 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
     };
     // A failed read keeps the slides already on screen (last known good)
     // rather than emptying the custom part of the rotation.
+    // The plain /information URL is its own scope, not a catch-all: it shows
+    // only "All locations" slides, so targeted slides stay on their screens.
+    // (fetchSlides with no slug still returns every slide for the manage page.)
     const loadSlides = async () => {
       const next = await fetchSlidesOrNull(locationSlug);
-      if (next) setSlides(next);
+      if (next) {
+        setSlides(locationSlug ? next : next.filter((s) => s.locationIds.length === 0));
+      }
       setSlidesLoaded(true);
     };
     const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
+    // Page targeting loads even without a slug: the plain URL needs it to
+    // leave out built-in pages targeted at specific locations.
     const loadTargeting = async () => {
-      if (!locationSlug) {
-        setPageLocations({});
-        setLocationId(null);
-        setTargetingLoaded(true);
-        return;
-      }
       const [nextPageLocations, nextLocationId] = await Promise.all([
         fetchBulletinPageLocations(),
-        fetchBulletinLocationId(locationSlug),
+        locationSlug ? fetchBulletinLocationId(locationSlug) : Promise.resolve(null),
       ]);
       setPageLocations(nextPageLocations);
       setLocationId(nextLocationId);
       setTargetingLoaded(true);
     };
-    setTargetingLoaded(!locationSlug);
+    setTargetingLoaded(false);
     loadContent();
     loadSlides();
     loadHidden();
@@ -217,8 +218,9 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   }, [locationSlug]);
 
   const pageIsVisible = (pageKey: string, ignoreTargeting: boolean) => {
-    if (ignoreTargeting || !locationSlug) return true;
+    if (ignoreTargeting) return true;
     if (!targetingLoaded || !contentLoaded) return false;
+    // No targeting rows = "All locations"; with no slug, that's all that shows.
     const targets = pageLocations[pageKey] ?? [];
     return targets.length === 0 || (locationId !== null && targets.includes(locationId));
   };
@@ -338,7 +340,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   */
   const targeted = buildRotation({});
   const settled =
-    slidesLoaded && (!locationSlug || (targetingLoaded && contentLoaded));
+    slidesLoaded && targetingLoaded && contentLoaded;
   let all = targeted;
   if (targeted.length === 0 && settled) {
     all = buildRotation({ ignoreTargeting: true });

@@ -46,7 +46,7 @@ function LocationSelect({
 }) {
   return (
     <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">No location (all slides)</option>
+      <option value="">No location (All locations content only)</option>
       {locations.map((l) => (
         <option key={l.id} value={l.id}>
           {l.name}
