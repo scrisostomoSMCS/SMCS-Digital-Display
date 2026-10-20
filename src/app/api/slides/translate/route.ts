@@ -7,7 +7,7 @@ const STAFF_ROLES = ["employee", "admin"];
 /*
   Fills in Spanish for a custom slide about to be saved (see
   translateSlide.server for the diff/translate rules) and returns it. Server
-  side so the MyMemory call in translate.server.ts never runs from the browser.
+  side so the translation call in translate.server.ts never runs from the browser.
 
   Unlike /api/info-content/save this route does NOT write: the editor saves the
   returned input through the existing updateSlide(), so slide writes keep one

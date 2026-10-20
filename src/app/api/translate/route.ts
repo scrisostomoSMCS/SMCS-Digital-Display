@@ -7,9 +7,10 @@ const MAX_CHARS = 500;
 
 /*
   English -> Spanish for short staff-entered text that is not part of a slide
-  or info_content, currently lost & found items (lib/lostFound). Same MyMemory
-  call and per-string isolation as the other translate routes. Staff only, and
-  capped, so the shared translation quota cannot be drained through it.
+  or info_content, currently lost & found items (lib/lostFound). Same
+  translateTexts call and per-string isolation as the other translate routes.
+  Staff only, and capped, so the shared translation quota cannot be drained
+  through it.
   Callers never send names here.
 */
 export async function POST(req: Request) {

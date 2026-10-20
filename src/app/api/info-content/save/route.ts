@@ -12,7 +12,7 @@ const STAFF_ROLES = ["employee", "admin"];
   Saves public.info_content, auto-translating any English that changed since
   the editor's `loaded` snapshot into Spanish (see translateInfoContent.server
   for the diff/translate rules). Runs server-side, not a client Supabase call
-  like the rest of the manage page, so translate-on-save (the MyMemory call in
+  like the rest of the manage page, so translate-on-save (the translation call in
   translate.server.ts) only ever runs from the server, never the browser.
 
   Auth mirrors the manage page's role gate; RLS on info_content is still the

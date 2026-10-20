@@ -603,7 +603,7 @@ export type SaveInfoContentResult = {
 /*
   Save the editable content (staff only, enforced server-side + RLS). Posts to
   /api/info-content/save instead of writing to Supabase directly, so the
-  Google Translate call in translateInfoContent.server.ts can run with a
+  translation call in translateInfoContent.server.ts can run with a
   server-only API key.
 
   `loaded` is the content as it was fetched (or last saved) — the server

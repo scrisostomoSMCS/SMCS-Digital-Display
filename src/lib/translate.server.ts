@@ -1,9 +1,14 @@
-// Server-only: calls the MyMemory Translation API (api.mymemory.translated.net).
-// Registered mode (an email passed as `de`) raises the daily quota from
-// ~5,000 words (anonymous) to ~50,000 words. Never import this from a
-// "use client" component; keeping the call server-side avoids exposing the
-// (rate-limited) endpoint to the browser and keeps translate-on-save the only
-// path that reaches it.
+// Server-only translation entry point. translateTexts picks the provider from
+// TRANSLATION_PROVIDER: "azure" (the default, see translateAzure.server.ts) or
+// "mymemory" (the MyMemory Translation API below, kept for now as a fallback).
+// Never import this from a "use client" component; keeping the call
+// server-side keeps provider keys and quotas off the browser and keeps
+// translate-on-save the only path that reaches them.
+//
+// MyMemory: registered mode (an email passed as `de`) raises the daily quota
+// from ~5,000 words (anonymous) to ~50,000 words.
+
+import { translateTextsAzure } from "./translateAzure.server";
 
 const ENDPOINT = "https://api.mymemory.translated.net/get";
 
@@ -131,7 +136,7 @@ export type TranslateResult =
   (see translateChangedFields) apply the ok results and report the failed
   ones as warnings rather than silently dropping them.
 */
-export async function translateTexts(texts: string[]): Promise<TranslateResult[]> {
+async function translateTextsMyMemory(texts: string[]): Promise<TranslateResult[]> {
   if (texts.length === 0) return [];
   const settled = await Promise.allSettled(texts.map(translateText));
   return settled.map((r) =>
@@ -139,4 +144,18 @@ export async function translateTexts(texts: string[]): Promise<TranslateResult[]
       ? { ok: true, text: r.value }
       : { ok: false, error: r.reason instanceof Error ? r.reason.message : String(r.reason) },
   );
+}
+
+/*
+  English -> Spanish for a list of strings, one result per string in order.
+  Never throws: a failure is { ok: false } for the strings it affects, and
+  callers keep the submitted Spanish and show a warning. Azure batches the
+  whole list into one request; MyMemory sends one request per string.
+*/
+export async function translateTexts(texts: string[]): Promise<TranslateResult[]> {
+  if (texts.length === 0) return [];
+  const provider = process.env.TRANSLATION_PROVIDER?.trim().toLowerCase();
+  return provider === "mymemory"
+    ? translateTextsMyMemory(texts)
+    : translateTextsAzure(texts);
 }
