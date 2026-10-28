@@ -171,6 +171,7 @@ export function CollapsiblePanel({
   title,
   badge,
   meta,
+  dimmed = false,
   open,
   onToggle,
   children,
@@ -180,12 +181,19 @@ export function CollapsiblePanel({
   badge?: ReactNode;
   // Secondary header text (e.g. "Updated 5 min ago"), shown after the badge.
   meta?: ReactNode;
+  // Grayed out, for a page staff have hidden ("Hide slide").
+  dimmed?: boolean;
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-8 border-2 border-placeholder">
+    <section
+      id={id}
+      className={`scroll-mt-8 border-2 ${
+        dimmed ? "border-dashed border-ink/30" : "border-placeholder"
+      }`}
+    >
       <button
         type="button"
         onClick={onToggle}
@@ -195,7 +203,11 @@ export function CollapsiblePanel({
         <span aria-hidden="true" className="text-lg text-ink/50">
           {open ? "▾" : "▸"}
         </span>
-        <span className="truncate text-xl font-bold text-blue">{title}</span>
+        <span
+          className={`truncate text-xl font-bold ${dimmed ? "text-ink/50" : "text-blue"}`}
+        >
+          {title}
+        </span>
         {badge}
         {meta}
       </button>

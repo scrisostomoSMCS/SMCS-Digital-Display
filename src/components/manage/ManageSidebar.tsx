@@ -34,6 +34,7 @@ import {
 } from "@/lib/bulletinLocations";
 import { openAnnouncementModal } from "@/lib/announcements";
 import SlideMenu from "./SlideMenu";
+import { usePausedPages } from "./usePausedPages";
 
 /*
   Sticky manage-page navigation: the Announcement action, then groups that
@@ -202,6 +203,8 @@ export default function ManageSidebar() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [deleted, setDeleted] = useState<Slide[]>([]);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
+  // Built-in pages hidden with "Hide slide": still listed, faded.
+  const paused = usePausedPages("sidebar");
   const [infoContent, setInfoContent] = useState<InfoContent | null>(null);
   const [names, setNames] = useState<SidebarNames>({});
   // The first section on the page; the spy corrects it on mount.
@@ -234,7 +237,8 @@ export default function ManageSidebar() {
 
   useEffect(() => {
     const loadSlides = async () => {
-      setSlides(await fetchSlides());
+      // Paused slides stay listed so staff can find them (grayed out below).
+      setSlides(await fetchSlides(undefined, { includePaused: true }));
       setDeleted(await fetchDeletedSlides());
     };
     // display_settings holds both the hidden list and the sidebar names.
@@ -270,7 +274,6 @@ export default function ManageSidebar() {
 
   const visibleBuiltins = BUILTINS.filter((b) => !hidden.includes(b.key));
   const hiddenBuiltins = BUILTINS.filter((b) => hidden.includes(b.key));
-  const totalVisible = visibleBuiltins.length + slides.length;
 
   // The single "services" builtin expands into one link per numbered page,
   // unfiltered and in order so anchors line up 1:1 with InfoContentEditor's
@@ -282,6 +285,15 @@ export default function ManageSidebar() {
     nameKey: servicePageKey(page.id),
     label: `This Week's Services — Page ${i + 1}`,
   }));
+
+  // What is actually on the screens: paused pages and slides do not count, and
+  // services counts while any of its pages is still showing.
+  const totalVisible =
+    visibleBuiltins.filter((b) =>
+      b.key === "services"
+        ? serviceLinks.some((link) => !paused.includes(link.nameKey))
+        : !(b.nameKey && paused.includes(b.nameKey)),
+    ).length + slides.filter((s) => !s.paused).length;
 
   const nameFor = (key: string | null, fallback: string) =>
     (key && names[key]) || fallback;
@@ -673,7 +685,7 @@ export default function ManageSidebar() {
                         active === link.anchor
                           ? "border-blue bg-blue/5 text-blue"
                           : "border-transparent text-ink hover:bg-ink/5 hover:text-blue"
-                      }`}
+                      } ${paused.includes(link.nameKey) ? "opacity-60" : ""}`}
                     />
                     <SlideMenu
                       onEdit={() => editBulletinPage(link.anchor)}
@@ -693,7 +705,9 @@ export default function ManageSidebar() {
                     name={nameFor(b.nameKey, b.label)}
                     onClick={() => b.anchor && jumpToBulletinPage(b.anchor)}
                     onRename={(name) => b.nameKey && rename(b.nameKey, name)}
-                    className={linkClass(!!b.anchor && active === b.anchor)}
+                    className={`${linkClass(!!b.anchor && active === b.anchor)} ${
+                      b.nameKey && paused.includes(b.nameKey) ? "opacity-60" : ""
+                    }`}
                   />
                   <SlideMenu
                     onEdit={
@@ -727,7 +741,7 @@ export default function ManageSidebar() {
                     name={slideName(s)}
                     onClick={() => jumpToSlide(s.id)}
                     onRename={(name) => rename(customSlideNameKey(s.id), name)}
-                    className={linkClass(active === `slide-${s.id}`)}
+                    className={`${linkClass(active === `slide-${s.id}`)} ${s.paused ? "opacity-60" : ""}`}
                   />
                   <SlideMenu
                     onEdit={() => editSlide(s.id)}

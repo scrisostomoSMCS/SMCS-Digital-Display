@@ -33,6 +33,7 @@ import {
   type InfoContent,
 } from "@/lib/infoContent";
 import { inputClass } from "./editorFields";
+import { usePausedPages } from "./usePausedPages";
 
 export default function BulletinLocationsManager() {
   const [locations, setLocations] = useState<BulletinLocation[]>([]);
@@ -52,6 +53,8 @@ export default function BulletinLocationsManager() {
     way to see that it is misconfigured is to read the saved config directly.
   */
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
+  // Paused built-in pages reach no screen, so they cannot keep one filled.
+  const paused = usePausedPages("bulletin-locations-manager");
   const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
   const [slides, setSlides] = useState<Slide[]>([]);
   const [content, setContent] = useState<InfoContent>(defaultInfoContent);
@@ -67,7 +70,7 @@ export default function BulletinLocationsManager() {
       await Promise.all([
         fetchHiddenBuiltins(),
         fetchBulletinPageLocations(),
-        fetchSlides(), // no slug: every visible slide, with its own targeting
+        fetchSlides(), // no slug: every visible, unpaused slide, with its own targeting
         fetchInfoContent(),
       ]);
     setHidden(nextHidden);
@@ -153,6 +156,7 @@ export default function BulletinLocationsManager() {
     locationRotationIsEmpty({
       locationId: location.id,
       hidden,
+      paused,
       pageLocations,
       slides,
       content,

@@ -41,6 +41,51 @@ export async function setHiddenBuiltins(
 }
 
 /*
+  Built-in pages staff have paused with "Hide slide" (migration 0032), by
+  bulletin page key (servicePageKey(id) or a FIXED_BULLETIN_PAGE_KEYS value), so
+  each services page pauses on its own. Unlike hidden_builtins above, a paused
+  page keeps its place in the manage page and sidebar; it is only kept off the
+  screens, and the display's never-blank fallback never brings it back.
+  Custom slides pause on their own row instead (slides.is_paused, 0031).
+*/
+// Fired on window after a pause/unpause saves, so this tab updates without
+// waiting for realtime.
+export const PAUSED_PAGES_EVENT = "smcs:paused-pages-change";
+
+// null when the read failed, which is not "nothing paused": reading it as []
+// would put every paused page back on the screens. Callers keep what they have.
+export async function fetchPausedPages(): Promise<string[] | null> {
+  const { data, error } = await supabase
+    .from("display_settings")
+    .select("paused_pages")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) {
+    console.warn("Paused pages unavailable:", error.message);
+    return null;
+  }
+  return (data?.paused_pages ?? []) as string[];
+}
+
+export async function setPagePaused(
+  pageKey: string,
+  paused: boolean,
+): Promise<string | null> {
+  const current = await fetchPausedPages();
+  // Writing from a failed read would un-pause every other page.
+  if (current === null) return "Couldn't read the current hidden pages. Please try again.";
+  const next = paused
+    ? [...new Set([...current, pageKey])]
+    : current.filter((key) => key !== pageKey);
+  const { error } = await supabase
+    .from("display_settings")
+    .upsert({ id: 1, paused_pages: next });
+  if (error) return error.message;
+  window.dispatchEvent(new Event(PAUSED_PAGES_EVENT));
+  return null;
+}
+
+/*
   Staff-chosen names for the manage page's sidebar entries, keyed by page key
   (the bulletin page keys, or customSlideNameKey). Manage-page labels only, never shown on the display.
   A missing key means the entry keeps its default name.
@@ -96,7 +141,10 @@ function reachesLocation(
   pageKey: string,
   locationId: string,
   pageLocations: BulletinPageLocationMap,
+  paused: string[],
 ): boolean {
+  // A paused page reaches nowhere, and the display never falls back to it.
+  if (paused.includes(pageKey)) return false;
   const targets = pageLocations[pageKey] ?? [];
   // No targeting rows at all = "All locations".
   return targets.length === 0 || targets.includes(locationId);
@@ -105,12 +153,14 @@ function reachesLocation(
 export function locationRotationIsEmpty({
   locationId,
   hidden,
+  paused,
   pageLocations,
   slides,
   content,
 }: {
   locationId: string;
   hidden: BuiltinKey[];
+  paused: string[];
   pageLocations: BulletinPageLocationMap;
   slides: Slide[];
   content: InfoContent;
@@ -122,7 +172,7 @@ export function locationRotationIsEmpty({
     content.services.pages.some(
       (page) =>
         page.services.length > 0 &&
-        reachesLocation(servicePageKey(page.id), locationId, pageLocations),
+        reachesLocation(servicePageKey(page.id), locationId, pageLocations, paused),
     )
   ) {
     return false;
@@ -137,14 +187,14 @@ export function locationRotationIsEmpty({
     fixed.some(
       ([key, pageKey]) =>
         !hidden.includes(key) &&
-        reachesLocation(pageKey, locationId, pageLocations),
+        reachesLocation(pageKey, locationId, pageLocations, paused),
     )
   ) {
     return false;
   }
 
   // `slides` must be the VISIBLE set (fetchSlides already drops soft-deleted
-  // rows); an empty locationIds means the slide shows everywhere.
+  // and paused rows); an empty locationIds means the slide shows everywhere.
   return !slides.some(
     (slide) =>
       slide.locationIds.length === 0 || slide.locationIds.includes(locationId),

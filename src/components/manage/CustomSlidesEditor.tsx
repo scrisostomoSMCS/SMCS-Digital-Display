@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import {
   fetchSlides,
   persistSlideOrder,
+  setSlidePaused,
   SLIDES_CHANGED_EVENT,
   type Slide,
 } from "@/lib/slides";
@@ -14,6 +15,7 @@ import type { BulletinLocation } from "@/lib/bulletinLocations";
 import SlideEditor from "./SlideEditor";
 import LocationBadges, { useBulletinLocations } from "./LocationBadges";
 import UpdatedAt from "./UpdatedAt";
+import HideSlideToggle, { HiddenLabel } from "./HideSlideToggle";
 import { smallBtn } from "./editorFields";
 import { useSidebarNames } from "./useSidebarNames";
 import { customSlideNameKey } from "@/lib/displaySettings";
@@ -27,6 +29,9 @@ import { customSlideNameKey } from "@/lib/displaySettings";
 
   Each header also reports when that slide's content last changed, for staff
   only. The public Digital Bulletin never shows it.
+
+  Paused slides ("Hide slide") stay in this list, grayed out with a "Hidden"
+  label, so staff can find, edit, and show them again.
 */
 
 function SlidePanel({
@@ -68,7 +73,9 @@ function SlidePanel({
       dragListener={false} // only the grip handle starts a drag
       dragControls={controls}
       onDragEnd={onDragEnd}
-      className="scroll-mt-8 border-2 border-placeholder bg-paper"
+      className={`scroll-mt-8 border-2 bg-paper ${
+        slide.paused ? "border-dashed border-ink/30" : "border-placeholder"
+      }`}
     >
       <div className="flex flex-wrap items-center gap-2 bg-ink/5 px-3 py-3 lg:flex-nowrap">
         <button
@@ -88,9 +95,12 @@ function SlidePanel({
           <span aria-hidden="true" className="text-lg text-ink/50">
             {open ? "▾" : "▸"}
           </span>
-          <span className="truncate text-xl font-bold text-blue">
+          <span
+            className={`truncate text-xl font-bold ${slide.paused ? "text-ink/50" : "text-blue"}`}
+          >
             {name || slide.title.trim() || "Untitled slide"}
           </span>
+          {slide.paused && <HiddenLabel />}
           <LocationBadges
             locationIds={slide.locationIds}
             locations={locations}
@@ -124,6 +134,12 @@ function SlidePanel({
       </div>
       {open && (
         <div className="p-3 lg:p-5">
+          <div className="mb-6">
+            <HideSlideToggle
+              paused={slide.paused}
+              onChange={(paused) => setSlidePaused(slide.id, paused)}
+            />
+          </div>
           <SlideEditor slide={slide} onSaved={onSaved} onDirtyChange={onDirtyChange} />
         </div>
       )}
@@ -175,7 +191,7 @@ export default function CustomSlidesEditor() {
   };
 
   const load = useCallback(async () => {
-    const next = await fetchSlides();
+    const next = await fetchSlides(undefined, { includePaused: true });
     // Only auto-expand/scroll to a slide that appears AFTER the first load.
     // On the initial load every existing slide is "new", so skip it, otherwise
     // the page would jump down to the slides section when you open Manage.

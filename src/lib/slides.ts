@@ -109,6 +109,9 @@ export type Slide = {
   content: unknown;
   position: number;
   hidden: boolean; // soft-deleted (recoverable), not shown on the display
+  // Staff "Hide slide" toggle (migration 0031): kept off every screen but still
+  // listed, editable, and previewable on the manage page. Not the soft delete.
+  paused: boolean;
   locationIds: string[]; // empty = shown at every bulletin location
   /*
     When this slide's CONTENT last changed, stamped by the database (migration
@@ -153,6 +156,7 @@ type SlideRow = {
   content: unknown;
   position: number;
   hidden: boolean | null;
+  is_paused: boolean | null;
   updated_at: string | null;
   slide_locations: { location_id: string }[] | null;
 };
@@ -183,19 +187,25 @@ function fromRow(r: SlideRow): Slide {
     content: r.content ?? null,
     position: r.position,
     hidden: r.hidden ?? false,
+    paused: r.is_paused ?? false,
     updatedAt: r.updated_at,
     locationIds: (r.slide_locations ?? []).map((x) => x.location_id),
   };
 }
 
 const COLUMNS =
-  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, menu, content, position, hidden, updated_at, slide_locations(location_id)";
+  "id, template, background, title, title_es, body, body_es, items, items_es, caption, caption_es, image_path, menu, content, position, hidden, is_paused, updated_at, slide_locations(location_id)";
 
 // Visible slides (shown on the display and as normal sidebar entries).
 // An unreadable table reads as no slides; see fetchSlidesOrNull for callers
 // that must tell the two apart.
-export async function fetchSlides(locationSlug?: string): Promise<Slide[]> {
-  return (await fetchSlidesOrNull(locationSlug)) ?? [];
+// Paused slides are left out unless includePaused is set, which only the
+// manage page's slide list and sidebar do (they still list paused slides).
+export async function fetchSlides(
+  locationSlug?: string,
+  { includePaused = false }: { includePaused?: boolean } = {},
+): Promise<Slide[]> {
+  return (await fetchSlidesOrNull(locationSlug, { includePaused })) ?? [];
 }
 
 /*
@@ -204,12 +214,15 @@ export async function fetchSlides(locationSlug?: string): Promise<Slide[]> {
   the same rule as the bed counts) instead of dropping every custom slide from
   the rotation until the next successful poll.
 */
-export async function fetchSlidesOrNull(locationSlug?: string): Promise<Slide[] | null> {
-  const { data, error } = await supabase
-    .from("slides")
-    .select(COLUMNS)
-    .eq("hidden", false)
-    .order("position", { ascending: true });
+export async function fetchSlidesOrNull(
+  locationSlug?: string,
+  { includePaused = false }: { includePaused?: boolean } = {},
+): Promise<Slide[] | null> {
+  let query = supabase.from("slides").select(COLUMNS).eq("hidden", false);
+  // RLS already keeps paused rows from anon (migration 0031); this also keeps
+  // them off a screen opened by a signed-in staff member.
+  if (!includePaused) query = query.eq("is_paused", false);
+  const { data, error } = await query.order("position", { ascending: true });
   if (error) {
     console.warn("Slides unavailable:", error.message);
     return null;
@@ -267,6 +280,23 @@ export async function setSlideHidden(
   const { data, error } = await supabase
     .from("slides")
     .update({ hidden })
+    .eq("id", id)
+    .select("id");
+  if (error) return error.message;
+  if (!data?.length) return NO_ROWS;
+  slidesChanged();
+  return null;
+}
+
+// "Hide slide" (paused=true) or show it again (false). Saved on its own, the
+// moment the toggle is clicked, so it never counts as a content edit.
+export async function setSlidePaused(
+  id: string,
+  paused: boolean,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("slides")
+    .update({ is_paused: paused })
     .eq("id", id)
     .select("id");
   if (error) return error.message;

@@ -43,6 +43,9 @@ import {
 import BulletinPageLocationSelector from "./BulletinPageLocationSelector";
 import LocationBadges, { useBulletinLocations } from "./LocationBadges";
 import { useSidebarNames } from "./useSidebarNames";
+import { usePausedPages } from "./usePausedPages";
+import HideSlideToggle, { HiddenLabel } from "./HideSlideToggle";
+import { setPagePaused } from "@/lib/displaySettings";
 
 /*
   Employee/admin editor for the /information display's three messaging pages.
@@ -256,6 +259,8 @@ export default function InfoContentEditor() {
   const locations = useBulletinLocations("info-content-editor");
   // Sidebar renames (double-click a sidebar name) also title the panels here.
   const names = useSidebarNames("info-content-editor");
+  // Pages hidden with "Hide slide". Saved on click, not with the Save button.
+  const paused = usePausedPages("info-content-editor");
   const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
 
   const loadPageLocations = useCallback(async () => {
@@ -365,8 +370,12 @@ export default function InfoContentEditor() {
     setSaving(false);
     if (result.error) setError(result.error);
     else {
+      // A removed page's location rows and its "Hide slide" flag go with it.
       const cleanupErrors = await Promise.all(
-        removedServicePageKeys.map(deleteBulletinPageLocations),
+        removedServicePageKeys.flatMap((key) => [
+          deleteBulletinPageLocations(key),
+          ...(paused.includes(key) ? [setPagePaused(key, false)] : []),
+        ]),
       );
       const cleanupError = cleanupErrors.find(Boolean);
       if (cleanupError) {
@@ -389,11 +398,23 @@ export default function InfoContentEditor() {
     }
   }
 
+  // "Hidden" (when paused) and the location badges, for a panel header.
   const locationBadge = (pageKey: string, panelId: string) => (
-    <LocationBadges
-      locationIds={pageLocations[pageKey] ?? []}
-      locations={locations}
-      expanded={open.has(panelId)}
+    <>
+      {paused.includes(pageKey) && <HiddenLabel />}
+      <LocationBadges
+        locationIds={pageLocations[pageKey] ?? []}
+        locations={locations}
+        expanded={open.has(panelId)}
+      />
+    </>
+  );
+
+  // The very top of every open panel, above its other settings.
+  const hideToggle = (pageKey: string) => (
+    <HideSlideToggle
+      paused={paused.includes(pageKey)}
+      onChange={(next) => setPagePaused(pageKey, next)}
     />
   );
 
@@ -473,9 +494,12 @@ export default function InfoContentEditor() {
             `services-page-${idx + 1}`,
           )}
           meta={pageUpdated(servicePageKey(page.id))}
+          dimmed={paused.includes(servicePageKey(page.id))}
           open={open.has(`services-page-${idx + 1}`)}
           onToggle={() => toggle(`services-page-${idx + 1}`)}
         >
+          {hideToggle(servicePageKey(page.id))}
+
           {/* Per page, like the page's location targeting. Saved with the
               shared Save button; the preview below follows it immediately. */}
           <label className="mb-4 flex items-start gap-3 border-b-2 border-blue/20 pb-4">
@@ -575,9 +599,12 @@ export default function InfoContentEditor() {
           "new-arrivals",
         )}
         meta={pageUpdated(FIXED_BULLETIN_PAGE_KEYS.newArrivals)}
+        dimmed={paused.includes(FIXED_BULLETIN_PAGE_KEYS.newArrivals)}
         open={open.has("new-arrivals")}
         onToggle={() => toggle("new-arrivals")}
       >
+        {hideToggle(FIXED_BULLETIN_PAGE_KEYS.newArrivals)}
+
         <BulletinPageLocationSelector
           pageKey={FIXED_BULLETIN_PAGE_KEYS.newArrivals}
         />
@@ -766,9 +793,12 @@ export default function InfoContentEditor() {
           "demographic",
         )}
         meta={pageUpdated(FIXED_BULLETIN_PAGE_KEYS.demographic)}
+        dimmed={paused.includes(FIXED_BULLETIN_PAGE_KEYS.demographic)}
         open={open.has("demographic")}
         onToggle={() => toggle("demographic")}
       >
+        {hideToggle(FIXED_BULLETIN_PAGE_KEYS.demographic)}
+
         <BulletinPageLocationSelector
           pageKey={FIXED_BULLETIN_PAGE_KEYS.demographic}
         />
@@ -829,9 +859,12 @@ export default function InfoContentEditor() {
           FIXED_BULLETIN_PAGE_KEYS.eventsToday,
           "events-today",
         )}
+        dimmed={paused.includes(FIXED_BULLETIN_PAGE_KEYS.eventsToday)}
         open={open.has("events-today")}
         onToggle={() => toggle("events-today")}
       >
+        {hideToggle(FIXED_BULLETIN_PAGE_KEYS.eventsToday)}
+
         <BulletinPageLocationSelector
           pageKey={FIXED_BULLETIN_PAGE_KEYS.eventsToday}
         />

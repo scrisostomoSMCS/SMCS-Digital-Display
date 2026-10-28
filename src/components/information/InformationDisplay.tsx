@@ -18,7 +18,11 @@ import { SHOW_LOST_FOUND } from "@/lib/siteConfig";
 import { itemsFor } from "@/lib/lostFound";
 import { useLostFound } from "@/lib/useLostFound";
 import { BulletinScopeProvider } from "./BulletinScope";
-import { fetchHiddenBuiltins, type BuiltinKey } from "@/lib/displaySettings";
+import {
+  fetchHiddenBuiltins,
+  fetchPausedPages,
+  type BuiltinKey,
+} from "@/lib/displaySettings";
 import {
   fetchBulletinLocationId,
   fetchBulletinPageLocations,
@@ -106,6 +110,11 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   const [slides, setSlides] = useState<Slide[]>([]);
   const [slidesLoaded, setSlidesLoaded] = useState(false);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
+  // Built-in page keys staff paused with "Hide slide" (custom slides pause in
+  // their own query). Never shown, not even by the never-blank ladder below.
+  // Until the first read lands, no built-in page shows, so a paused one cannot
+  // flash on a screen that just booted. A failed read keeps the last good list.
+  const [paused, setPaused] = useState<string[] | null>(null);
   const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
   const [locationId, setLocationId] = useState<string | null>(null);
   const [targetingLoaded, setTargetingLoaded] = useState(!locationSlug);
@@ -175,7 +184,15 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       }
       setSlidesLoaded(true);
     };
-    const loadHidden = async () => setHidden(await fetchHiddenBuiltins());
+    // Both live on the display_settings row.
+    const loadHidden = async () => {
+      const [nextHidden, nextPaused] = await Promise.all([
+        fetchHiddenBuiltins(),
+        fetchPausedPages(),
+      ]);
+      setHidden(nextHidden);
+      if (nextPaused) setPaused(nextPaused);
+    };
     // Page targeting loads even without a slug: the plain URL needs it to
     // leave out built-in pages targeted at specific locations.
     const loadTargeting = async () => {
@@ -199,7 +216,12 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
       .on("postgres_changes", { event: "*", schema: "public", table: "slide_locations" }, loadSlides)
       .on("postgres_changes", { event: "*", schema: "public", table: "builtin_page_locations" }, loadTargeting)
       .on("postgres_changes", { event: "*", schema: "public", table: "bulletin_locations" }, loadTargeting)
-      .on("postgres_changes", { event: "*", schema: "public", table: "display_settings" }, loadHidden)
+      // Also reloads slides: pausing a slide nudges display_settings (migration
+      // 0031) because RLS keeps the paused row's own update from this screen.
+      .on("postgres_changes", { event: "*", schema: "public", table: "display_settings" }, () => {
+        loadHidden();
+        loadSlides();
+      })
       .subscribe();
     // Backstop only (see REFRESH_INTERVAL): re-runs the same four loaders
     // realtime calls above, so there is no second copy of the fetch logic to
@@ -218,6 +240,8 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   }, [locationSlug]);
 
   const pageIsVisible = (pageKey: string, ignoreTargeting: boolean) => {
+    // Paused ("Hide slide") wins over every fallback, unlike targeting.
+    if (paused === null || paused.includes(pageKey)) return false;
     if (ignoreTargeting) return true;
     if (!targetingLoaded || !contentLoaded) return false;
     // No targeting rows = "All locations"; with no slug, that's all that shows.
@@ -332,6 +356,9 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
        manage page flags this state separately (see locationRotationIsEmpty),
        because from here the TV looks fine while the config is still broken.
 
+    No rung ever drops "Hide slide": a paused page or slide stays off screen
+    even if that leaves the rotation empty.
+
     `settled` waits for the loaders whose initial value could read as empty.
     slides starts [] and is the real hazard: if hidden lands before the slides
     query returns, a location carried entirely by custom slides looks empty for
@@ -340,7 +367,7 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   */
   const targeted = buildRotation({});
   const settled =
-    slidesLoaded && targetingLoaded && contentLoaded;
+    slidesLoaded && targetingLoaded && contentLoaded && paused !== null;
   let all = targeted;
   if (targeted.length === 0 && settled) {
     all = buildRotation({ ignoreTargeting: true });
