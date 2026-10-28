@@ -32,6 +32,14 @@ export type BedProgram = {
 export const BED_RESERVE_PHONE = "(209) 636-0651";
 export const FAMILY_LODGE_INTAKE_PHONE = "209-939-9733";
 
+// TEMPORARILY DISABLED: hides the live bed panel on the Digital Bulletin
+// (/information, its WordPress/Yodeck iframe embeds, and the manage-page slide
+// previews). While hidden the panel never mounts, so the bulletin makes no bed
+// queries, Realtime subscription, or poll. Staff editing on /manage and the
+// home-page popup are unaffected. Set to true to bring the panel back; nothing
+// else needs to change.
+export const SHOW_BED_AVAILABILITY_ON_BULLETIN = false;
+
 type BedDbRow = {
   id: string;
   program_key: string;

@@ -37,6 +37,7 @@ import DemographicPage from "./DemographicPage";
 import EventsTodayPage from "./EventsTodayPage";
 import CustomSlidePage from "./CustomSlidePage";
 import BedAvailabilitySlide from "@/components/BedAvailabilitySlide";
+import { SHOW_BED_AVAILABILITY_ON_BULLETIN } from "@/lib/bedAvailability";
 import AnnouncementBar from "./AnnouncementBar";
 
 // Prev/next arrows: bare glyphs, no button chrome — deliberately unlike the
@@ -441,8 +442,11 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
         {/* Live bed availability: top-right callout, white on red so it stands
             out against the paper-white bulletin. Slides keep this corner clear
             via BED_PANEL_CLEARANCE on their header band — widening the panel
-            here means re-checking that constant. */}
-        <BedAvailabilitySlide className="absolute right-5 top-5 z-20 w-[29rem]" />
+            here means re-checking that constant. Gated here rather than inside
+            the component so that, while hidden, its data hook never runs. */}
+        {SHOW_BED_AVAILABILITY_ON_BULLETIN && (
+          <BedAvailabilitySlide className="absolute right-5 top-5 z-20 w-[29rem]" />
+        )}
 
         {/* Staff announcement, overlaid across the top of the canvas.
 
@@ -466,12 +470,14 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
         {/* Back button, shrunk to a bare left arrow and parked immediately left of
             the bed panel (right-5 + w-[29rem] = 30.25rem, plus a 0.75rem gap) —
             the one spot on the slide that covers no page content. The accessible
-            label carries the full "Back to home" meaning. */}
+            label carries the full "Back to home" meaning. With the bed panel
+            hidden it moves into the corner instead of floating beside an empty
+            space. */}
         <Link
           href="/"
           aria-label="Back to home"
           title="Back to home"
-          className="absolute right-[31rem] top-5 z-20 flex h-12 w-12 items-center justify-center rounded-full border-2 border-blue bg-paper text-3xl font-semibold text-blue hover:bg-blue hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-4"
+          className={`absolute ${SHOW_BED_AVAILABILITY_ON_BULLETIN ? "right-[31rem]" : "right-5"} top-5 z-20 flex h-12 w-12 items-center justify-center rounded-full border-2 border-blue bg-paper text-3xl font-semibold text-blue hover:bg-blue hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-4`}
         >
           <span aria-hidden="true">←</span>
         </Link>

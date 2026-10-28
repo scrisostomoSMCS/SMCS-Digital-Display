@@ -8,6 +8,7 @@ import {
   fitScale,
 } from "@/lib/bulletinCanvas";
 import BedAvailabilitySlide from "@/components/BedAvailabilitySlide";
+import { SHOW_BED_AVAILABILITY_ON_BULLETIN } from "@/lib/bedAvailability";
 
 /*
   Shows a bulletin page exactly as the wall screen draws it, scaled down to fit
@@ -69,8 +70,11 @@ export default function BulletinCanvasPreview({
       >
         {children}
         {/* Drawn over every slide on the live display, so it belongs in the
-            preview too — this is the corner slides must keep clear. */}
-        <BedAvailabilitySlide className="absolute right-5 top-5 z-20 w-[29rem]" />
+            preview too — this is the corner slides must keep clear. Follows the
+            same flag as the live display so previews stay true to it. */}
+        {SHOW_BED_AVAILABILITY_ON_BULLETIN && (
+          <BedAvailabilitySlide className="absolute right-5 top-5 z-20 w-[29rem]" />
+        )}
       </div>
     </div>
   );
