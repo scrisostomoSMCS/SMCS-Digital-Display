@@ -4,16 +4,21 @@ import { useEffect, useRef, useState } from "react";
 
 /*
   Three-dots (⋯) menu used on every sidebar slide. Edit is optional (omitted for
-  auto-updating slides, which show a note instead). Palette-only, no shadows.
+  auto-updating slides, which show a note instead). Styled for the dark
+  sidebar, its only user: sidebar grays, a 1px border, no shadows.
 */
 export default function SlideMenu({
   onEdit,
   editNote,
   onDelete,
+  triggerClassName = "text-sidebar-text hover:bg-sidebar-pill hover:text-sidebar-text-active",
 }: {
   onEdit?: () => void;
   editNote?: string;
   onDelete?: () => void; // omitted for permanent/default slides
+  // Color (and any hover-to-reveal opacity) for the ⋯ button. While the menu
+  // is open the button is always shown, whatever this says.
+  triggerClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -33,7 +38,7 @@ export default function SlideMenu({
   }, [open]);
 
   const item =
-    "block w-full px-4 py-2 text-left text-base font-semibold hover:bg-blue hover:text-paper";
+    "block w-full rounded-lg px-3 py-1.5 text-left text-sm font-medium text-sidebar-text-active hover:bg-sidebar-line focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal";
 
   return (
     <div ref={ref} className="relative">
@@ -47,20 +52,22 @@ export default function SlideMenu({
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        className="flex h-8 w-8 items-center justify-center rounded text-xl leading-none text-ink/60 hover:bg-ink/10 hover:text-ink"
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded text-xl leading-none ${triggerClassName} ${
+          open ? "opacity-100!" : ""
+        }`}
       >
         ⋯
       </button>
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-9 z-20 w-44 border-2 border-placeholder bg-paper py-1"
+          className="absolute right-0 top-8 z-20 w-44 rounded-xl border border-sidebar-border bg-sidebar-pill p-1"
         >
           {onEdit ? (
             <button
               role="menuitem"
               type="button"
-              className={`${item} text-ink`}
+              className={item}
               onClick={() => {
                 setOpen(false);
                 onEdit();
@@ -69,7 +76,7 @@ export default function SlideMenu({
               Edit
             </button>
           ) : (
-            <p className="px-4 py-2 text-sm text-ink/50">
+            <p className="px-3 py-1.5 text-sm text-sidebar-text">
               {editNote ?? "Not editable"}
             </p>
           )}
@@ -77,7 +84,7 @@ export default function SlideMenu({
             <button
               role="menuitem"
               type="button"
-              className={`${item} text-blue`}
+              className={item}
               onClick={() => {
                 setOpen(false);
                 onDelete();

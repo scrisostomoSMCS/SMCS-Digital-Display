@@ -24,12 +24,14 @@ export default async function Header() {
         {/* Logo sits on a white block so the blue/teal mark keeps its contrast
             against the teal bar. It links OUT to the main smcares.org site
             rather than to this site's "/", so it is a plain external anchor.
-            The mobile header's "SMCS" wordmark still goes to "/". */}
+            The mobile header's "SMCS" wordmark still goes to "/".
+            Hidden on /manage while its sidebar is docked (xl+): the sidebar
+            carries the logo there, directly below. */}
         <a
           href="https://smcares.org"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center bg-paper px-5 py-2"
+          className="flex shrink-0 items-center bg-paper px-5 py-2 xl:group-data-[manage]:hidden"
           aria-label={t("siteAria")}
         >
           <Image

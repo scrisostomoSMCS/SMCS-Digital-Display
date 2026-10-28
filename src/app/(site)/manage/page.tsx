@@ -7,6 +7,7 @@ import ManageCalendar from "@/components/manage/ManageCalendar";
 import InfoContentEditor from "@/components/manage/InfoContentEditor";
 import CustomSlidesEditor from "@/components/manage/CustomSlidesEditor";
 import QuickEventForm from "@/components/manage/QuickEventForm";
+import NavBar from "@/components/NavBar";
 import ManageSidebar from "@/components/manage/ManageSidebar";
 import BulletinLocationsManager from "@/components/manage/BulletinLocationsManager";
 import AnnouncementLauncher from "@/components/manage/AnnouncementLauncher";
@@ -51,139 +52,148 @@ export default async function ManagePage() {
     // why the variables are applied here rather than inside the preview itself.
     // Declaring the variables does not change this page's own typography — only
     // .font-display / .font-body consume them.
-    <div className={`${bulletinFontClass} mx-auto max-w-[1600px] px-0 lg:px-6`}>
-      {/* The nav bar's "Home" leaves for smcares.org, so staff need an explicit
-          way back to this site's home page from the editor. */}
-      <div className="flex flex-wrap justify-end gap-3 px-6 pt-6 lg:px-0">
-        {/* Filled, unlike the outlined home link beside it, so the one
-            destination staff check regularly reads as the primary action. */}
-        <Link
-          href="/manage/health"
-          className="inline-flex items-center gap-2 rounded-full border-2 border-blue bg-blue px-5 py-2 text-base font-semibold text-paper hover:bg-paper hover:text-blue"
-        >
-          <MonitorCheck size={20} aria-hidden="true" />
-          Screen health
-        </Link>
-        <Link
-          href="/"
-          className="inline-block rounded-full border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper"
-        >
-          ← Back to Digital Bulletin Home
-        </Link>
-      </div>
+    <div className={`${bulletinFontClass} flex`}>
+      {/* Section navigation (its own component), flush left directly under the
+          teal top bar, with the blue nav bar to its right. Docked on wide
+          screens, a drawer on narrower laptops, hidden on small screens, where
+          the page just scrolls. */}
+      <ManageSidebar />
 
-      <div className="flex gap-0 lg:gap-8">
-        {/* Sticky section navigation (its own component). Hidden on small
-            screens, where the page just scrolls. */}
-        <ManageSidebar />
+      <div className="min-w-0 flex-1">
+        {/* The site nav bar, rendered here rather than by the site layout so
+            the sidebar can run up beside it (see NavBar). */}
+        <NavBar inManagePage />
 
-        <div className="min-w-0 flex-1">
-          {/* Announcements interrupt every wall screen at once and are used
-              under time pressure, so the control sits at the top of the content
-              column, above the first section rather than inside one. px-6
-              matches Section's own padding so it aligns with the headings
-              below it. */}
-          <div className="px-6 pt-6">
-            <AnnouncementLauncher />
+        <div className="mx-auto max-w-[1600px] lg:px-6">
+          {/* The nav bar's "Home" leaves for smcares.org, so staff need an explicit
+              way back to this site's home page from the editor. */}
+          <div className="flex flex-wrap justify-end gap-3 px-6 pt-6 lg:px-0">
+            {/* Filled, unlike the outlined home link beside it, so the one
+                destination staff check regularly reads as the primary action. */}
+            <Link
+              href="/manage/health"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-blue bg-blue px-5 py-2 text-base font-semibold text-paper hover:bg-paper hover:text-blue"
+            >
+              <MonitorCheck size={20} aria-hidden="true" />
+              Screen health
+            </Link>
+            <Link
+              href="/"
+              className="inline-block rounded-full border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper"
+            >
+              ← Back to Digital Bulletin Home
+            </Link>
           </div>
 
-          {/* Bed counts are the first section, and the editor is compact
-              enough to fit on one laptop screen. */}
-          <Section
-            id="bed-availability"
-            title="Live Bed Availability"
-            className="scroll-mt-6"
-            wide
-            dense
-          >
-            <BedAvailabilityEditor />
-          </Section>
+          <div>
+            {/* Announcements interrupt every wall screen at once and are used
+                under time pressure, so the control sits at the top of the content
+                column, above the first section rather than inside one. px-6
+                matches Section's own padding so it aligns with the headings
+                below it. The id is the sidebar's Announcements jump target and
+                its first scroll-spy anchor. */}
+            <div id="announcements" className="scroll-mt-6 px-6 pt-6">
+              <AnnouncementLauncher />
+            </div>
+
+            {/* Bed counts are the first section, and the editor is compact
+                enough to fit on one laptop screen. */}
+            <Section
+              id="bed-availability"
+              title="Live Bed Availability"
+              className="scroll-mt-6"
+              wide
+              dense
+            >
+              <BedAvailabilityEditor />
+            </Section>
 
 
-          <Section
-            id="calendar"
-            title="Calendar"
-            className="scroll-mt-6"
-            wide
-            dense
-          >
-            <p className="max-w-3xl text-lg">
-              Add and edit the schedule here. Click a time slot to create an
-              event; drag to move it, or drag an edge to resize. Click an event
-              to edit or delete it. Changes appear on the Live Calendar within a
-              second or two.
-            </p>
-            <p className="mt-3 flex flex-wrap items-center gap-4 text-base">
-              <span className="flex items-center gap-2">
-                <span className="inline-block h-4 w-4 bg-blue" /> On Live
-                Calendar
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="inline-block h-4 w-4 bg-teal" /> Off dashboard
-                (personal)
-              </span>
-            </p>
-
-            {/* Second entry point for events, writes to the same events data
-                as the calendar (and thus the dashboard + "Events today" slide). */}
-            <div className="mt-8">
-              <h3 className="text-xl font-bold text-blue">Quick add an event</h3>
-              <span className="mt-1 mb-3 block h-1 w-16 bg-teal" />
-              <p className="mb-4 max-w-3xl text-base text-ink/70">
-                Adds to the calendar, the Live Calendar, and &ldquo;Events
-                happening today&rdquo;, the same as adding it on the calendar
-                below.
+            <Section
+              id="calendar"
+              title="Calendar"
+              className="scroll-mt-6"
+              wide
+              dense
+            >
+              <p className="max-w-3xl text-lg">
+                Add and edit the schedule here. Click a time slot to create an
+                event; drag to move it, or drag an edge to resize. Click an event
+                to edit or delete it. Changes appear on the Live Calendar within a
+                second or two.
               </p>
-              <QuickEventForm />
-            </div>
+              <p className="mt-3 flex flex-wrap items-center gap-4 text-base">
+                <span className="flex items-center gap-2">
+                  <span className="inline-block h-4 w-4 bg-blue" /> On Live
+                  Calendar
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="inline-block h-4 w-4 bg-teal" /> Off dashboard
+                  (personal)
+                </span>
+              </p>
 
-            <div className="mt-8 h-[68dvh] min-h-[460px] lg:h-[70vh] lg:min-h-[560px]">
-              <ManageCalendar />
-            </div>
-          </Section>
-
-          <Section
-            id="digital-schedule"
-            title="Digital Bulletin pages"
-            className="scroll-mt-6"
-            wide
-            dense
-          >
-            <p className="max-w-3xl text-lg">
-              The pages that rotate on the public Digital Bulletin screens. Edit
-              their text and choose which locations show each page below.
-            </p>
-            <div className="mt-6 space-y-8">
-              <BulletinLocationsManager />
-              <div>
-                <h3 className="text-2xl font-bold text-blue">
-                  Shared bulletin pages
-                </h3>
-                <p className="mt-1 mb-4 max-w-3xl text-base text-ink/70">
-                  Edit each built-in page and choose All locations or specific
-                  buildings.
+              {/* Second entry point for events, writes to the same events data
+                  as the calendar (and thus the dashboard + "Events today" slide). */}
+              <div className="mt-8">
+                <h3 className="text-xl font-bold text-blue">Quick add an event</h3>
+                <span className="mt-1 mb-3 block h-1 w-16 bg-teal" />
+                <p className="mb-4 max-w-3xl text-base text-ink/70">
+                  Adds to the calendar, the Live Calendar, and &ldquo;Events
+                  happening today&rdquo;, the same as adding it on the calendar
+                  below.
                 </p>
-                <InfoContentEditor />
+                <QuickEventForm />
               </div>
-            </div>
-          </Section>
 
-          <Section
-            id="custom-slides"
-            title="Custom slides"
-            className="scroll-mt-6"
-            wide
-            dense
-          >
-            <p className="max-w-3xl text-lg">
-              Slides you&rsquo;ve added to the rotation. Expand one to edit its
-              layout, text, colors, image, and display locations; each saves on
-              its own. Add or delete slides from the sidebar.
-            </p>
-            <div className="mt-6">
-              <CustomSlidesEditor />
-            </div>
-          </Section>
+              <div className="mt-8 h-[68dvh] min-h-[460px] lg:h-[70vh] lg:min-h-[560px]">
+                <ManageCalendar />
+              </div>
+            </Section>
+
+            <Section
+              id="digital-schedule"
+              title="Digital Bulletin pages"
+              className="scroll-mt-6"
+              wide
+              dense
+            >
+              <p className="max-w-3xl text-lg">
+                The pages that rotate on the public Digital Bulletin screens. Edit
+                their text and choose which locations show each page below.
+              </p>
+              <div className="mt-6 space-y-8">
+                <BulletinLocationsManager />
+                <div>
+                  <h3 className="text-2xl font-bold text-blue">
+                    Shared bulletin pages
+                  </h3>
+                  <p className="mt-1 mb-4 max-w-3xl text-base text-ink/70">
+                    Edit each built-in page and choose All locations or specific
+                    buildings.
+                  </p>
+                  <InfoContentEditor />
+                </div>
+              </div>
+            </Section>
+
+            <Section
+              id="custom-slides"
+              title="Custom slides"
+              className="scroll-mt-6"
+              wide
+              dense
+            >
+              <p className="max-w-3xl text-lg">
+                Slides you&rsquo;ve added to the rotation. Expand one to edit its
+                layout, text, colors, image, and display locations; each saves on
+                its own. Add or delete slides from the sidebar.
+              </p>
+              <div className="mt-6">
+                <CustomSlidesEditor />
+              </div>
+            </Section>
+          </div>
         </div>
       </div>
     </div>

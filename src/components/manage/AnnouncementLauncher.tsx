@@ -9,7 +9,8 @@ import DepthButton from "./DepthButton";
   The "Create an Announcement" button at the top of the manage page, and the one
   modal it opens.
 
-  The sidebar's "Announcement" item opens the SAME modal. The two live in
+  The sidebar's green "Push an announcement" buttons open the SAME modal (the
+  sidebar's Announcements row itself just scrolls here). The two live in
   different subtrees of a Server Component page, so they talk through a window
   event (OPEN_ANNOUNCEMENT_EVENT) rather than shared state — a context provider
   would mean wrapping the whole manage page in a client component, which is a

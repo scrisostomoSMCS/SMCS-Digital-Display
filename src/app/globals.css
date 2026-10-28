@@ -28,6 +28,32 @@
      brighter yellow-oranges wash out. */
   --color-amber: #b45309;
 
+  /* Manage-page sidebar only: a dark, neutral gray panel beside the light
+     page. Checked against `sidebar` (#18181b) for WCAG AA:
+       sidebar-text 6.9:1 (5.9:1 on the pill), sidebar-text-active 16.1:1
+       (13.7:1 on the pill), sidebar-text-dim 5.2:1 (hidden slides), teal
+       badges 5.2:1 on the pill. The line and border are decorative. */
+  --color-sidebar: #18181b;
+  --color-sidebar-hover: #1f1f23;
+  --color-sidebar-pill: #26262a;
+  --color-sidebar-border: #333333;
+  --color-sidebar-line: #2e2e32;
+  --color-sidebar-text: #a1a1aa;
+  --color-sidebar-text-active: #f4f4f5;
+  --color-sidebar-text-dim: #8a8a93;
+  /* The sidebar's "push an announcement" button. `green` (#0f7038) is only
+     2.86:1 against the dark sidebar, under the 3:1 a control needs; this is
+     3.53:1, with its white icon at 5.02:1. Hover lightens to 5.38:1 (icon
+     3.3:1, still over the 3:1 for graphics). */
+  --color-sidebar-push: #15803d;
+  --color-sidebar-push-hover: #16a34a;
+
+  /* Width of the docked manage sidebar (and its drawer). */
+  --spacing-manage-sidebar: 17rem;
+  /* Height of the blue nav bar on /manage and of the sidebar's logo row
+     beside it, so the two line up. */
+  --spacing-manage-bar: 3.5rem;
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
@@ -102,6 +128,47 @@ select:disabled,
 }
 .manage-calendar .fc {
   font-size: 0.95rem;
+}
+
+/* Manage sidebar: thin scrollbar that suits the dark background. */
+.manage-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-sidebar-line) transparent;
+}
+
+/*
+  Manage sidebar tree: a group's children hang off a thin vertical line under
+  the group's icon (row padding 0.75rem + half the 20px icon), each joined by a
+  small curved elbow. ::before is the elbow, from the top of the row to its
+  middle, rounding into the row. ::after carries the line straight on past
+  every child but the last (and across the gap to the next), so the last one
+  ends in a soft corner.
+*/
+.sidebar-tree {
+  margin-left: calc(0.75rem + 10px);
+}
+.sidebar-tree > li {
+  position: relative;
+  padding-left: 16px;
+}
+.sidebar-tree > li::before,
+.sidebar-tree > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  pointer-events: none;
+  border-left: 1px solid var(--color-sidebar-line);
+}
+.sidebar-tree > li::before {
+  top: -0.125rem;
+  height: calc(50% + 0.125rem);
+  width: 12px;
+  border-bottom: 1px solid var(--color-sidebar-line);
+  border-bottom-left-radius: 8px;
+}
+.sidebar-tree > li:not(:last-child)::after {
+  top: 0;
+  bottom: -0.125rem;
 }
 
 @media (max-width: 1023px) {
