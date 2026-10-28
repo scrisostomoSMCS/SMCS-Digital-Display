@@ -18,6 +18,7 @@ import { SHOW_LOST_FOUND } from "@/lib/siteConfig";
 import { itemsFor } from "@/lib/lostFound";
 import { useLostFound } from "@/lib/useLostFound";
 import { BulletinScopeProvider } from "./BulletinScope";
+import { TopBandProvider } from "./TopBand";
 import {
   fetchHiddenBuiltins,
   fetchPausedPages,
@@ -119,6 +120,8 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
   const [pageLocations, setPageLocations] = useState<BulletinPageLocationMap>({});
   const [locationId, setLocationId] = useState<string | null>(null);
   const [targetingLoaded, setTargetingLoaded] = useState(!locationSlug);
+  // A staff announcement is overlaid across the top of the canvas right now.
+  const [announcementLive, setAnnouncementLive] = useState(false);
   const observerRef = useRef<ResizeObserver | null>(null);
   // Polled only while something shows weather: a Weather slide, or a
   // services page with its "Show weather" toggle on. Subscribed here, where
@@ -425,18 +428,22 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
         {/* Tells location-bound slides (lost & found) which screen this is:
             a wall screen scoped to its ?location=, or none without one. */}
         <BulletinScopeProvider value={{ kind: "screen", locationId }}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current}
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            >
-              {pages[current]}
-            </motion.div>
-          </AnimatePresence>
+          {/* TopBand: slides that use the top of the canvas give it up while
+              the bed panel or an announcement is floating over it. */}
+          <TopBandProvider reserved={SHOW_BED_AVAILABILITY_ON_BULLETIN || announcementLive}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={current}
+                className="absolute inset-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              >
+                {pages[current]}
+              </motion.div>
+            </AnimatePresence>
+          </TopBandProvider>
         </BulletinScopeProvider>
 
         {/* Live bed availability: top-right callout, white on red so it stands
@@ -465,7 +472,10 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
 
             It is NOT inside the <AnimatePresence> above, so it stays put across
             slide changes instead of fading out and back in every rotation. */}
-        <AnnouncementBar className="absolute left-16 right-[36rem] top-5 z-30" />
+        <AnnouncementBar
+          className="absolute left-16 right-[36rem] top-5 z-30"
+          onLiveChange={setAnnouncementLive}
+        />
 
         {/* Back button, shrunk to a bare left arrow and parked immediately left of
             the bed panel (right-5 + w-[29rem] = 30.25rem, plus a 0.75rem gap) —

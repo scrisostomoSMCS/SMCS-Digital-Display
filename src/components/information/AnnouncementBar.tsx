@@ -21,6 +21,8 @@ import {
   bulletin exactly as it was":
     - fetchLiveAnnouncement swallows its own errors and returns null.
     - nothing live renders null — no wrapper, no reserved space, no layout shift.
+      (While one IS live, onLiveChange tells InformationDisplay, and slides that
+      normally use the top of the canvas give it up — see TopBand.)
     - a throw in render is caught by the boundary at the bottom of this file,
       which renders null. It must never reach app/information/error.tsx, because
       that boundary replaces the WHOLE bulletin with a fallback card.
@@ -47,19 +49,19 @@ const POLL_INTERVAL = 30_000;
   way, so one number covers all of them:
 
      32px  InfoPageShell's @min-[64rem]:py-8 top padding
-  + 200px  BED_PANEL_CLEARANCE (12.5rem), the empty header band every page
-           reserves so the bed panel never lands on content
+  + 240px  BED_PANEL_CLEARANCE (15rem), the empty header band every page
+           reserves while the bed panel or an announcement is up (TopBand)
   +  12px  the SMALLEST gap any page leaves under that band — SlideTemplateView's
            image-focus variant (@min-[64rem]:mt-3). Others leave 20-32px; the
            tightest one is what has to be safe.
-  = 244px  the y at which real content can begin on the tightest page
+  = 284px  the y at which real content can begin on the tightest page
 
-  The bubble starts at top-5 (20px), so it gets 224px. If BED_PANEL_CLEARANCE or
+  The bubble starts at top-5 (20px), so it gets 264px. If BED_PANEL_CLEARANCE or
   that mt-3 ever changes, re-derive these two numbers — same contract the bed
   panel already documents in BedAvailabilitySlide.
 */
 const BUBBLE_TOP = 20;
-const CONTENT_STARTS_AT = 244;
+const CONTENT_STARTS_AT = 284;
 const MAX_BUBBLE_HEIGHT = CONTENT_STARTS_AT - BUBBLE_TOP;
 
 /*
@@ -77,8 +79,21 @@ const MAX_BUBBLE_HEIGHT = CONTENT_STARTS_AT - BUBBLE_TOP;
 const MESSAGE_SIZES = [36, 32, 28, 24];
 const MESSAGE_LINE_HEIGHT = 1.3;
 
-function AnnouncementBubble({ className = "" }: { className?: string }) {
+type BarProps = {
+  className?: string;
+  // Called with true while an announcement is up, false otherwise (including
+  // when the boundary below unmounts a failed bubble).
+  onLiveChange?: (live: boolean) => void;
+};
+
+function AnnouncementBubble({ className = "", onLiveChange }: BarProps) {
   const [live, setLive] = useState<Announcement | null>(null);
+
+  const isLive = live !== null;
+  useEffect(() => {
+    onLiveChange?.(isLive);
+  }, [isLive, onLiveChange]);
+  useEffect(() => () => onLiveChange?.(false), [onLiveChange]);
   // Index into MESSAGE_SIZES, and whether the fit pass below has finished.
   const [sizeIndex, setSizeIndex] = useState(0);
   const [fitted, setFitted] = useState(false);
@@ -246,10 +261,10 @@ class AnnouncementBoundary extends Component<
   }
 }
 
-export default function AnnouncementBar({ className = "" }: { className?: string }) {
+export default function AnnouncementBar({ className = "", onLiveChange }: BarProps) {
   return (
     <AnnouncementBoundary>
-      <AnnouncementBubble className={className} />
+      <AnnouncementBubble className={className} onLiveChange={onLiveChange} />
     </AnnouncementBoundary>
   );
 }

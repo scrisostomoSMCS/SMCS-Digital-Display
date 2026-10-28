@@ -47,6 +47,7 @@ import { SHOW_LOST_FOUND } from "@/lib/siteConfig";
 import { MAX_LOST_ITEMS, itemsFor, shortDate } from "@/lib/lostFound";
 import { useLostFound } from "@/lib/useLostFound";
 import { lostFoundScope, useBulletinScope } from "./BulletinScope";
+import { useTopBandClearance } from "./TopBand";
 
 /*
   Renders a custom slide in one of the on-brand layout templates. This SAME
@@ -791,6 +792,7 @@ export default function SlideTemplateView({
   // The menu table needs every row it can get, so its headline runs a step
   // smaller (a full week title fits on one line instead of wrapping to two).
   const isMenu = slide.template === "weekly-menu";
+  const topBand = useTopBandClearance();
 
   const Header = (
     <motion.header
@@ -838,12 +840,13 @@ export default function SlideTemplateView({
             uploaded image happens to be.
 
             No headline on this template, so the eyebrow band itself carries
-            BED_PANEL_CLEARANCE. That band is what keeps the TOP of the image
-            below the live bed-availability panel, which floats over the
-            top-right of every slide — without it a full-width image runs under
-            the red card. The image takes the rest of the canvas from there. */}
+            BED_PANEL_CLEARANCE — but only while the bed panel or a live
+            announcement is floating over the top of the canvas (see TopBand).
+            Then the band keeps the TOP of the image below them; otherwise the
+            image starts right under the eyebrow and takes the rest of the
+            canvas. */}
         <div className="relative z-10 flex h-full min-h-0 flex-col">
-          <div className={`shrink-0 ${BED_PANEL_CLEARANCE}`}>
+          <div className={`shrink-0 ${topBand}`}>
             <InfoEyebrow bg={bg} />
           </div>
           {/* Negative margins cancel InfoPageShell's own side padding at each
