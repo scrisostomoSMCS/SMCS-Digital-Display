@@ -26,7 +26,9 @@ export default async function RootLayout({
   const locale = await getLocale();
 
   return (
-    <html lang={locale}>
+    // suppressHydrationWarning covers only the manage sidebar's collapsed
+    // attribute, which a pre-hydration script may set (see lib/manageSidebar).
+    <html lang={locale} suppressHydrationWarning>
       <body>
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>

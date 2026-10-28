@@ -59,6 +59,10 @@
     Arial, sans-serif;
 }
 
+/* While the manage sidebar is collapsed (set on <html>; see
+   lib/manageSidebar). Only /manage ever sets it. */
+@custom-variant sidebar-collapsed ([data-manage-sidebar="collapsed"] &);
+
 /*
   Base readability rules for an older audience:
   large body text, generous line spacing, strong contrast.

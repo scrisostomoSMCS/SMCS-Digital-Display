@@ -1,18 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import {
   BedIcon,
   CalendarDotsIcon,
+  CaretLeftIcon,
   CaretRightIcon,
   MegaphoneIcon,
   MonitorIcon,
   PlusIcon,
-  SidebarSimpleIcon,
   SlideshowIcon,
   TrashIcon,
-  XIcon,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase";
@@ -46,12 +45,17 @@ import {
   FIXED_BULLETIN_PAGE_KEYS,
 } from "@/lib/bulletinLocations";
 import { openAnnouncementModal } from "@/lib/announcements";
+import {
+  applySidebarCollapsed,
+  readSidebarCollapsed,
+  saveSidebarCollapsed,
+} from "@/lib/manageSidebar";
 import SlideMenu from "./SlideMenu";
 import { usePausedPages } from "./usePausedPages";
 
 /*
   Sticky manage-page navigation, a dark sidebar of top-level rows that mirror
-  the page: Announcements (opens the modal), Live bed availability, Weekly
+  the page: Announcements (its green + opens the modal), Live bed availability, Weekly
   calendar, then two collapsible groups, Digital bulletin pages and Custom
   slides, whose children hang off a soft tree, and Recently deleted when
   anything is in it.
@@ -173,8 +177,15 @@ function CountBadge({ count, label }: { count: number; label: string }) {
   beside, never inside, the button it accompanies, so its click cannot reach
   that button's scroll; stopPropagation guards anything that listens above.
   `className` sizes and places it (28px on the row, 24px as the badge).
+  `tip`: on the strip it gets the strip's tooltip instead of a native title.
 */
-function PushAnnouncementButton({ className }: { className: string }) {
+function PushAnnouncementButton({
+  className,
+  tip = false,
+}: {
+  className: string;
+  tip?: boolean;
+}) {
   return (
     <button
       type="button"
@@ -183,11 +194,30 @@ function PushAnnouncementButton({ className }: { className: string }) {
         openAnnouncementModal();
       }}
       aria-label="Push an announcement"
-      title="Push an announcement"
-      className={`flex shrink-0 items-center justify-center rounded-lg bg-sidebar-push text-paper transition-colors duration-150 hover:bg-sidebar-push-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal ${className}`}
+      title={tip ? undefined : "Push an announcement"}
+      className={`group/tip flex shrink-0 items-center justify-center rounded-lg bg-sidebar-push text-paper transition-colors duration-150 hover:bg-sidebar-push-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal ${className}`}
     >
       <PlusIcon size={14} weight="bold" aria-hidden="true" />
+      {tip && <StripTip label="Push an announcement" />}
     </button>
+  );
+}
+
+/*
+  The collapsed strip's tooltip: the item's name in a small dark pill to the
+  right of the icon, shown on hover and on keyboard focus, which the native
+  title (about a second's delay, mouse only) is not. Decorative: every strip
+  button already has the same text as its aria-label. Its button needs
+  `group/tip` and a positioned box.
+*/
+function StripTip({ label }: { label: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute top-1/2 left-full z-10 ml-3 -translate-y-1/2 rounded-lg border border-sidebar-border bg-sidebar-pill px-2.5 py-1 text-sm leading-tight font-medium whitespace-nowrap text-sidebar-text-active opacity-0 transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-visible/tip:opacity-100 motion-reduce:transition-none"
+    >
+      {label}
+    </span>
   );
 }
 
@@ -255,6 +285,39 @@ function TopRow({
         </button>
       )}
     </div>
+  );
+}
+
+// The collapsed strip's buttons share one look; `active` is the pill.
+// `group/tip` and `relative` are for each one's StripTip.
+const stripButtonClass = (active: boolean) =>
+  `group/tip relative flex h-10 w-10 items-center justify-center rounded-xl border transition-colors duration-150 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal ${
+    active
+      ? "border-sidebar-border bg-sidebar-pill text-sidebar-text-active"
+      : "border-transparent text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active"
+  }`;
+
+function StripButton({
+  icon: Icon,
+  label,
+  onClick,
+  active = false,
+}: {
+  icon: PhosphorIcon;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={stripButtonClass(active)}
+    >
+      <Icon size={22} aria-hidden="true" />
+      <StripTip label={label} />
+    </button>
   );
 }
 
@@ -750,30 +813,55 @@ export default function ManageSidebar() {
   const customHiddenCount = slides.filter((s) => s.paused).length;
   const deletedCount = hiddenBuiltins.length + deleted.length;
 
-  // Between lg and xl the sidebar would crowd the calendar, so it collapses to
-  // a strip of the top-level icons. The toggle (or a group's icon) opens the
-  // full sidebar as a drawer over the page. It stays open while staff work in
-  // it (renaming needs a double-click, which an auto-close on the first click
-  // would swallow); the close button, the backdrop, and Escape put it away.
-  // At xl and up it is always docked.
+  // Between lg and xl the sidebar would crowd the calendar, so it is always a
+  // strip of the top-level icons there, and Expand opens the full sidebar as a
+  // drawer over the page. The drawer stays open while staff work in it
+  // (renaming needs a double-click, which an auto-close on the first click
+  // would swallow); Collapse, the backdrop, and Escape put it away.
+  // At xl and up the sidebar docks, and Collapse shrinks it to the same strip
+  // (remembered per browser; see lib/manageSidebar). The saved choice only
+  // applies there, the strip CSS ignores it below xl.
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const openButtonRef = useRef<HTMLButtonElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const expandButtonRef = useRef<HTMLButtonElement>(null);
+  const collapseButtonRef = useRef<HTMLButtonElement>(null);
+  // Before paint, so a client-side navigation here does not flash the wrong
+  // state either (a full load already has it from the page's inline script).
+  useLayoutEffect(() => {
+    applySidebarCollapsed(readSidebarCollapsed());
+    return () => applySidebarCollapsed(false);
+  }, []);
+  // Tailwind's xl, in the same units, so this always agrees with the CSS.
+  const isDocked = () => window.matchMedia("(min-width: 80rem)").matches;
   function closeDrawer() {
     setDrawerOpen(false);
-    openButtonRef.current?.focus();
+    expandButtonRef.current?.focus();
   }
-  function openDrawerAt(group: GroupKey) {
-    setGroupOpen(group, true);
-    setDrawerOpen(true);
+  // Focus follows the toggle to its counterpart, so keyboard users keep their
+  // place. `group` opens that group first (the strip's Recently deleted).
+  function expandSidebar(group?: GroupKey) {
+    if (group) setGroupOpen(group, true);
+    if (isDocked()) {
+      saveSidebarCollapsed(false);
+      collapseButtonRef.current?.focus();
+    } else {
+      setDrawerOpen(true);
+    }
+  }
+  function collapseSidebar() {
+    if (isDocked()) {
+      saveSidebarCollapsed(true);
+      expandButtonRef.current?.focus();
+    } else {
+      closeDrawer();
+    }
   }
   useEffect(() => {
     if (!drawerOpen) return;
-    closeButtonRef.current?.focus();
+    collapseButtonRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       setDrawerOpen(false);
-      openButtonRef.current?.focus();
+      expandButtonRef.current?.focus();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -800,407 +888,422 @@ export default function ManageSidebar() {
     }
   }, [active, groupsOpen, drawerOpen]);
 
-  // The collapsed strip's buttons share one look; `active` is the pill.
-  const stripButtonClass = (active: boolean) =>
-    `flex h-10 w-10 items-center justify-center rounded-xl border transition-colors duration-150 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal ${
-      active
-        ? "border-sidebar-border bg-sidebar-pill text-sidebar-text-active"
-        : "border-transparent text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-text-active"
-    }`;
-
   return (
     <>
-      {/* lg–xl only: the collapsed strip. The toggle opens the full sidebar;
-          the top-level icons act directly where they can, and open the drawer
-          on their group where they have children. */}
-      <div className="sticky top-0 hidden h-dvh w-14 shrink-0 flex-col items-center gap-1 bg-sidebar pb-3 lg:flex xl:hidden">
-        {/* Level with the blue nav bar, like the full sidebar's logo row. */}
-        <div className="flex h-manage-bar shrink-0 items-center">
-          <button
-            ref={openButtonRef}
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Show sections"
-            title="Show sections"
-            aria-expanded={drawerOpen}
-            aria-controls="manage-sections"
-            className={stripButtonClass(false)}
-          >
-            <SidebarSimpleIcon size={22} aria-hidden="true" />
-          </button>
-        </div>
-        {/* The megaphone scrolls like the full row; the push button rides on
-            its top-right corner as a badge, a sibling rather than a child.
-            The sidebar-colored ring separates the two. */}
-        <div className="relative">
+      {/* The sidebar's column. Its width is the one thing that animates:
+          always the strip's 56px between lg and xl; at xl the full sidebar's
+          width, or the strip's while collapsed. The page content beside it is
+          flex-1, so it takes up whatever this frees. */}
+      <div className="sticky top-0 z-30 hidden h-dvh w-14 shrink-0 bg-sidebar transition-[width] duration-200 ease-out motion-reduce:transition-none lg:block xl:w-manage-sidebar xl:sidebar-collapsed:w-14">
+        {/* Inside the column, which is its own stacking context, so it can sit
+            between the strip and the drawer. */}
+        {drawerOpen && (
           <button
             type="button"
-            onClick={() => jump("announcements")}
-            aria-label="Announcements"
-            title="Announcements"
-            className={stripButtonClass(active === "announcements")}
-          >
-            <MegaphoneIcon size={22} aria-hidden="true" />
-          </button>
-          <PushAnnouncementButton className="absolute -top-2 -right-2 h-6 w-6 ring-2 ring-sidebar" />
-        </div>
-        <button
-          type="button"
-          onClick={() => jump("bed-availability")}
-          aria-label="Live bed availability"
-          title="Live bed availability"
-          className={stripButtonClass(active === "bed-availability")}
-        >
-          <BedIcon size={22} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          onClick={() => jump("calendar")}
-          aria-label="Weekly calendar"
-          title="Weekly calendar"
-          className={stripButtonClass(active === "calendar")}
-        >
-          <CalendarDotsIcon size={22} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          onClick={() => openDrawerAt("dsp")}
-          aria-label="Digital bulletin pages"
-          title="Digital bulletin pages"
-          className={stripButtonClass(dspActive)}
-        >
-          <MonitorIcon size={22} aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          onClick={() => openDrawerAt("custom")}
-          aria-label="Custom slides"
-          title="Custom slides"
-          className={stripButtonClass(customActive)}
-        >
-          <SlideshowIcon size={22} aria-hidden="true" />
-        </button>
-        {hasRecoverable && (
-          <button
-            type="button"
-            onClick={() => openDrawerAt("deleted")}
-            aria-label="Recently deleted"
-            title="Recently deleted"
-            className={stripButtonClass(false)}
-          >
-            <TrashIcon size={22} aria-hidden="true" />
-          </button>
+            tabIndex={-1}
+            aria-label="Collapse sidebar"
+            onClick={closeDrawer}
+            className="fixed inset-0 z-40 bg-ink/40 xl:hidden"
+          />
         )}
-      </div>
-      {drawerOpen && (
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-label="Hide sections"
-          onClick={closeDrawer}
-          className="fixed inset-0 z-40 hidden bg-ink/40 lg:block xl:hidden"
-        />
-      )}
-
-      <nav
-        id="manage-sections"
-        aria-label="Manage sections"
-        className={`h-dvh w-manage-sidebar shrink-0 flex-col bg-sidebar text-sidebar-text xl:sticky xl:top-0 xl:z-auto xl:flex ${
-          drawerOpen ? "hidden lg:fixed lg:top-0 lg:left-0 lg:z-50 lg:flex" : "hidden"
-        }`}
-      >
-        {/* Logo, fixed above the scrolling list, in a row the height of the
-            blue nav bar beside it. The header hides its own logo on this page
-            while the sidebar is docked, so this is the one on screen, and it
-            keeps the header logo's link out to smcares.org.
-            The artwork is blue and teal, which is unreadable on the dark gray,
-            and there is no light version, so it is recolored to solid white
-            here. Swap in a real reversed file if one is made. */}
-        <div className="flex h-manage-bar shrink-0 items-center justify-between gap-2 pr-3 pl-6">
+        {/* The icon strip: lg–xl, and xl while collapsed. Outside the clipping
+            box below so its tooltips can reach out over the page. */}
+        <div className="absolute inset-y-0 left-0 z-10 flex w-14 flex-col items-center gap-1 bg-sidebar pb-3 xl:hidden xl:sidebar-collapsed:flex">
+          {/* The logo's house-and-people mark, in a row the height of the blue
+              nav bar, like the full sidebar's logo row. Recolored to white
+              like the full logo; same link. */}
           <a
             href="https://smcares.org"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="St. Mary's Community Services main website (opens in a new tab)"
-            className="rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
+            className="flex h-manage-bar shrink-0 items-center rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
           >
             <Image
-              src="/smcslogo.png"
+              src="/smcslogo-mark.png"
               alt=""
-              width={1468}
-              height={354}
-              className="h-9 w-auto brightness-0 invert"
+              width={457}
+              height={340}
+              className="h-auto w-9 brightness-0 invert"
             />
           </a>
           <button
-            ref={closeButtonRef}
+            ref={expandButtonRef}
             type="button"
-            onClick={closeDrawer}
-            aria-label="Hide sections"
-            className={`${stripButtonClass(false)} shrink-0 xl:hidden`}
+            onClick={() => expandSidebar()}
+            aria-label="Expand sidebar"
+            aria-expanded={drawerOpen}
+            aria-controls="manage-sections"
+            className={`${stripButtonClass(false)} mb-1`}
           >
-            <XIcon size={22} aria-hidden="true" />
+            <CaretRightIcon size={20} aria-hidden="true" />
+            <StripTip label="Expand sidebar" />
           </button>
-        </div>
-
-        {/* Scrolls on its own when the lists outgrow the viewport. */}
-        <div
-          ref={contentRef}
-          className="manage-sidebar-scroll min-h-0 flex-1 space-y-2 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pt-1 pb-6"
-        >
-          {/* Announcements. Sits first because it is the most urgent action on
-              this page. The row scrolls to the Create an Announcement button
-              at the top of the page, like every other row; the green button in
-              the caret's place opens the push modal itself. */}
-          <div data-spy="announcements">
-            <TopRow
+          {/* The megaphone scrolls like the full row; the push button rides on
+              its top-right corner as a badge, a sibling rather than a child.
+              The sidebar-colored ring separates the two. */}
+          <div className="relative">
+            <StripButton
               icon={MegaphoneIcon}
               label="Announcements"
               onClick={() => jump("announcements")}
               active={active === "announcements"}
-              action={<PushAnnouncementButton className="mr-1 h-7 w-7" />}
+            />
+            <PushAnnouncementButton
+              tip
+              className="absolute -top-2 -right-2 h-6 w-6 ring-2 ring-sidebar"
             />
           </div>
-
-          {/* Beds. Matches the bed counts' place as the page's first section. */}
-          <div data-spy="bed-availability">
-            <TopRow
-              icon={BedIcon}
-              label="Live bed availability"
-              onClick={() => jump("bed-availability")}
-              active={active === "bed-availability"}
+          <StripButton
+            icon={BedIcon}
+            label="Live bed availability"
+            onClick={() => jump("bed-availability")}
+            active={active === "bed-availability"}
+          />
+          <StripButton
+            icon={CalendarDotsIcon}
+            label="Weekly calendar"
+            onClick={() => jump("calendar")}
+            active={active === "calendar"}
+          />
+          {/* Groups scroll to their section, like the full sidebar's labels;
+              their children are one Expand away. */}
+          <StripButton
+            icon={MonitorIcon}
+            label="Digital bulletin pages"
+            onClick={() => jump("digital-schedule")}
+            active={dspActive}
+          />
+          <StripButton
+            icon={SlideshowIcon}
+            label="Custom slides"
+            onClick={() => jump("custom-slides")}
+            active={customActive}
+          />
+          {/* No section to scroll to, so it expands the sidebar with the
+              group open. */}
+          {hasRecoverable && (
+            <StripButton
+              icon={TrashIcon}
+              label="Recently deleted"
+              onClick={() => expandSidebar("deleted")}
             />
-          </div>
+          )}
+        </div>
 
-          <div data-spy="calendar">
-            <TopRow
-              icon={CalendarDotsIcon}
-              label="Weekly calendar"
-              onClick={() => jump("calendar")}
-              active={active === "calendar"}
-            />
-          </div>
+        {/* Clips the full sidebar to the column while the width animates, so
+            it is revealed and hidden at its own width instead of reflowing.
+            The drawer is fixed, which this does not clip. */}
+        <div className="absolute inset-0 overflow-hidden">
+          <nav
+            id="manage-sections"
+            aria-label="Manage sections"
+            // Collapsing keeps it visible until the width has closed over it
+            // (visibility waits out a 200ms transition), and hides it from
+            // the tab order after. The transition is on the collapsed state
+            // only, so expanding shows it at once and Collapse can take focus.
+            className={`h-dvh w-manage-sidebar flex-col bg-sidebar text-sidebar-text xl:static xl:z-auto xl:flex xl:sidebar-collapsed:invisible xl:sidebar-collapsed:transition-[visibility] xl:sidebar-collapsed:duration-200 motion-reduce:transition-none ${
+              drawerOpen ? "hidden lg:fixed lg:top-0 lg:left-0 lg:z-50 lg:flex" : "hidden"
+            }`}
+          >
+            {/* Logo, fixed above the scrolling list, in a row the height of
+                the blue nav bar beside it. The header hides its own logo on
+                this page at xl and up, so this is the one on screen, and it
+                keeps the header logo's link out to smcares.org.
+                The artwork is blue and teal, which is unreadable on the dark
+                gray, and there is no light version, so it is recolored to
+                solid white here. Swap in a real reversed file if one is made. */}
+            <div className="flex h-manage-bar shrink-0 items-center justify-between gap-2 pr-3 pl-6">
+              <a
+                href="https://smcares.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="St. Mary's Community Services main website (opens in a new tab)"
+                className="rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
+              >
+                <Image
+                  src="/smcslogo.png"
+                  alt=""
+                  width={1468}
+                  height={354}
+                  className="h-9 w-auto brightness-0 invert"
+                />
+              </a>
+              {/* Docks to the strip at xl; closes the drawer below it. */}
+              <button
+                ref={collapseButtonRef}
+                type="button"
+                onClick={collapseSidebar}
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+                aria-expanded="true"
+                aria-controls="manage-sections"
+                className={`${stripButtonClass(false)} shrink-0`}
+              >
+                <CaretLeftIcon size={20} aria-hidden="true" />
+              </button>
+            </div>
 
-          {/* Digital bulletin pages */}
-          <div>
-            <TopRow
-              icon={MonitorIcon}
-              label="Digital bulletin pages"
-              onClick={() => jump("digital-schedule")}
-              current={dspActive}
-              badge={<CountBadge count={dspHiddenCount} label="hidden" />}
-              expanded={groupsOpen.dsp}
-              controls="sidebar-dsp-list"
-              onToggle={() => setGroupOpen("dsp", !groupsOpen.dsp)}
-            />
-            <ul
-              id="sidebar-dsp-list"
-              hidden={!groupsOpen.dsp}
-              className="sidebar-tree mt-0.5 space-y-0.5"
+            {/* Scrolls on its own when the lists outgrow the viewport. */}
+            <div
+              ref={contentRef}
+              className="manage-sidebar-scroll min-h-0 flex-1 space-y-2 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pt-1 pb-6"
             >
-              <li data-spy="display-locations">
-                <div className={rowClass(active === "display-locations")}>
-                  <button
-                    type="button"
-                    onClick={() => jump("display-locations")}
-                    className={childLinkClass(active === "display-locations")}
-                  >
-                    Display locations
-                  </button>
-                </div>
-              </li>
-              {visibleBuiltins.flatMap((b) => {
-                // The repeatable services type shows one numbered link per page.
-                if (b.key === "services") {
-                  return serviceLinks.map((link, idx) => {
-                    const isActive = active === link.anchor;
-                    const dimmed = paused.includes(link.nameKey);
+              {/* Announcements. Sits first because it is the most urgent action on
+                  this page. The row scrolls to the Create an Announcement button
+                  at the top of the page, like every other row; the green button in
+                  the caret's place opens the push modal itself. */}
+              <div data-spy="announcements">
+                <TopRow
+                  icon={MegaphoneIcon}
+                  label="Announcements"
+                  onClick={() => jump("announcements")}
+                  active={active === "announcements"}
+                  action={<PushAnnouncementButton className="mr-1 h-7 w-7" />}
+                />
+              </div>
+
+              {/* Beds. Matches the bed counts' place as the page's first section. */}
+              <div data-spy="bed-availability">
+                <TopRow
+                  icon={BedIcon}
+                  label="Live bed availability"
+                  onClick={() => jump("bed-availability")}
+                  active={active === "bed-availability"}
+                />
+              </div>
+
+              <div data-spy="calendar">
+                <TopRow
+                  icon={CalendarDotsIcon}
+                  label="Weekly calendar"
+                  onClick={() => jump("calendar")}
+                  active={active === "calendar"}
+                />
+              </div>
+
+              {/* Digital bulletin pages */}
+              <div>
+                <TopRow
+                  icon={MonitorIcon}
+                  label="Digital bulletin pages"
+                  onClick={() => jump("digital-schedule")}
+                  current={dspActive}
+                  badge={<CountBadge count={dspHiddenCount} label="hidden" />}
+                  expanded={groupsOpen.dsp}
+                  controls="sidebar-dsp-list"
+                  onToggle={() => setGroupOpen("dsp", !groupsOpen.dsp)}
+                />
+                <ul
+                  id="sidebar-dsp-list"
+                  hidden={!groupsOpen.dsp}
+                  className="sidebar-tree mt-0.5 space-y-0.5"
+                >
+                  <li data-spy="display-locations">
+                    <div className={rowClass(active === "display-locations")}>
+                      <button
+                        type="button"
+                        onClick={() => jump("display-locations")}
+                        className={childLinkClass(active === "display-locations")}
+                      >
+                        Display locations
+                      </button>
+                    </div>
+                  </li>
+                  {visibleBuiltins.flatMap((b) => {
+                    // The repeatable services type shows one numbered link per page.
+                    if (b.key === "services") {
+                      return serviceLinks.map((link, idx) => {
+                        const isActive = active === link.anchor;
+                        const dimmed = paused.includes(link.nameKey);
+                        return (
+                          <li key={link.anchor} data-spy={link.anchor}>
+                            <div className={rowClass(isActive)}>
+                              <RenamableLink
+                                name={nameFor(link.nameKey, link.label)}
+                                onClick={() => jumpToBulletinPage(link.anchor)}
+                                onRename={(name) => rename(link.nameKey, name)}
+                                // Keeps "- Page N" (any dash) visible.
+                                keepEnd={PAGE_NUMBER_END}
+                                className={childLinkClass(isActive, dimmed)}
+                              />
+                              {dimmed && <HiddenTag />}
+                              <SlideMenu
+                                triggerClassName={menuTriggerClass(isActive)}
+                                onEdit={() => editBulletinPage(link.anchor)}
+                                onDelete={
+                                  serviceLinks.length > 1
+                                    ? () => removeServicesPage(idx)
+                                    : undefined
+                                }
+                              />
+                            </div>
+                          </li>
+                        );
+                      });
+                    }
+                    const deletable = !PROTECTED.includes(b.key);
+                    const isActive = !!b.anchor && active === b.anchor;
+                    const dimmed = !!b.nameKey && paused.includes(b.nameKey);
                     return (
-                      <li key={link.anchor} data-spy={link.anchor}>
+                      <li key={b.key} data-spy={b.anchor ?? undefined}>
                         <div className={rowClass(isActive)}>
                           <RenamableLink
-                            name={nameFor(link.nameKey, link.label)}
-                            onClick={() => jumpToBulletinPage(link.anchor)}
-                            onRename={(name) => rename(link.nameKey, name)}
-                            // Keeps "- Page N" (any dash) visible.
-                            keepEnd={PAGE_NUMBER_END}
+                            name={nameFor(b.nameKey, b.label)}
+                            onClick={() => b.anchor && jumpToBulletinPage(b.anchor)}
+                            onRename={(name) => b.nameKey && rename(b.nameKey, name)}
                             className={childLinkClass(isActive, dimmed)}
                           />
                           {dimmed && <HiddenTag />}
                           <SlideMenu
                             triggerClassName={menuTriggerClass(isActive)}
-                            onEdit={() => editBulletinPage(link.anchor)}
+                            onEdit={
+                              b.anchor
+                                ? () => editBulletinPage(b.anchor as string)
+                                : undefined
+                            }
+                            editNote="Auto-updates from calendar"
                             onDelete={
-                              serviceLinks.length > 1
-                                ? () => removeServicesPage(idx)
+                              deletable
+                                ? () => hideBuiltin(b.key, nameFor(b.nameKey, b.label))
                                 : undefined
                             }
                           />
                         </div>
                       </li>
                     );
-                  });
-                }
-                const deletable = !PROTECTED.includes(b.key);
-                const isActive = !!b.anchor && active === b.anchor;
-                const dimmed = !!b.nameKey && paused.includes(b.nameKey);
-                return (
-                  <li key={b.key} data-spy={b.anchor ?? undefined}>
-                    <div className={rowClass(isActive)}>
-                      <RenamableLink
-                        name={nameFor(b.nameKey, b.label)}
-                        onClick={() => b.anchor && jumpToBulletinPage(b.anchor)}
-                        onRename={(name) => b.nameKey && rename(b.nameKey, name)}
-                        className={childLinkClass(isActive, dimmed)}
-                      />
-                      {dimmed && <HiddenTag />}
-                      <SlideMenu
-                        triggerClassName={menuTriggerClass(isActive)}
-                        onEdit={
-                          b.anchor
-                            ? () => editBulletinPage(b.anchor as string)
-                            : undefined
-                        }
-                        editNote="Auto-updates from calendar"
-                        onDelete={
-                          deletable
-                            ? () => hideBuiltin(b.key, nameFor(b.nameKey, b.label))
-                            : undefined
-                        }
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                  })}
+                </ul>
+              </div>
 
-          {/* Custom slides */}
-          <div>
-            <TopRow
-              icon={SlideshowIcon}
-              label="Custom slides"
-              onClick={() => jump("custom-slides")}
-              current={customActive}
-              badge={<CountBadge count={customHiddenCount} label="hidden" />}
-              expanded={groupsOpen.custom}
-              controls="sidebar-custom-list"
-              onToggle={() => setGroupOpen("custom", !groupsOpen.custom)}
-            />
-            <ul
-              id="sidebar-custom-list"
-              hidden={!groupsOpen.custom}
-              className="sidebar-tree mt-0.5 space-y-0.5"
-            >
-              {slides.map((s) => {
-                const isActive = active === `slide-${s.id}`;
-                return (
-                  <li key={s.id} data-spy={`slide-${s.id}`}>
-                    <div className={rowClass(isActive)}>
-                      <RenamableLink
-                        name={slideName(s)}
-                        onClick={() => jumpToSlide(s.id)}
-                        onRename={(name) => rename(customSlideNameKey(s.id), name)}
-                        className={childLinkClass(isActive, s.paused)}
-                      />
-                      {s.paused && <HiddenTag />}
-                      <SlideMenu
-                        triggerClassName={menuTriggerClass(isActive)}
-                        onEdit={() => editSlide(s.id)}
-                        onDelete={() => removeCustom(s)}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-              {/* A plain muted row at the end of the list, not a button
-                  block, so it reads as an action on the list. */}
-              <li>
-                <button
-                  type="button"
-                  onClick={addSlide}
-                  className="flex w-full items-center gap-2 rounded-xl border border-transparent px-3 py-1.5 text-left text-sm font-medium text-sidebar-text transition-colors duration-150 hover:bg-sidebar-hover hover:text-sidebar-text-active focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal"
+              {/* Custom slides */}
+              <div>
+                <TopRow
+                  icon={SlideshowIcon}
+                  label="Custom slides"
+                  onClick={() => jump("custom-slides")}
+                  current={customActive}
+                  badge={<CountBadge count={customHiddenCount} label="hidden" />}
+                  expanded={groupsOpen.custom}
+                  controls="sidebar-custom-list"
+                  onToggle={() => setGroupOpen("custom", !groupsOpen.custom)}
+                />
+                <ul
+                  id="sidebar-custom-list"
+                  hidden={!groupsOpen.custom}
+                  className="sidebar-tree mt-0.5 space-y-0.5"
                 >
-                  <PlusIcon size={16} aria-hidden="true" className="shrink-0" />
-                  Add new slide
-                </button>
-              </li>
-            </ul>
-          </div>
+                  {slides.map((s) => {
+                    const isActive = active === `slide-${s.id}`;
+                    return (
+                      <li key={s.id} data-spy={`slide-${s.id}`}>
+                        <div className={rowClass(isActive)}>
+                          <RenamableLink
+                            name={slideName(s)}
+                            onClick={() => jumpToSlide(s.id)}
+                            onRename={(name) => rename(customSlideNameKey(s.id), name)}
+                            className={childLinkClass(isActive, s.paused)}
+                          />
+                          {s.paused && <HiddenTag />}
+                          <SlideMenu
+                            triggerClassName={menuTriggerClass(isActive)}
+                            onEdit={() => editSlide(s.id)}
+                            onDelete={() => removeCustom(s)}
+                          />
+                        </div>
+                      </li>
+                    );
+                  })}
+                  {/* A plain muted row at the end of the list, not a button
+                      block, so it reads as an action on the list. */}
+                  <li>
+                    <button
+                      type="button"
+                      onClick={addSlide}
+                      className="flex w-full items-center gap-2 rounded-xl border border-transparent px-3 py-1.5 text-left text-sm font-medium text-sidebar-text transition-colors duration-150 hover:bg-sidebar-hover hover:text-sidebar-text-active focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal"
+                    >
+                      <PlusIcon size={16} aria-hidden="true" className="shrink-0" />
+                      Add new slide
+                    </button>
+                  </li>
+                </ul>
+              </div>
 
-          {/* Recovery: restore hidden built-ins or soft-deleted custom slides.
-              Collapsed by default; only there when something is in it. The
-              label opens and closes it too, since it has no section to jump to. */}
-          {hasRecoverable && (
-            <div>
-              <TopRow
-                icon={TrashIcon}
-                label="Recently deleted"
-                onClick={() => setGroupOpen("deleted", !groupsOpen.deleted)}
-                badge={<CountBadge count={deletedCount} label="" />}
-                expanded={groupsOpen.deleted}
-                controls="sidebar-deleted-list"
-                onToggle={() => setGroupOpen("deleted", !groupsOpen.deleted)}
-              />
-              <ul
-                id="sidebar-deleted-list"
-                hidden={!groupsOpen.deleted}
-                className="sidebar-tree mt-0.5 space-y-0.5"
-              >
-                {hiddenBuiltins.map((b) => (
-                  <li key={b.key}>
-                    <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-1.5">
-                      <span
-                        title={nameFor(b.nameKey, b.label)}
-                        className="truncate text-sm text-sidebar-text-dim"
-                      >
-                        {nameFor(b.nameKey, b.label)}
-                      </span>
-                      <button
-                        type="button"
-                        className="shrink-0 text-sm font-medium text-sidebar-text-active hover:underline"
-                        onClick={() =>
-                          setHiddenBuiltins(hidden.filter((k) => k !== b.key))
-                        }
-                      >
-                        Restore
-                      </button>
-                    </div>
-                  </li>
-                ))}
-                {deleted.map((s) => (
-                  <li key={s.id}>
-                    <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-1.5">
-                      <span
-                        title={slideName(s)}
-                        className="truncate text-sm text-sidebar-text-dim"
-                      >
-                        {slideName(s)}
-                      </span>
-                      <span className="flex shrink-0 gap-2">
-                        <button
-                          type="button"
-                          className="text-sm font-medium text-sidebar-text-active hover:underline"
-                          onClick={() => restoreCustom(s)}
-                        >
-                          Restore
-                        </button>
-                        <button
-                          type="button"
-                          className="text-sm font-medium text-sidebar-text hover:text-sidebar-text-active hover:underline"
-                          onClick={() => deleteForever(s)}
-                        >
-                          Delete
-                        </button>
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {/* Recovery: restore hidden built-ins or soft-deleted custom slides.
+                  Collapsed by default; only there when something is in it. The
+                  label opens and closes it too, since it has no section to jump to. */}
+              {hasRecoverable && (
+                <div>
+                  <TopRow
+                    icon={TrashIcon}
+                    label="Recently deleted"
+                    onClick={() => setGroupOpen("deleted", !groupsOpen.deleted)}
+                    badge={<CountBadge count={deletedCount} label="" />}
+                    expanded={groupsOpen.deleted}
+                    controls="sidebar-deleted-list"
+                    onToggle={() => setGroupOpen("deleted", !groupsOpen.deleted)}
+                  />
+                  <ul
+                    id="sidebar-deleted-list"
+                    hidden={!groupsOpen.deleted}
+                    className="sidebar-tree mt-0.5 space-y-0.5"
+                  >
+                    {hiddenBuiltins.map((b) => (
+                      <li key={b.key}>
+                        <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-1.5">
+                          <span
+                            title={nameFor(b.nameKey, b.label)}
+                            className="truncate text-sm text-sidebar-text-dim"
+                          >
+                            {nameFor(b.nameKey, b.label)}
+                          </span>
+                          <button
+                            type="button"
+                            className="shrink-0 text-sm font-medium text-sidebar-text-active hover:underline"
+                            onClick={() =>
+                              setHiddenBuiltins(hidden.filter((k) => k !== b.key))
+                            }
+                          >
+                            Restore
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                    {deleted.map((s) => (
+                      <li key={s.id}>
+                        <div className="flex min-w-0 items-center justify-between gap-2 px-3 py-1.5">
+                          <span
+                            title={slideName(s)}
+                            className="truncate text-sm text-sidebar-text-dim"
+                          >
+                            {slideName(s)}
+                          </span>
+                          <span className="flex shrink-0 gap-2">
+                            <button
+                              type="button"
+                              className="text-sm font-medium text-sidebar-text-active hover:underline"
+                              onClick={() => restoreCustom(s)}
+                            >
+                              Restore
+                            </button>
+                            <button
+                              type="button"
+                              className="text-sm font-medium text-sidebar-text hover:text-sidebar-text-active hover:underline"
+                              onClick={() => deleteForever(s)}
+                            >
+                              Delete
+                            </button>
+                          </span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-          )}
+          </nav>
         </div>
-      </nav>
+      </div>
     </>
   );
 }

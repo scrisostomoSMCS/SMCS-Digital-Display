@@ -13,6 +13,7 @@ import BulletinLocationsManager from "@/components/manage/BulletinLocationsManag
 import AnnouncementLauncher from "@/components/manage/AnnouncementLauncher";
 import BedAvailabilityEditor from "@/components/manage/BedAvailabilityEditor";
 import { bulletinFontClass } from "@/lib/bulletinFonts";
+import { COLLAPSED_SIDEBAR_SCRIPT } from "@/lib/manageSidebar";
 
 export const metadata = {
   title: "Manage | SMCS",
@@ -54,9 +55,13 @@ export default async function ManagePage() {
     // .font-display / .font-body consume them.
     <div className={`${bulletinFontClass} flex`}>
       {/* Section navigation (its own component), flush left directly under the
-          teal top bar, with the blue nav bar to its right. Docked on wide
-          screens, a drawer on narrower laptops, hidden on small screens, where
-          the page just scrolls. */}
+          teal top bar, with the blue nav bar to its right. Docked (and
+          collapsible to an icon strip) on wide screens, a strip with a drawer
+          on narrower laptops, hidden on small screens, where the page just
+          scrolls. */}
+      {/* Applies a saved "collapsed" before the first paint, so the sidebar
+          never flashes open first (see lib/manageSidebar). */}
+      <script dangerouslySetInnerHTML={{ __html: COLLAPSED_SIDEBAR_SCRIPT }} />
       <ManageSidebar />
 
       <div className="min-w-0 flex-1">

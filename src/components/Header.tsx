@@ -25,8 +25,8 @@ export default async function Header() {
             against the teal bar. It links OUT to the main smcares.org site
             rather than to this site's "/", so it is a plain external anchor.
             The mobile header's "SMCS" wordmark still goes to "/".
-            Hidden on /manage while its sidebar is docked (xl+): the sidebar
-            carries the logo there, directly below. */}
+            Hidden on /manage at xl+: the sidebar carries the logo there,
+            directly below (just the mark while it is collapsed). */}
         <a
           href="https://smcares.org"
           target="_blank"
