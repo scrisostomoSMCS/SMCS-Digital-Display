@@ -17,17 +17,33 @@ import { SHOW_BED_AVAILABILITY_ON_BULLETIN } from "@/lib/bedAvailability";
   unconditionally, because the services page's weather pill lives inside it.
 */
 const TopBandContext = createContext<boolean>(SHOW_BED_AVAILABILITY_ON_BULLETIN);
+// Whether the live announcement is one of the things up there; it spans most
+// of the canvas top, unlike the bed panel in its corner.
+const AnnouncementContext = createContext(false);
 
 export function TopBandProvider({
   reserved,
+  announcement = false,
   children,
 }: {
   reserved: boolean;
+  announcement?: boolean;
   children: ReactNode;
 }) {
-  return <TopBandContext.Provider value={reserved}>{children}</TopBandContext.Provider>;
+  return (
+    <TopBandContext.Provider value={reserved}>
+      <AnnouncementContext.Provider value={announcement}>{children}</AnnouncementContext.Provider>
+    </TopBandContext.Provider>
+  );
 }
 
 // BED_PANEL_CLEARANCE while the top band is in use, otherwise nothing.
 export const useTopBandClearance = () =>
   useContext(TopBandContext) ? BED_PANEL_CLEARANCE : "";
+
+// True when the bed panel is the only thing over the top band, so the space
+// left of the panel, right under the eyebrow, is still free to use.
+export const useBesideBedPanel = () => {
+  const announcement = useContext(AnnouncementContext);
+  return SHOW_BED_AVAILABILITY_ON_BULLETIN && !announcement;
+};

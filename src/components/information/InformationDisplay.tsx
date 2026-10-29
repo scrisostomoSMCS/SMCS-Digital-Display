@@ -443,7 +443,10 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
         <BulletinScopeProvider value={{ kind: "screen", locationId }}>
           {/* TopBand: slides that use the top of the canvas give it up while
               the bed panel or an announcement is floating over it. */}
-          <TopBandProvider reserved={SHOW_BED_AVAILABILITY_ON_BULLETIN || announcementLive}>
+          <TopBandProvider
+            reserved={SHOW_BED_AVAILABILITY_ON_BULLETIN || announcementLive}
+            announcement={announcementLive}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={current}

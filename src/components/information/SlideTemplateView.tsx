@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type CSSProperties, type SyntheticEvent } from "react";
 import { motion } from "framer-motion";
 import { CalendarDays, Clock, MapPin } from "lucide-react";
 import { ThermometerColdIcon, ThermometerHotIcon } from "@phosphor-icons/react/ssr";
@@ -47,7 +47,7 @@ import { SHOW_LOST_FOUND } from "@/lib/siteConfig";
 import { MAX_LOST_ITEMS, itemsFor, shortDate } from "@/lib/lostFound";
 import { useLostFound } from "@/lib/useLostFound";
 import { lostFoundScope, useBulletinScope } from "./BulletinScope";
-import { useTopBandClearance } from "./TopBand";
+import { useBesideBedPanel, useTopBandClearance } from "./TopBand";
 
 /*
   Renders a custom slide in one of the on-brand layout templates. This SAME
@@ -61,14 +61,22 @@ import { useTopBandClearance } from "./TopBand";
   distance. Spanish lines only appear when a Spanish value exists.
 */
 
+// "Image with caption" never enlarges an image past this many times its own
+// pixel size while it is placed beside the bed panel, so small uploads stay sharp.
+const MAX_UPSCALE = 2;
+
 function ImageSlot({
   src,
   tone,
   fill = false,
+  onLoad,
+  imgStyle,
 }: {
   src: string | null;
   tone: string;
   fill?: boolean;
+  onLoad?: (e: SyntheticEvent<HTMLImageElement>) => void;
+  imgStyle?: CSSProperties;
 }) {
   return (
     <div className="flex h-full w-full items-center justify-center overflow-hidden">
@@ -83,6 +91,8 @@ function ImageSlot({
         <img
           src={src}
           alt=""
+          onLoad={onLoad}
+          style={imgStyle}
           className={
             fill
               ? "h-full w-full object-contain"
@@ -794,6 +804,50 @@ export default function SlideTemplateView({
   const isMenu = slide.template === "weekly-menu";
   const topBand = useTopBandClearance();
 
+  /*
+    "Image with caption" beside the bed panel: the image takes whichever box
+    shows it bigger. Box A runs from under the eyebrow down to the caption,
+    stopping short of the panel's left edge; box B is the full width below the
+    panel's clearance band. Judged once per image from its natural size, in the
+    box A layout (which it loads into, so a portrait image never moves); only a
+    wide image then switches, before it has drawn anything.
+  */
+  const besideBed = useBesideBedPanel();
+  const bandRef = useRef<HTMLDivElement>(null);
+  const clearanceRef = useRef<HTMLDivElement>(null);
+  const imageAreaRef = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState<{ src: string; wide: boolean; style: CSSProperties } | null>(null);
+  const placed = besideBed && fit && fit.src === img ? fit : null;
+  const wide = placed?.wide ?? false;
+
+  const placeImage = (e: SyntheticEvent<HTMLImageElement>) => {
+    const { naturalWidth: nw, naturalHeight: nh } = e.currentTarget;
+    const area = imageAreaRef.current;
+    const band = bandRef.current;
+    const clearance = clearanceRef.current;
+    if (!img || fit?.src === img || !nw || !nh || !area || !band || !clearance) return;
+    // Layout sizes (offset*), so the canvas's display scale never enters in.
+    const margins = getComputedStyle(area);
+    const wA = area.offsetWidth;
+    const hA = area.offsetHeight;
+    const wB = wA + parseFloat(margins.marginRight) - parseFloat(margins.marginLeft);
+    const hB = hA - Math.max(0, clearance.offsetHeight - band.offsetHeight);
+    const scaleIn = (w: number, h: number) => Math.min(w / nw, h / nh, MAX_UPSCALE);
+    const sA = scaleIn(wA, hA);
+    if (scaleIn(wB, hB) > sA) {
+      setFit({ src: img, wide: true, style: { maxWidth: nw * MAX_UPSCALE, maxHeight: nh * MAX_UPSCALE } });
+      return;
+    }
+    // Centered on the canvas, in line with the caption, unless that would run
+    // into the panel's gap; then it moves left just far enough.
+    const w = nw * sA;
+    setFit({
+      src: img,
+      wide: false,
+      style: { width: w, height: nh * sA, marginLeft: Math.min((wB - w) / 2, wA - w), marginRight: "auto" },
+    });
+  };
+
   const Header = (
     <motion.header
       variants={headerIn}
@@ -846,16 +900,39 @@ export default function SlideTemplateView({
             image starts right under the eyebrow and takes the rest of the
             canvas. */}
         <div className="relative z-10 flex h-full min-h-0 flex-col">
-          <div className={`shrink-0 ${topBand}`}>
+          {/* Beside the bed panel the eyebrow band drops its clearance unless the
+              image chose box B; this invisible copy of the band's clearance is
+              what box B's height is measured from. */}
+          {besideBed && (
+            <div
+              ref={clearanceRef}
+              aria-hidden="true"
+              className={`invisible absolute top-0 ${BED_PANEL_CLEARANCE}`}
+            />
+          )}
+          <div ref={bandRef} className={`shrink-0 ${besideBed && !wide ? "" : topBand}`}>
             <InfoEyebrow bg={bg} />
           </div>
           {/* Negative margins cancel InfoPageShell's own side padding at each
               breakpoint, so the image runs edge to edge on the canvas instead of
               stopping at the text margin. Keep these in step with the shell's
               px-* values or the image will not reach the edge (or will overhang
-              it). The caption below stays inside the normal margins. */}
-          <div className="-mx-4 mt-2 min-h-0 flex-1 @min-[40rem]:-mx-6 @min-[64rem]:-mx-16 @min-[64rem]:mt-3">
-            <ImageSlot src={img} tone={placeholderTone} fill />
+              it). The caption below stays inside the normal margins.
+              Box A stops 27.5rem short of the right edge instead: the panel's
+              right-5 + w-[29rem], plus a 1.25rem gap, less the shell's 4rem. */}
+          <div
+            ref={imageAreaRef}
+            className={`-mx-4 mt-2 min-h-0 flex-1 @min-[40rem]:-mx-6 @min-[64rem]:mt-3 ${
+              besideBed && !wide ? "@min-[64rem]:-ml-16 @min-[64rem]:mr-[27.5rem]" : "@min-[64rem]:-mx-16"
+            }`}
+          >
+            <ImageSlot
+              src={img}
+              tone={placeholderTone}
+              fill
+              onLoad={besideBed ? placeImage : undefined}
+              imgStyle={placed?.style}
+            />
           </div>
           {/* Every row this block gives up is a row the image gets, and a taller
               image is also a WIDER one (object-contain scales both together), so
