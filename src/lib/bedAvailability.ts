@@ -38,7 +38,7 @@ export const FAMILY_LODGE_INTAKE_PHONE = "209-939-9733";
 // queries, Realtime subscription, or poll. Staff editing on /manage and the
 // home-page popup are unaffected. Set to true to bring the panel back; nothing
 // else needs to change.
-export const SHOW_BED_AVAILABILITY_ON_BULLETIN = false;
+export const SHOW_BED_AVAILABILITY_ON_BULLETIN = true;
 
 type BedDbRow = {
   id: string;
