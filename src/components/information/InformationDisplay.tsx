@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { PAGE_DURATION } from "@/lib/informationContent";
+import { reloadAtSlideSwitch } from "@/lib/buildVersion";
 import { canvasStyle, fitScale } from "@/lib/bulletinCanvas";
 import {
   fetchInfoContentOrNull,
@@ -60,6 +61,9 @@ const NAV_CLASS = "text-ink hover:text-blue";
   broken until the page reloads.
 */
 const REFRESH_INTERVAL = 600_000; // 10 minutes
+
+// How long a slide switch waits on a started reload before giving up on it.
+const RELOAD_STALL = 15_000;
 
 /*
   Paging arrow: a stem plus a head, drawn rather than typed. A text glyph ("←")
@@ -384,11 +388,20 @@ export default function InformationDisplay({ locationSlug }: { locationSlug?: st
 
   useEffect(() => {
     if (pages.length === 0) return;
-    const id = setTimeout(
-      () => setActive((a) => (a + 1) % pages.length),
-      PAGE_DURATION,
-    );
-    return () => clearTimeout(id);
+    let stalled: ReturnType<typeof setTimeout> | undefined;
+    const advance = () => setActive((a) => (a + 1) % pages.length);
+    const id = setTimeout(() => {
+      // A reload onto newly deployed code (BuildVersionWatcher) takes this
+      // switch instead, leaving the current slide up until the new page paints
+      // over it. Still here RELOAD_STALL later means the reload never
+      // happened, so the rotation carries on as if nothing was attempted.
+      if (reloadAtSlideSwitch()) stalled = setTimeout(advance, RELOAD_STALL);
+      else advance();
+    }, PAGE_DURATION);
+    return () => {
+      clearTimeout(id);
+      clearTimeout(stalled);
+    };
   }, [active, pages.length]);
 
   if (pages.length === 0) {

@@ -28,6 +28,8 @@ export type Screen = {
   locationName: string | null;
   lastSeen: string | null;
   lastContentSync: string | null;
+  // Commit SHA the TV's page was built from; null if it hasn't reported one.
+  buildVersion: string | null;
   createdAt: string;
 };
 
@@ -37,12 +39,13 @@ type ScreenRow = {
   location_id: string | null;
   last_seen: string | null;
   last_content_sync: string | null;
+  build_version: string | null;
   created_at: string;
   location: { name: string } | null;
 };
 
 const COLUMNS =
-  "id, name, location_id, last_seen, last_content_sync, created_at, location:bulletin_locations(name)";
+  "id, name, location_id, last_seen, last_content_sync, build_version, created_at, location:bulletin_locations(name)";
 
 function fromRow(row: ScreenRow): Screen {
   return {
@@ -52,6 +55,7 @@ function fromRow(row: ScreenRow): Screen {
     locationName: row.location?.name ?? null,
     lastSeen: row.last_seen,
     lastContentSync: row.last_content_sync,
+    buildVersion: row.build_version,
     createdAt: row.created_at,
   };
 }
@@ -171,16 +175,30 @@ export async function probeContent(): Promise<boolean> {
   }
 }
 
-// An unknown screen id is a silent no-op in the RPC, so this cannot create rows.
+/*
+  An unknown screen id is a silent no-op in the RPC, so this cannot create rows.
+
+  Reports the build version too (migration 0033). If the database doesn't have
+  that argument yet, the call errors, so it retries in the 0026 shape: a missed
+  migration costs the version column, never the check-in itself.
+*/
 export async function sendHeartbeat(
   screenId: string,
   contentOk: boolean,
+  buildVersion: string,
 ): Promise<void> {
   try {
-    await supabase.rpc("screen_heartbeat", {
+    const { error } = await supabase.rpc("screen_heartbeat", {
       p_screen_id: screenId,
       p_content_ok: contentOk,
+      p_build_version: buildVersion,
     });
+    if (error) {
+      await supabase.rpc("screen_heartbeat", {
+        p_screen_id: screenId,
+        p_content_ok: contentOk,
+      });
+    }
   } catch {
     /* silent by design */
   }

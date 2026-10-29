@@ -1,5 +1,6 @@
 import InformationDisplay from "@/components/information/InformationDisplay";
 import ScreenHeartbeat from "@/components/information/ScreenHeartbeat";
+import BuildVersionWatcher from "@/components/information/BuildVersionWatcher";
 import { bulletinFontClass } from "@/lib/bulletinFonts";
 
 export const metadata = {
@@ -19,6 +20,9 @@ export const metadata = {
 
   ?screen=<id> identifies the physical TV for health monitoring (see
   ScreenHeartbeat). It never affects what renders; without it, nothing checks in.
+
+  BuildVersionWatcher reloads the page onto newly deployed code, at a slide
+  switch. Data updates on its own; code otherwise never would on an open TV.
 */
 export default async function InformationPage({
   searchParams,
@@ -40,6 +44,7 @@ export default async function InformationPage({
     >
       <InformationDisplay locationSlug={location} />
       <ScreenHeartbeat screenId={screen} />
+      <BuildVersionWatcher />
     </div>
   );
 }

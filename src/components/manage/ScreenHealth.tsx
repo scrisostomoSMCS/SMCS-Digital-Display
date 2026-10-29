@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { absoluteTime, relativeTime } from "@/lib/relativeTime";
+import { fetchDeployedVersion, shortVersion } from "@/lib/buildVersion";
 import {
   fetchScreens,
   screenStatus,
@@ -57,6 +58,42 @@ function StatusBadge({ status }: { status: ScreenStatus }) {
   );
 }
 
+/*
+  The deploy a screen's page came from, against the one live now. "Old code"
+  only when both are known and differ: a failed version check flags nothing.
+  A screen that checks in without a version is running code from before
+  version reporting, which can't reload itself onto new code.
+*/
+function BuildVersion({
+  screen,
+  deployed,
+}: {
+  screen: Screen;
+  deployed: string | null;
+}) {
+  if (!screen.buildVersion) {
+    if (!screen.lastSeen) return <span className="text-ink/40">—</span>;
+    return (
+      <span className="block text-sm font-semibold text-red">
+        Not reported (old code; reload this TV)
+      </span>
+    );
+  }
+  const isOld = deployed !== null && screen.buildVersion !== deployed;
+  return (
+    <>
+      <span className="font-mono" title={screen.buildVersion}>
+        {shortVersion(screen.buildVersion)}
+      </span>
+      {isOld ? (
+        <span className="block text-sm font-semibold text-red">Old code</span>
+      ) : (
+        deployed !== null && <span className="block text-sm text-ink/60">Current</span>
+      )}
+    </>
+  );
+}
+
 function Timestamp({ at, now }: { at: string | null; now: number }) {
   const relative = relativeTime(at, now);
   if (!relative) return <span className="text-ink/40">—</span>;
@@ -69,9 +106,15 @@ export default function ScreenHealth() {
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [filter, setFilter] = useState("all");
+  // The deploy live right now; kept from the last good check on a failure.
+  const [deployed, setDeployed] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const result = await fetchScreens();
+    const [result, version] = await Promise.all([
+      fetchScreens(),
+      fetchDeployedVersion(),
+    ]);
+    if (version) setDeployed(version);
     setNow(Date.now());
     setLoaded(true);
     // On a failed poll keep the last good list on screen and say so, rather
@@ -208,7 +251,7 @@ export default function ScreenHealth() {
           </div>
 
           <div className="mt-5 overflow-x-auto border-2 border-placeholder">
-            <table className="w-full min-w-[720px] text-left text-base">
+            <table className="w-full min-w-[860px] text-left text-base">
               <thead className="border-b-2 border-placeholder bg-ink/5">
                 <tr>
                   <th scope="col" className="px-4 py-3 font-semibold">Status</th>
@@ -216,6 +259,7 @@ export default function ScreenHealth() {
                   <th scope="col" className="px-4 py-3 font-semibold">Location</th>
                   <th scope="col" className="px-4 py-3 font-semibold">Last seen</th>
                   <th scope="col" className="px-4 py-3 font-semibold">Content last loaded</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Code version</th>
                 </tr>
               </thead>
               <tbody>
@@ -241,6 +285,9 @@ export default function ScreenHealth() {
                           Can&rsquo;t load content
                         </span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <BuildVersion screen={screen} deployed={deployed} />
                     </td>
                   </tr>
                 ))}

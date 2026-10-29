@@ -7,6 +7,7 @@ import {
   probeContent,
   sendHeartbeat,
 } from "@/lib/screens";
+import { BUILD_VERSION } from "@/lib/buildVersion";
 
 /*
   Invisible check-in for a wall TV running /information?screen=<id>, so staff
@@ -20,6 +21,9 @@ import {
   No screen param (the WordPress embed, a browser tab) or a malformed one means
   no check-ins at all. An id that isn't registered is ignored by the database,
   so a typo in a Yodeck URL can't create a phantom screen.
+
+  Each check-in also reports which deploy this page's code came from, so the
+  health page can show screens still running old code.
 */
 export default function ScreenHeartbeat({ screenId }: { screenId?: string }) {
   useEffect(() => {
@@ -27,7 +31,7 @@ export default function ScreenHeartbeat({ screenId }: { screenId?: string }) {
 
     const beat = () => {
       probeContent()
-        .then((contentOk) => sendHeartbeat(screenId, contentOk))
+        .then((contentOk) => sendHeartbeat(screenId, contentOk, BUILD_VERSION))
         .catch(() => {
           /* silent by design */
         });
