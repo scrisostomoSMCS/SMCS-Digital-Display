@@ -47,6 +47,10 @@
      3.3:1, still over the 3:1 for graphics). */
   --color-sidebar-push: #15803d;
   --color-sidebar-push-hover: #16a34a;
+  /* The sidebar's unread badge on Logs, the red sibling of sidebar-push. `red`
+     (#c1121f) is about 2.85:1 against the dark sidebar, under the 3:1 a
+     graphic needs; this is 3.67:1, with its white count at 4.83:1. */
+  --color-sidebar-alert: #dc2626;
 
   /* Width of the docked manage sidebar (and its drawer). */
   --spacing-manage-sidebar: 17rem;

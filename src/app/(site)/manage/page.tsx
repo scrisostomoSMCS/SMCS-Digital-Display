@@ -62,7 +62,7 @@ export default async function ManagePage() {
       {/* Applies a saved "collapsed" before the first paint, so the sidebar
           never flashes open first (see lib/manageSidebar). */}
       <script dangerouslySetInnerHTML={{ __html: COLLAPSED_SIDEBAR_SCRIPT }} />
-      <ManageSidebar />
+      <ManageSidebar isAdmin={profile.role === "admin"} />
 
       <div className="min-w-0 flex-1">
         {/* The site nav bar, rendered here rather than by the site layout so

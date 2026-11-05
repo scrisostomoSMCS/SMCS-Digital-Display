@@ -2,11 +2,13 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   BedIcon,
   CalendarDotsIcon,
   CaretLeftIcon,
   CaretRightIcon,
+  ClockCounterClockwiseIcon,
   MegaphoneIcon,
   MonitorIcon,
   PlusIcon,
@@ -45,6 +47,8 @@ import {
   FIXED_BULLETIN_PAGE_KEYS,
 } from "@/lib/bulletinLocations";
 import { openAnnouncementModal } from "@/lib/announcements";
+import { badgeLabel } from "@/lib/auditLogs";
+import { useAuditUnread } from "@/lib/useAuditUnread";
 import {
   applySidebarCollapsed,
   readSidebarCollapsed,
@@ -204,6 +208,27 @@ function PushAnnouncementButton({
 }
 
 /*
+  The unread count on Logs (admins only): changes since this admin last opened
+  Logs, not counting their own. Built on the green "+"'s exact box, the same
+  `className` per placement (24px corner badge on the strip, 28px in the row's
+  right-hand slot), same radius, white on a color checked against the sidebar,
+  so the two read as one family. Red because it is news, not an action.
+  Decorative: the Logs link carries the count in its accessible name, and
+  clicks pass through to it.
+*/
+function LogsBadge({ count, className }: { count: number; className: string }) {
+  if (count === 0) return null;
+  return (
+    <span
+      aria-hidden="true"
+      className={`pointer-events-none flex shrink-0 items-center justify-center rounded-lg bg-sidebar-alert text-xs leading-none font-bold text-paper tabular-nums ${className}`}
+    >
+      {badgeLabel(count)}
+    </span>
+  );
+}
+
+/*
   The collapsed strip's tooltip: the item's name in a small dark pill to the
   right of the icon, shown on hover and on keyboard focus, which the native
   title (about a second's delay, mouse only) is not. Decorative: every strip
@@ -226,12 +251,15 @@ function StripTip({ label }: { label: string }) {
   caret that expands or collapses its children, or an `action` button in the
   caret's place. The label always jumps to its section; only the caret toggles.
   `current` marks a group that holds the active item: its text brightens, but
-  only the item itself gets the pill.
+  only the item itself gets the pill. With `href` the label is a link to
+  another page instead (Logs), with `ariaLabel` overriding its name.
 */
 function TopRow({
   icon: Icon,
   label,
   onClick,
+  href,
+  ariaLabel,
   active = false,
   current = false,
   badge,
@@ -242,7 +270,9 @@ function TopRow({
 }: {
   icon: PhosphorIcon;
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
+  href?: string;
+  ariaLabel?: string;
   active?: boolean;
   current?: boolean;
   badge?: ReactNode;
@@ -252,18 +282,26 @@ function TopRow({
   onToggle?: () => void;
 }) {
   const bright = active || current;
+  const labelClassName = `flex min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal ${
+    bright ? "text-sidebar-text-active" : "text-sidebar-text hover:text-sidebar-text-active"
+  }`;
+  const labelContent = (
+    <>
+      <Icon size={20} aria-hidden="true" className="shrink-0" />
+      <span className="truncate">{label}</span>
+    </>
+  );
   return (
     <div className={rowClass(active)}>
-      <button
-        type="button"
-        onClick={onClick}
-        className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-teal ${
-          bright ? "text-sidebar-text-active" : "text-sidebar-text hover:text-sidebar-text-active"
-        }`}
-      >
-        <Icon size={20} aria-hidden="true" className="shrink-0" />
-        <span className="truncate">{label}</span>
-      </button>
+      {href ? (
+        <Link href={href} aria-label={ariaLabel} className={labelClassName}>
+          {labelContent}
+        </Link>
+      ) : (
+        <button type="button" onClick={onClick} className={labelClassName}>
+          {labelContent}
+        </button>
+      )}
       {badge}
       {action}
       {onToggle && (
@@ -395,7 +433,14 @@ function RenamableLink({
   );
 }
 
-export default function ManageSidebar() {
+/*
+  `isAdmin` comes from the manage page's server-side role check (the same
+  profiles.role lookup as the Admin Panel). It only decides whether the Logs
+  item shows; /manage/logs and RLS on audit_logs enforce access on their own.
+*/
+export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
+  const unreadLogs = useAuditUnread(isAdmin);
+  const logsLabel = unreadLogs > 0 ? `Logs (${badgeLabel(unreadLogs)} new)` : "Logs";
   const [slides, setSlides] = useState<Slide[]>([]);
   const [deleted, setDeleted] = useState<Slide[]>([]);
   const [hidden, setHidden] = useState<BuiltinKey[]>([]);
@@ -989,6 +1034,24 @@ export default function ManageSidebar() {
               onClick={() => expandSidebar("deleted")}
             />
           )}
+          {/* Admins only. A link to its own page, not a section; the unread
+              badge rides on its corner exactly like the megaphone's "+". */}
+          {isAdmin && (
+            <div className="relative">
+              <Link
+                href="/manage/logs"
+                aria-label={logsLabel}
+                className={stripButtonClass(false)}
+              >
+                <ClockCounterClockwiseIcon size={22} aria-hidden="true" />
+                <StripTip label="Logs" />
+              </Link>
+              <LogsBadge
+                count={unreadLogs}
+                className="absolute -top-2 -right-2 h-6 w-6 ring-2 ring-sidebar"
+              />
+            </div>
+          )}
         </div>
 
         {/* Clips the full sidebar to the column while the width animates, so
@@ -1299,6 +1362,19 @@ export default function ManageSidebar() {
                     ))}
                   </ul>
                 </div>
+              )}
+
+              {/* Logs: admins only, last because it is a separate page rather
+                  than a section of this one. The badge sits in the same
+                  right-hand slot, at the same size, as Announcements' "+". */}
+              {isAdmin && (
+                <TopRow
+                  icon={ClockCounterClockwiseIcon}
+                  label="Logs"
+                  href="/manage/logs"
+                  ariaLabel={logsLabel}
+                  action={<LogsBadge count={unreadLogs} className="mr-1 h-7 w-7" />}
+                />
               )}
             </div>
           </nav>
