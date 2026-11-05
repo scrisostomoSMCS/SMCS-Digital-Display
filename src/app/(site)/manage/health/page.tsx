@@ -33,7 +33,8 @@ export default async function ScreenHealthPage() {
 
   return (
     <div className="mx-auto max-w-[1600px] px-0 lg:px-6">
-      <div className="flex justify-end px-6 pt-6 lg:px-0">
+      {/* Below lg only: from lg up the manage sidebar is the way back. */}
+      <div className="flex justify-end px-6 pt-6 lg:hidden">
         <Link
           href="/manage"
           className="inline-block rounded-full border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper"

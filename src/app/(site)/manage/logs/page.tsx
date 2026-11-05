@@ -12,7 +12,8 @@ export const metadata = {
   Admin-only audit log of every Digital Bulletin change (migration 0034).
   Exactly the Admin Panel's gate: middleware requires sign-in, this redirects
   anyone whose role isn't admin, and RLS on public.audit_logs (admins SELECT
-  only) is the real enforcement. Laid out like /manage/health.
+  only) is the real enforcement. The sidebar and nav bar come from
+  manage/layout.tsx.
 */
 export default async function LogsPage() {
   const supabase = await createSupabaseServerClient();
@@ -31,7 +32,8 @@ export default async function LogsPage() {
 
   return (
     <div className="mx-auto max-w-[1600px] px-0 lg:px-6">
-      <div className="flex justify-end px-6 pt-6 lg:px-0">
+      {/* Below lg only: from lg up the manage sidebar is the way back. */}
+      <div className="flex justify-end px-6 pt-6 lg:hidden">
         <Link
           href="/manage"
           className="inline-block rounded-full border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper"
@@ -41,10 +43,9 @@ export default async function LogsPage() {
       </div>
 
       <Section id="logs" title="Logs" wide dense>
-        <p className="max-w-3xl text-lg">
-          Every change to the Digital Bulletin: who made it, when, and what
-          changed. Click an entry to see the details. Times are Pacific.
-          Entries are kept for 180 days.
+        <p className="max-w-3xl text-base text-ink/70">
+          Every change to the Digital Bulletin. Click a row for the details.
+          Times are Pacific; entries are kept for 180 days.
         </p>
         <div className="mt-6">
           <AuditLogList />

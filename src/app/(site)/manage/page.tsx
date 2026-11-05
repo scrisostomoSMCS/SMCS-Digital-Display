@@ -1,19 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MonitorCheck } from "lucide-react";
+import { History, MonitorCheck } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Section from "@/components/Section";
 import ManageCalendar from "@/components/manage/ManageCalendar";
 import InfoContentEditor from "@/components/manage/InfoContentEditor";
 import CustomSlidesEditor from "@/components/manage/CustomSlidesEditor";
 import QuickEventForm from "@/components/manage/QuickEventForm";
-import NavBar from "@/components/NavBar";
-import ManageSidebar from "@/components/manage/ManageSidebar";
 import BulletinLocationsManager from "@/components/manage/BulletinLocationsManager";
 import AnnouncementLauncher from "@/components/manage/AnnouncementLauncher";
 import BedAvailabilityEditor from "@/components/manage/BedAvailabilityEditor";
-import { bulletinFontClass } from "@/lib/bulletinFonts";
-import { COLLAPSED_SIDEBAR_SCRIPT } from "@/lib/manageSidebar";
 
 export const metadata = {
   title: "Manage | SMCS",
@@ -27,9 +23,9 @@ const STAFF_ROLES = ["employee", "admin"];
   signed-in clients → sent home. Editing lives on this separate route so the
   view-only Live Calendar never renders editing controls.
 
-  Layout: sticky section sidebar (jump links + slide menus) alongside four
-  clearly-separated areas, the live bed counts, the calendar, the built-in
-  information pages, and the custom slides.
+  Layout: the sticky section sidebar (jump links + slide menus, from
+  manage/layout.tsx) alongside four clearly-separated areas, the live bed
+  counts, the calendar, the built-in information pages, and the custom slides.
 */
 export default async function ManagePage() {
   const supabase = await createSupabaseServerClient();
@@ -47,41 +43,33 @@ export default async function ManagePage() {
   if (!profile || !STAFF_ROLES.includes(profile.role)) redirect("/");
 
   return (
-    // bulletinFontClass: the slide previews below draw real bulletin pages, and
-    // they only wrap text the way the wall screen does if Playfair/Poppins are
-    // in scope. next/font can only be called from a Server Component, which is
-    // why the variables are applied here rather than inside the preview itself.
-    // Declaring the variables does not change this page's own typography — only
-    // .font-display / .font-body consume them.
-    <div className={`${bulletinFontClass} flex`}>
-      {/* Section navigation (its own component), flush left directly under the
-          teal top bar, with the blue nav bar to its right. Docked (and
-          collapsible to an icon strip) on wide screens, a strip with a drawer
-          on narrower laptops, hidden on small screens, where the page just
-          scrolls. */}
-      {/* Applies a saved "collapsed" before the first paint, so the sidebar
-          never flashes open first (see lib/manageSidebar). */}
-      <script dangerouslySetInnerHTML={{ __html: COLLAPSED_SIDEBAR_SCRIPT }} />
-      <ManageSidebar isAdmin={profile.role === "admin"} />
-
-      <div className="min-w-0 flex-1">
-        {/* The site nav bar, rendered here rather than by the site layout so
-            the sidebar can run up beside it (see NavBar). */}
-        <NavBar inManagePage />
-
+    // The sidebar, nav bar and fonts come from manage/layout.tsx, shared with
+    // /manage/health and /manage/logs.
         <div className="mx-auto max-w-[1600px] lg:px-6">
           {/* The nav bar's "Home" leaves for smcares.org, so staff need an explicit
               way back to this site's home page from the editor. */}
           <div className="flex flex-wrap justify-end gap-3 px-6 pt-6 lg:px-0">
             {/* Filled, unlike the outlined home link beside it, so the one
-                destination staff check regularly reads as the primary action. */}
+                destination staff check regularly reads as the primary action.
+                Phones and narrow tablets only (below lg): from lg up the
+                sidebar's Screen health item does this job. */}
             <Link
               href="/manage/health"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-blue bg-blue px-5 py-2 text-base font-semibold text-paper hover:bg-paper hover:text-blue"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-blue bg-blue px-5 py-2 text-base font-semibold text-paper hover:bg-paper hover:text-blue lg:hidden"
             >
               <MonitorCheck size={20} aria-hidden="true" />
               Screen health
             </Link>
+            {/* Same deal for admins' Logs, which has no other way in below lg. */}
+            {profile.role === "admin" && (
+              <Link
+                href="/manage/logs"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper lg:hidden"
+              >
+                <History size={20} aria-hidden="true" />
+                Logs
+              </Link>
+            )}
             <Link
               href="/"
               className="inline-block rounded-full border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper"
@@ -200,7 +188,5 @@ export default async function ManagePage() {
             </Section>
           </div>
         </div>
-      </div>
-    </div>
   );
 }

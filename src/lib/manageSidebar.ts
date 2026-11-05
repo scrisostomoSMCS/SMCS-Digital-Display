@@ -12,6 +12,14 @@
   needs the values, and exports from a "use client" module are not readable
   there.
 */
+/*
+  The pages that share the manage layout (sidebar + in-column nav bar):
+  /manage itself and the pages under it (/manage/health, /manage/logs).
+*/
+export function isManagePath(pathname: string | null): boolean {
+  return !!pathname && (pathname === "/manage" || pathname.startsWith("/manage/"));
+}
+
 export const SIDEBAR_COLLAPSED_KEY = "manage-sidebar-collapsed";
 export const SIDEBAR_COLLAPSED_ATTR = "data-manage-sidebar";
 

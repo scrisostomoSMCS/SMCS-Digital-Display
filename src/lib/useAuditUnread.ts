@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
-import { fetchAuditUnreadCount } from "./auditLogs";
+import { AUDIT_LOGS_SEEN_EVENT, fetchAuditUnreadCount } from "./auditLogs";
 
 /*
   The Logs badge count for the signed-in admin. Off (always 0, no queries, no
@@ -15,7 +15,8 @@ import { fetchAuditUnreadCount } from "./auditLogs";
   audit_logs means only admins receive these events at all.
 
   Also recounts when the tab comes back into view, which covers a Realtime
-  connection that dropped while the laptop slept.
+  connection that dropped while the laptop slept, and when the Logs screen
+  marks everything seen.
 */
 const RECOUNT_DELAY = 400;
 
@@ -50,12 +51,14 @@ export function useAuditUnread(enabled: boolean): number {
       )
       .subscribe();
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener(AUDIT_LOGS_SEEN_EVENT, recount);
 
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
       supabase.removeChannel(channel);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener(AUDIT_LOGS_SEEN_EVENT, recount);
     };
   }, [enabled]);
 

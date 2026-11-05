@@ -3,12 +3,14 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BedIcon,
   CalendarDotsIcon,
   CaretLeftIcon,
   CaretRightIcon,
   ClockCounterClockwiseIcon,
+  HeartbeatIcon,
   MegaphoneIcon,
   MonitorIcon,
   PlusIcon,
@@ -294,7 +296,12 @@ function TopRow({
   return (
     <div className={rowClass(active)}>
       {href ? (
-        <Link href={href} aria-label={ariaLabel} className={labelClassName}>
+        <Link
+          href={href}
+          aria-label={ariaLabel}
+          aria-current={active ? "page" : undefined}
+          className={labelClassName}
+        >
           {labelContent}
         </Link>
       ) : (
@@ -433,13 +440,43 @@ function RenamableLink({
   );
 }
 
+// The sidebar's own pages, which get the active pill while you are on them.
+const PAGE_ITEMS: Record<string, string> = {
+  "/manage/health": "screen-health",
+  "/manage/logs": "logs",
+};
+
+// /manage's server-rendered section anchors. Arriving at one from another
+// manage page is kept in place while the content above it loads (see below).
+// The panel and slide anchors are not here: their editors already open and
+// scroll to them when they arrive in the hash.
+const SECTION_ANCHORS = new Set([
+  "announcements",
+  "bed-availability",
+  "calendar",
+  "digital-schedule",
+  "display-locations",
+  "custom-slides",
+]);
+
 /*
-  `isAdmin` comes from the manage page's server-side role check (the same
+  Mounted once by manage/layout.tsx for /manage, /manage/health and
+  /manage/logs, so it stays put across the three. On /manage its items scroll
+  the page and a scroll-spy follows along; on the other two they link to
+  /manage#<section>, and Screen health / Logs show as the active item.
+
+  `isAdmin` comes from the layout's server-side role check (the same
   profiles.role lookup as the Admin Panel). It only decides whether the Logs
   item shows; /manage/logs and RLS on audit_logs enforce access on their own.
 */
 export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
-  const unreadLogs = useAuditUnread(isAdmin);
+  const pathname = usePathname();
+  const router = useRouter();
+  const onManage = pathname === "/manage";
+  const pageItem = PAGE_ITEMS[pathname] ?? null;
+  // On the Logs screen everything is being seen as it arrives.
+  const unreadCount = useAuditUnread(isAdmin);
+  const unreadLogs = pageItem === "logs" ? 0 : unreadCount;
   const logsLabel = unreadLogs > 0 ? `Logs (${badgeLabel(unreadLogs)} new)` : "Logs";
   const [slides, setSlides] = useState<Slide[]>([]);
   const [deleted, setDeleted] = useState<Slide[]>([]);
@@ -448,14 +485,24 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
   const paused = usePausedPages("sidebar");
   const [infoContent, setInfoContent] = useState<InfoContent | null>(null);
   const [names, setNames] = useState<SidebarNames>({});
-  // The first anchor on the page; the spy corrects it on mount.
-  const [active, setActive] = useState("announcements");
+  // The first anchor on the page; the spy corrects it on mount. On Screen
+  // health or Logs it starts as that page, so a full load never flashes the
+  // Announcements pill first.
+  const [active, setActive] = useState(() => pageItem ?? "announcements");
+  // Client-side moves between the three pages: the page items follow the path.
+  // Back on /manage the spy (below) takes over again.
+  useEffect(() => {
+    if (pageItem) setActive(pageItem);
+  }, [pageItem]);
   // Set when a sidebar link is clicked, and held until the reader scrolls for
   // themselves. Sections near the end of the page cannot reach the spy's
   // trigger line (the page runs out of scroll first), so without this the spy
   // would immediately take the highlight back off whatever was just clicked
   // and hand it to the last section that did cross the line.
   const clickedRef = useRef<string | null>(null);
+  // True while an arrival from another manage page is being held in place
+  // (see below); the spy sits out so those re-scrolls can't move the highlight.
+  const arrivingRef = useRef(false);
   // Which collapsible groups are open: Digital bulletin pages and Custom
   // slides start open, Recently deleted closed. Toggled with each group's
   // caret, opened automatically when the active item moves into a closed
@@ -581,6 +628,8 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
   ];
   const spyKey = spyIds.join("|");
   useEffect(() => {
+    // Only /manage has sections to follow; elsewhere the page item is active.
+    if (!onManage) return;
     // Read on scroll rather than with IntersectionObserver. The editors below
     // fetch their content before rendering ("Loading editor…"), so the bulletin
     // panels and slide anchors do not exist yet when this effect first runs.
@@ -593,6 +642,7 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
     let settled = false;
     const update = () => {
       frame = 0;
+      if (arrivingRef.current) return;
       if (clickedRef.current) {
         if (!settled) return;
         clickedRef.current = null;
@@ -666,13 +716,60 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
       if (frame) cancelAnimationFrame(frame);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spyKey]);
+  }, [spyKey, onManage]);
+
+  /*
+    Arriving on /manage from Screen health or Logs with a #section: the bed
+    counts and calendar above most sections load after the first paint and
+    push the target down, so it is held at the top until the page settles
+    (2.5s) or the reader scrolls for themselves, whichever comes first.
+  */
+  useEffect(() => {
+    if (!onManage) return;
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    if (!SECTION_ANCHORS.has(id)) return;
+    let done = false;
+    const place = () => {
+      if (!done) document.getElementById(id)?.scrollIntoView({ block: "start" });
+    };
+    const resize = new ResizeObserver(place);
+    const stop = () => {
+      done = true;
+      arrivingRef.current = false;
+      resize.disconnect();
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchmove", stop);
+      window.removeEventListener("keydown", stop);
+    };
+    resize.observe(document.body);
+    window.addEventListener("wheel", stop, { passive: true });
+    window.addEventListener("touchmove", stop, { passive: true });
+    window.addEventListener("keydown", stop);
+    const timer = setTimeout(stop, 2500);
+    arrivingRef.current = true;
+    clickedRef.current = id;
+    setActive(id);
+    place();
+    return () => {
+      clearTimeout(timer);
+      stop();
+    };
+  }, [onManage]);
+
+  // Off /manage, every section item is a link back to it. True when it
+  // navigated, so the caller skips its in-page scroll.
+  function leaveForManage(anchor: string): boolean {
+    if (onManage) return false;
+    router.push(`/manage#${anchor}`);
+    return true;
+  }
 
   // Plain navigation to a bulletin page, the same deal as the custom slides:
   // scroll to the panel and leave it as it was. No hash, because the hash is
   // what tells InfoContentEditor to expand, and browsing the list should not
   // force open every page it passes. Use the menu's Edit to open one.
   function jumpToBulletinPage(anchor: string) {
+    if (leaveForManage(anchor)) return;
     document
       .getElementById(anchor)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -682,6 +779,7 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
 
   // Edit does mean "open this one": the hash is InfoContentEditor's signal.
   function editBulletinPage(anchor: string) {
+    if (leaveForManage(anchor)) return;
     // Assigning an unchanged hash fires no hashchange, so Edit on the panel
     // already in the hash would do nothing. Clear it first, via replaceState so
     // the extra step stays out of the back button.
@@ -694,6 +792,7 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
   }
 
   function jump(id: string) {
+    if (leaveForManage(id)) return;
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
     clickedRef.current = id;
     setActive(id);
@@ -703,6 +802,7 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
   // is set, because the hash is what tells CustomSlidesEditor to expand, and
   // browsing the list should not force every slide it passes open.
   function jumpToSlide(id: string) {
+    if (leaveForManage(`slide-${id}`)) return;
     document
       .getElementById(`slide-${id}`)
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -713,6 +813,7 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
   // The menu's Edit action, which does mean "open this one": the hash is the
   // signal CustomSlidesEditor listens for.
   function editSlide(id: string) {
+    if (leaveForManage(`slide-${id}`)) return;
     // Assigning an unchanged hash fires no hashchange, so Edit on the slide
     // already in the hash would do nothing. Clear it first, via replaceState so
     // the extra step stays out of the back button.
@@ -931,7 +1032,9 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
     } else if (rect.bottom > box.bottom - margin) {
       content.scrollBy({ top: rect.bottom - box.bottom + margin, behavior: "smooth" });
     }
-  }, [active, groupsOpen, drawerOpen]);
+    // spyKey: the slide and page lists load after mount and push the rows
+    // below them (Screen health, Logs) down, so check again once they land.
+  }, [active, groupsOpen, drawerOpen, spyKey]);
 
   return (
     <>
@@ -1034,14 +1137,27 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
               onClick={() => expandSidebar("deleted")}
             />
           )}
-          {/* Admins only. A link to its own page, not a section; the unread
-              badge rides on its corner exactly like the megaphone's "+". */}
+          {/* Pages of their own rather than sections: links, active while
+              you are on them. Screen health is for every staff member who
+              sees this sidebar, the same roles /manage/health allows. */}
+          <Link
+            href="/manage/health"
+            aria-label="Screen health"
+            aria-current={active === "screen-health" ? "page" : undefined}
+            className={stripButtonClass(active === "screen-health")}
+          >
+            <HeartbeatIcon size={22} aria-hidden="true" />
+            <StripTip label="Screen health" />
+          </Link>
+          {/* Admins only. The unread badge rides on its corner exactly like
+              the megaphone's "+". */}
           {isAdmin && (
             <div className="relative">
               <Link
                 href="/manage/logs"
                 aria-label={logsLabel}
-                className={stripButtonClass(false)}
+                aria-current={active === "logs" ? "page" : undefined}
+                className={stripButtonClass(active === "logs")}
               >
                 <ClockCounterClockwiseIcon size={22} aria-hidden="true" />
                 <StripTip label="Logs" />
@@ -1364,17 +1480,31 @@ export default function ManageSidebar({ isAdmin = false }: { isAdmin?: boolean }
                 </div>
               )}
 
-              {/* Logs: admins only, last because it is a separate page rather
-                  than a section of this one. The badge sits in the same
-                  right-hand slot, at the same size, as Announcements' "+". */}
-              {isAdmin && (
+              {/* Screen health and Logs: last because they are pages of their
+                  own rather than sections of /manage. Each gets the active
+                  pill while you are on it. Logs is admins only; its badge sits
+                  in the same right-hand slot, at the same size, as
+                  Announcements' "+". */}
+              {/* data-spy so the sidebar scrolls the active one into view. */}
+              <div data-spy="screen-health">
                 <TopRow
-                  icon={ClockCounterClockwiseIcon}
-                  label="Logs"
-                  href="/manage/logs"
-                  ariaLabel={logsLabel}
-                  action={<LogsBadge count={unreadLogs} className="mr-1 h-7 w-7" />}
+                  icon={HeartbeatIcon}
+                  label="Screen health"
+                  href="/manage/health"
+                  active={active === "screen-health"}
                 />
+              </div>
+              {isAdmin && (
+                <div data-spy="logs">
+                  <TopRow
+                    icon={ClockCounterClockwiseIcon}
+                    label="Logs"
+                    href="/manage/logs"
+                    ariaLabel={logsLabel}
+                    active={active === "logs"}
+                    action={<LogsBadge count={unreadLogs} className="mr-1 h-7 w-7" />}
+                  />
+                </div>
               )}
             </div>
           </nav>

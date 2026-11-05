@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SITE_NAV_LINKS } from "@/lib/siteNavigation";
 import StickySubNav from "@/components/StickySubNav";
+import { isManagePath } from "@/lib/manageSidebar";
 
 /*
   Primary page navigation, below the teal top bar on every (site) page.
@@ -13,11 +14,12 @@ import StickySubNav from "@/components/StickySubNav";
   positioned) so the photo shows behind the links; on every other page it's a
   solid blue bar. (Auth-aware links live in the top bar via AuthNav.)
 
-  The staff editor (/manage) is the exception: its dark section sidebar runs
-  up beside this bar, so the page renders the bar itself, inside its content
-  column (`inManagePage`), and the copy in the site layout renders nothing
-  there. The links then line up with the content column's left edge. The
-  sidebar also takes the sticky nav's job there, so that stays off.
+  The staff editor (/manage and the pages under it) is the exception: its dark
+  section sidebar runs up beside this bar, so the manage layout renders the
+  bar itself, inside its content column (`inManagePage`), and the copy in the
+  site layout renders nothing there. The links then line up with the content
+  column's left edge. The sidebar also takes the sticky nav's job there, so
+  that stays off.
 */
 export default function NavBar({
   inManagePage = false,
@@ -26,7 +28,7 @@ export default function NavBar({
 }) {
   const pathname = usePathname();
   const overlay = pathname === "/";
-  const manage = pathname === "/manage";
+  const manage = isManagePath(pathname);
   const mainNavRef = useRef<HTMLElement>(null);
   const t = useTranslations("nav");
 
