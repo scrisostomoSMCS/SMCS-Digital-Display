@@ -44,8 +44,7 @@ export default async function LogsPage() {
 
       <Section id="logs" title="Logs" wide dense>
         <p className="max-w-3xl text-base text-ink/70">
-          Every change to the Digital Bulletin. Click a row for the details.
-          Times are Pacific; entries are kept for 180 days.
+          Logs expire after 180 days.
         </p>
         <div className="mt-6">
           <AuditLogList />
