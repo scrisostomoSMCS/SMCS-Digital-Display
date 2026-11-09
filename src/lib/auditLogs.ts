@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { NOUN, actionPill } from "./auditActionPill";
 
 /*
   The admin-only audit log behind /manage/logs (migration 0034). Rows are
@@ -179,6 +180,109 @@ export function matchesAuditFilters(log: AuditLog, f: AuditFilters): boolean {
   return true;
 }
 
+const AUDIT_COLUMNS =
+  "id, created_at, actor_id, actor_name, source, action, category, table_name, record_id, summary, old_data, new_data, changed_fields";
+
+/* --- Grouping --------------------------------------------------------------
+  The trigger writes one entry per row, so a save that touches several rows
+  (six bed counts, several slides) leaves several entries. The Logs table and
+  the badge show them as ONE group. This happens only at display time: the
+  table itself is untouched, so older entries group too.
+
+  Entries next to each other (newest first) join a group when they share the
+  person, source, category and action pill, and each is within
+  AUDIT_GROUP_WINDOW_MS of the one before it. Anything else, including another
+  person's entry in between, starts a new group.
+*/
+export const AUDIT_GROUP_WINDOW_MS = 10_000;
+
+export type AuditLogGroup = {
+  // The oldest entry's id: unchanged as live entries join at the top.
+  key: number;
+  logs: AuditLog[]; // newest first, never empty
+};
+
+const groupKeyOf = (l: AuditLog) =>
+  [l.source, l.actorId ?? l.actorName, l.category, actionPill(l).label].join("\u0000");
+
+export function groupAuditLogs(logs: AuditLog[]): AuditLogGroup[] {
+  const groups: AuditLog[][] = [];
+  let lastKey = "";
+  for (const log of logs) {
+    const key = groupKeyOf(log);
+    const current = groups[groups.length - 1];
+    const prev = current?.[current.length - 1];
+    if (
+      prev &&
+      key === lastKey &&
+      Math.abs(Date.parse(prev.createdAt) - Date.parse(log.createdAt)) <= AUDIT_GROUP_WINDOW_MS
+    ) {
+      current.push(log);
+    } else {
+      groups.push([log]);
+      lastKey = key;
+    }
+  }
+  return groups.map((g) => ({ key: g[g.length - 1].id, logs: g }));
+}
+
+// "Bed count updated: " when every entry's summary starts with it, else null.
+function sharedPrefix(logs: AuditLog[]): string | null {
+  const first = logs[0].summary;
+  const cut = first.indexOf(": ");
+  if (cut <= 0) return null;
+  const prefix = first.slice(0, cut + 2);
+  return logs.every((l) => l.summary.startsWith(prefix)) ? prefix : null;
+}
+
+// One change inside an open group, without the part the group's line says:
+// "Bed count updated: Men's Lodge 1 → 2" -> "Men's Lodge 1 → 2".
+export function groupChildSummary(group: AuditLogGroup, log: AuditLog): string {
+  const prefix = sharedPrefix(group.logs);
+  return prefix ? log.summary.slice(prefix.length) : log.summary;
+}
+
+// What the "(N ...)" counts, by table. Anything else counts "changes".
+const GROUP_UNIT: Record<string, string> = {
+  bed_availability: "locations",
+  slides: "slides",
+  slide_locations: "locations",
+  builtin_page_locations: "locations",
+  bulletin_locations: "locations",
+  info_content: "pages",
+  events: "events",
+  screens: "screens",
+  announcements: "announcements",
+  lost_found_items: "items",
+};
+
+/*
+  The Description of a group of two or more: "Bed counts updated (6
+  locations)", "3 slides hidden". With `matchingOnly` (a search is on, so the
+  query returned only the entries that match) it counts matching changes.
+*/
+export function groupSummary(group: AuditLogGroup, matchingOnly: boolean): string {
+  const { logs } = group;
+  const lead = logs[0];
+  const n = logs.length;
+  const noun = NOUN[lead.tableName] ?? "Record";
+  const prefix = sharedPrefix(logs);
+  const base = prefix ? prefix.slice(0, -2) : actionPill(lead).label;
+  const label = base.startsWith(`${noun} `) ? `${noun}s${base.slice(noun.length)}` : base;
+  if (matchingOnly) return `${label} (${n} matching changes)`;
+
+  // Count records only when each entry is a different record of one table;
+  // the same slide edited twice is "2 changes", not "2 slides".
+  const oneTable = logs.every((l) => l.tableName === lead.tableName);
+  const distinct = new Set(logs.map((l) => l.recordId)).size === n;
+  const unit = (oneTable && distinct && GROUP_UNIT[lead.tableName]) || "changes";
+  // "Slides hidden" + slides -> "3 slides hidden", not "Slides hidden (3 slides)".
+  if (unit !== "changes" && label.toLowerCase().startsWith(`${unit} `)) {
+    return `${n} ${label[0].toLowerCase()}${label.slice(1)}`;
+  }
+  return `${label} (${n} ${unit})`;
+}
+
 // LIKE treats % and _ as wildcards; a search for "50%" means the characters.
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 
@@ -193,9 +297,7 @@ export async function fetchAuditLogs(
 ): Promise<{ logs: AuditLog[]; error: string | null }> {
   let query = supabase
     .from("audit_logs")
-    .select(
-      "id, created_at, actor_id, actor_name, source, action, category, table_name, record_id, summary, old_data, new_data, changed_fields",
-    )
+    .select(AUDIT_COLUMNS)
     .order("id", { ascending: false })
     .limit(AUDIT_PAGE_SIZE);
   if (beforeId !== undefined) query = query.lt("id", beforeId);
@@ -240,14 +342,48 @@ export async function fetchActorRoles(ids: string[]): Promise<Record<string, str
 }
 
 /*
-  Entries since this admin last opened Logs, not counting their own. The RPC
-  stops counting at 10, which is all the "9+" badge needs. null when the call
-  failed: the badge then stays as it was rather than claiming zero.
+  GROUPS of entries since this admin last opened Logs, not counting their own
+  entries, grouped exactly as the Logs table groups them. Stops at 10, which is
+  all the "9+" badge needs. null when a call failed: the badge then stays as it
+  was rather than claiming zero.
+
+  Counted here rather than by the audit_logs_unread_count() RPC (0034, which
+  counts raw entries and is no longer called) because grouping uses the action
+  pill, which only exists in the browser. Same rules as the RPC: "since" is
+  profiles.logs_last_seen_at (database clock), and only admins can read
+  audit_logs at all (RLS). Reads at most UNREAD_SCAN_LIMIT entries, far more
+  than ten groups need.
 */
+const UNREAD_CAP = 10;
+const UNREAD_SCAN_LIMIT = 200;
+
 export async function fetchAuditUnreadCount(): Promise<number | null> {
-  const { data, error } = await supabase.rpc("audit_logs_unread_count");
-  if (error || typeof data !== "number") return null;
-  return data;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const uid = session?.user.id;
+  if (!uid) return null;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("logs_last_seen_at")
+    .eq("id", uid)
+    .maybeSingle();
+  if (profileError) return null;
+  const seen = (profile as { logs_last_seen_at: string | null } | null)?.logs_last_seen_at;
+
+  let query = supabase
+    .from("audit_logs")
+    .select(AUDIT_COLUMNS)
+    .or(`actor_id.is.null,actor_id.neq.${uid}`)
+    .order("id", { ascending: false })
+    .limit(UNREAD_SCAN_LIMIT);
+  if (seen) query = query.gt("created_at", seen);
+
+  const { data, error } = await query;
+  if (error || !data) return null;
+  const groups = groupAuditLogs((data as AuditDbRow[]).map(toAuditLog));
+  return Math.min(groups.length, UNREAD_CAP);
 }
 
 // Fired on window once the logs are marked seen, so the sidebar badge (which

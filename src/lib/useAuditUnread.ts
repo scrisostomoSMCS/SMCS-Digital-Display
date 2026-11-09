@@ -8,11 +8,12 @@ import { AUDIT_LOGS_SEEN_EVENT, fetchAuditUnreadCount } from "./auditLogs";
   The Logs badge count for the signed-in admin. Off (always 0, no queries, no
   channel) when `enabled` is false, so non-admins never touch audit_logs.
 
-  A fresh count on mount, then Realtime: every new audit_logs row triggers a
-  recount through the same RPC rather than counting events client-side, so the
-  "not my own changes" and "since I last looked" rules live in one place (the
-  database). Debounced because one save can write several rows. RLS on
-  audit_logs means only admins receive these events at all.
+  The count is of GROUPS (one multi-row save is one), as the Logs table shows
+  them. A fresh count on mount, then Realtime: every new audit_logs row
+  triggers a full recount through fetchAuditUnreadCount rather than adding up
+  events here, so the "not my own changes", "since I last looked" and grouping
+  rules live in one place. Debounced because one save can write several rows.
+  RLS on audit_logs means only admins receive these events at all.
 
   Also recounts when the tab comes back into view, which covers a Realtime
   connection that dropped while the laptop slept, and when the Logs screen

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarBlankIcon,
   CaretRightIcon,
@@ -16,6 +16,9 @@ import {
   fetchActorRoles,
   fetchAuditActors,
   fetchAuditLogs,
+  groupAuditLogs,
+  groupChildSummary,
+  groupSummary,
   hasAuditFilters,
   markAuditLogsSeen,
   matchesAuditFilters,
@@ -25,6 +28,7 @@ import {
   toAuditLog,
   type AuditFilters,
   type AuditLog,
+  type AuditLogGroup,
 } from "@/lib/auditLogs";
 import { PILL_TONE_CLASS, actionPill } from "@/lib/auditActionPill";
 
@@ -32,6 +36,10 @@ import { PILL_TONE_CLASS, actionPill } from "@/lib/auditActionPill";
   The admin audit log as a table: User, Date, Time, Action, Description, newest
   first, 50 at a time. Clicking a row opens the changed fields before and after.
   Light theme to match the manage page's content area (the sidebar stays dark).
+
+  Entries from one multi-row save (six bed counts at once) show as ONE row
+  (groupAuditLogs in src/lib/auditLogs.ts); opening it lists each change, and
+  each change opens its own before/after. A group of one looks as it always did.
 
   Opening this screen marks everything as seen (clears the sidebar badge), and
   so does each entry that arrives live while it is open, since it is on screen.
@@ -131,6 +139,54 @@ function Details({ log }: { log: AuditLog }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+// The changes inside an open group, each opening its own before/after table.
+function GroupChildren({
+  group,
+  expanded,
+  onToggle,
+}: {
+  group: AuditLogGroup;
+  expanded: Set<string>;
+  onToggle: (key: string) => void;
+}) {
+  return (
+    <ul className="divide-y divide-placeholder border-2 border-placeholder bg-paper">
+      {group.logs.map((log) => {
+        const key = `l:${log.id}`;
+        const open = expanded.has(key);
+        const detailsId = `audit-log-${log.id}`;
+        return (
+          <li key={log.id}>
+            <button
+              type="button"
+              onClick={() => onToggle(key)}
+              aria-expanded={open}
+              aria-controls={detailsId}
+              className="flex w-full items-start gap-2 px-3 py-2 text-left hover:bg-ink/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue"
+            >
+              <span className="min-w-0 flex-1 break-words">
+                <Summary text={groupChildSummary(group, log)} />
+              </span>
+              <CaretRightIcon
+                size={16}
+                aria-hidden="true"
+                className={`mt-1 shrink-0 text-ink/60 transition-transform duration-150 motion-reduce:transition-none ${
+                  open ? "rotate-90" : ""
+                }`}
+              />
+            </button>
+            {open && (
+              <div id={detailsId} className="px-3 pb-3">
+                <Details log={log} />
+              </div>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -297,7 +353,8 @@ export default function AuditLogList() {
   const [error, setError] = useState<string | null>(null);
   const [actors, setActors] = useState<{ id: string; name: string }[]>([]);
   const [roles, setRoles] = useState<Record<string, string>>({});
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  // Open rows: "g:<group key>" for a group, "l:<log id>" for one entry.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   // The live subscription outlives filter changes; it reads the current ones.
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
@@ -396,14 +453,20 @@ export default function AuditLogList() {
     };
   }, []);
 
-  function toggle(id: number) {
+  function toggle(key: string) {
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }
+
+  // Regrouped over everything loaded, so live entries and "Load more" join
+  // the groups they belong to.
+  const groups = useMemo(() => groupAuditLogs(logs), [logs]);
+  // A search returns only the matching entries, so groups then count those.
+  const searching = filters.search.trim() !== "";
 
   const filtered = hasAuditFilters(filters) || searchText.trim() !== "";
 
@@ -521,17 +584,21 @@ export default function AuditLogList() {
                 </tr>
               </thead>
               <tbody>
-                {logs.map((log) => {
-                  const open = expanded.has(log.id);
+                {groups.map((group) => {
+                  // The newest entry stands for the group in every column.
+                  const log = group.logs[0];
+                  const single = group.logs.length === 1;
+                  const rowKey = single ? `l:${log.id}` : `g:${group.key}`;
+                  const open = expanded.has(rowKey);
                   const pill = actionPill(log);
-                  const detailsId = `audit-log-${log.id}`;
+                  const detailsId = single ? `audit-log-${log.id}` : `audit-group-${group.key}`;
                   return (
-                    <Fragment key={log.id}>
+                    <Fragment key={rowKey}>
                       {/* The whole row opens the details for a mouse; the
                           button in Description is the keyboard and
                           screen-reader control (its click bubbles here). */}
                       <tr
-                        onClick={() => toggle(log.id)}
+                        onClick={() => toggle(rowKey)}
                         className={`cursor-pointer border-b border-placeholder align-middle hover:bg-ink/5 ${
                           open ? "bg-ink/5" : ""
                         }`}
@@ -561,7 +628,9 @@ export default function AuditLogList() {
                             className="flex w-full items-start gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
                           >
                             <span className="min-w-0 flex-1 break-words">
-                              <Summary text={log.summary} />
+                              <Summary
+                                text={single ? log.summary : groupSummary(group, searching)}
+                              />
                             </span>
                             <CaretRightIcon
                               size={16}
@@ -576,7 +645,11 @@ export default function AuditLogList() {
                       {open && (
                         <tr id={detailsId} className="border-b border-placeholder bg-ink/5">
                           <td colSpan={5} className="px-4 pt-1 pb-4">
-                            <Details log={log} />
+                            {single ? (
+                              <Details log={log} />
+                            ) : (
+                              <GroupChildren group={group} expanded={expanded} onToggle={toggle} />
+                            )}
                           </td>
                         </tr>
                       )}

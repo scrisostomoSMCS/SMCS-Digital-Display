@@ -33,7 +33,8 @@ export const PILL_TONE_CLASS: Record<PillTone, string> = {
 };
 
 // What kind of record an entry is about, from the table it was written for.
-const NOUN: Record<string, string> = {
+// Also used by groupSummary in auditLogs.ts ("Bed count" -> "Bed counts").
+export const NOUN: Record<string, string> = {
   slides: "Slide",
   slide_locations: "Slide",
   info_content: "Page",
