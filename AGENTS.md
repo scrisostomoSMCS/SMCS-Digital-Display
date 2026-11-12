@@ -139,3 +139,8 @@ The user manages the development server manually.
 - Use `npm run lint` for routine verification while the development server is running.
 - If a full production build is necessary, tell the user first so the development server can be stopped.
 - Never run development and production build processes concurrently against the same `.next` directory.
+
+## Release Order
+
+- Any change that includes a new migration: apply it to dev, then to prod, BEFORE running `git release`.
+- When a task adds a migration, end your summary with a reminder listing which migration files must be applied to prod before deploying.
