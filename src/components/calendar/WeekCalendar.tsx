@@ -5,6 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import type {
+  DatesSetArg,
   EventClickArg,
   EventContentArg,
   EventInput,
@@ -16,6 +17,7 @@ import {
   DAY_END_HOUR,
 } from "@/lib/dashboardConfig";
 import { type DashboardEvent } from "@/lib/events";
+import { expandEvents } from "@/lib/recurrence";
 import { DEFAULT_EVENT_COLOR } from "@/lib/eventColors";
 import EventModal, { type SelectedEvent } from "./EventModal";
 
@@ -78,7 +80,9 @@ const NARROW_QUERY = "(max-width: 1023px)";
   Presentational week calendar. Role-agnostic: it just renders whatever events
   it's given, so the Live Calendar (all events) and the Personal Calendar (a
   user's own signups), and future employee/admin views, reuse it unchanged.
-  Data loading + realtime live in thin wrapper components, not here.
+  Data loading + realtime live in thin wrapper components, not here. Weekly
+  series arrive as one event each and are expanded (src/lib/recurrence) for
+  the dates FullCalendar reports through datesSet.
 */
 type WeekCalendarProps = {
   events: DashboardEvent[];
@@ -97,6 +101,9 @@ export default function WeekCalendar({ events }: WeekCalendarProps) {
 
   // The event whose detail popup is open (null = no popup).
   const [selected, setSelected] = useState<SelectedEvent | null>(null);
+
+  // The dates in view, so weekly series can be expanded for exactly them.
+  const [range, setRange] = useState<{ start: Date; end: Date } | null>(null);
 
   // Zero-pad an hour into the "HH:00:00" form FullCalendar's slot times expect.
   const slotTime = (h: number) => `${String(h).padStart(2, "0")}:00:00`;
@@ -133,7 +140,13 @@ export default function WeekCalendar({ events }: WeekCalendarProps) {
     calRef.current?.getApi().changeView(narrow ? "list" : "timeGrid");
   }, [narrow]);
 
-  const fcEvents = useMemo(() => events.map(toEventInput), [events]);
+  const fcEvents = useMemo(
+    () =>
+      expandEvents(events, range?.start ?? null, range?.end ?? null).map(
+        toEventInput,
+      ),
+    [events, range],
+  );
 
   if (!mounted) {
     return <div className="tv-calendar h-full" aria-hidden="true" />;
@@ -156,6 +169,7 @@ export default function WeekCalendar({ events }: WeekCalendarProps) {
         // shift): an event saved as 9:00 reads as 9:00 everywhere.
         timeZone="UTC"
         events={fcEvents}
+        datesSet={(arg: DatesSetArg) => setRange({ start: arg.start, end: arg.end })}
         eventContent={renderEvent}
         eventTimeFormat={{
           hour: "numeric",

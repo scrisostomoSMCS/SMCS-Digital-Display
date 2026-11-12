@@ -1,12 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Repeat } from "lucide-react";
 import ColorPicker from "./ColorPicker";
+import RepeatFields from "./RepeatFields";
+import {
+  formatDateKey,
+  formatRepeatDays,
+  repeatError,
+  type RepeatState,
+} from "@/lib/recurrence";
 
 /*
   Create/edit form shown when an employee clicks a slot or an event. Pure UI:
   it collects fields and hands them back; the parent (ManageCalendar) does the
   Supabase write. Times are datetime-local strings treated as UTC wall-clock.
+
+  For a weekly series the form always shows the SERIES (its first date and
+  time), even when opened from a later occurrence; that occurrence's date only
+  drives the "Skip … only" button.
 */
 export type EventFormState = {
   name: string;
@@ -14,8 +26,8 @@ export type EventFormState = {
   location: string;
   startLocal: string; // "YYYY-MM-DDTHH:mm" (UTC wall-clock)
   endLocal: string;
-  showOnDashboard: boolean;
   color: string; // hex tint used on the calendars
+  repeat: RepeatState;
 };
 
 type EventFormProps = {
@@ -26,6 +38,12 @@ type EventFormProps = {
   onSave: (state: EventFormState) => void;
   onDelete?: () => void;
   onClose: () => void;
+  // Series only: the clicked occurrence's date ("YYYY-MM-DD") and the series'
+  // skipped dates, with their actions.
+  skipDate?: string;
+  skipped?: string[];
+  onSkip?: (date: string) => void;
+  onUndoSkip?: (date: string) => void;
 };
 
 const inputClass =
@@ -39,6 +57,10 @@ export default function EventForm({
   onSave,
   onDelete,
   onClose,
+  skipDate,
+  skipped,
+  onSkip,
+  onUndoSkip,
 }: EventFormProps) {
   const [state, setState] = useState<EventFormState>(initial);
 
@@ -54,11 +76,15 @@ export default function EventForm({
   const set = <K extends keyof EventFormState>(k: K, v: EventFormState[K]) =>
     setState((s) => ({ ...s, [k]: v }));
 
+  const repeatProblem = repeatError(state.repeat, state.startLocal, state.endLocal);
   const invalid =
     !state.name.trim() ||
     !state.startLocal ||
     !state.endLocal ||
-    state.endLocal <= state.startLocal;
+    state.endLocal <= state.startLocal ||
+    repeatProblem !== null;
+  // The saved series being edited (not the unsaved checkbox state).
+  const isSeries = mode === "edit" && initial.repeat.on;
 
   return (
     <div
@@ -74,11 +100,17 @@ export default function EventForm({
           e.preventDefault();
           if (!invalid) onSave(state);
         }}
-        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto border-4 border-blue bg-paper p-4 lg:max-h-none lg:overflow-visible lg:p-6"
+        className="max-h-[calc(100dvh-1.5rem)] w-full max-w-lg overflow-y-auto border-4 border-blue bg-paper p-4 lg:p-6"
       >
         <h2 className="text-2xl font-bold text-blue">
           {mode === "create" ? "New event" : "Edit event"}
         </h2>
+        {state.repeat.on && state.repeat.days.length > 0 && (
+          <p className="mt-1 flex items-center gap-2 text-base font-semibold text-ink/80">
+            <Repeat size={18} aria-hidden="true" className="text-blue" />
+            Repeats {formatRepeatDays(state.repeat.days)}
+          </p>
+        )}
         <span className="mt-2 block h-1 w-16 bg-teal" />
 
         <label className="mt-4 block text-base font-semibold">
@@ -113,7 +145,7 @@ export default function EventForm({
 
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-2">
           <label className="block text-base font-semibold">
-            Start
+            {state.repeat.on ? "Start (first date)" : "Start"}
             <input
               type="datetime-local"
               className={inputClass}
@@ -135,21 +167,24 @@ export default function EventForm({
         </div>
 
         <div className="mt-4">
+          <RepeatFields
+            value={state.repeat}
+            onChange={(v) => set("repeat", v)}
+            startDate={state.startLocal}
+            error={repeatProblem}
+            inputClass={inputClass}
+            skipped={isSeries ? skipped : undefined}
+            onUndoSkip={isSeries ? onUndoSkip : undefined}
+            busy={saving}
+          />
+        </div>
+
+        <div className="mt-4">
           <ColorPicker
             value={state.color}
             onChange={(v) => set("color", v)}
           />
         </div>
-
-        <label className="mt-4 flex items-center gap-2 text-base font-semibold">
-          <input
-            type="checkbox"
-            className="h-5 w-5 accent-blue"
-            checked={state.showOnDashboard}
-            onChange={(e) => set("showOnDashboard", e.target.checked)}
-          />
-          Show on Live Calendar
-        </label>
 
         {error && (
           <p role="alert" className="mt-3 border-l-4 border-blue pl-3 text-base">
@@ -174,17 +209,36 @@ export default function EventForm({
               Cancel
             </button>
           </div>
-          {mode === "edit" && onDelete && (
-            <button
-              type="button"
-              onClick={onDelete}
-              disabled={saving}
-              className="border-2 border-teal px-5 py-2 text-base font-semibold text-teal hover:bg-teal hover:text-paper disabled:opacity-60"
-            >
-              Delete
-            </button>
-          )}
+          <div className="flex flex-wrap gap-3">
+            {isSeries && skipDate && onSkip && (
+              <button
+                type="button"
+                onClick={() => onSkip(skipDate)}
+                disabled={saving}
+                className="border-2 border-blue px-5 py-2 text-base font-semibold text-blue hover:bg-blue hover:text-paper disabled:opacity-60"
+              >
+                Skip {formatDateKey(skipDate)} only
+              </button>
+            )}
+            {mode === "edit" && onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={saving}
+                className="border-2 border-teal px-5 py-2 text-base font-semibold text-teal hover:bg-teal hover:text-paper disabled:opacity-60"
+              >
+                {isSeries ? "Delete series" : "Delete"}
+              </button>
+            )}
+          </div>
         </div>
+        {isSeries && (
+          <p className="mt-3 text-base text-ink/70">
+            Delete removes every date in this series. To cancel one day, use
+            Skip. To stop it repeating but keep past dates, set &ldquo;Ends
+            on&rdquo;.
+          </p>
+        )}
       </form>
     </div>
   );

@@ -18,6 +18,8 @@ the data layer.
 - `events.ts`, the `DashboardEvent` type (the UI contract every calendar
   renders against) plus reads of the `events` table.
 - `manageEvents.ts`, staff create/update/delete for events.
+- `recurrence.ts`, weekly recurring events: expands a series row into dated
+  occurrences for a range (`expandEvents`), plus the repeat-form validation.
 - `useLiveEvents.ts`, hook that loads events and subscribes to Realtime.
 - `eventColors.ts`, the per-event color choices.
 - Calendars consume all of this through `components/calendar/WeekCalendar.tsx`,

@@ -5,6 +5,13 @@ import { createEvent } from "@/lib/manageEvents";
 import { DEFAULT_EVENT_COLOR } from "@/lib/eventColors";
 import { Field, inputClass, labelClass } from "./editorFields";
 import ColorPicker from "./ColorPicker";
+import RepeatFields from "./RepeatFields";
+import {
+  recurrenceToSave,
+  repeatError,
+  REPEAT_OFF,
+  type RepeatState,
+} from "@/lib/recurrence";
 
 /*
   A second entry point for adding a calendar event, alongside the calendar
@@ -20,18 +27,23 @@ export default function QuickEventForm() {
   const [date, setDate] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
-  const [onDashboard, setOnDashboard] = useState(true);
   const [color, setColor] = useState(DEFAULT_EVENT_COLOR);
+  const [repeat, setRepeat] = useState<RepeatState>(REPEAT_OFF);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const invalid = !name.trim() || !date || !start || !end || end <= start;
+  // Same validation as the calendar's form, on the same "date + time" strings.
+  const repeatProblem = repeatError(repeat, `${date}T${start}`, `${date}T${end}`);
+  const invalid =
+    !name.trim() || !date || !start || !end || end <= start || repeatProblem !== null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (invalid) {
-      setError("Add a name, date, and start/end times (end after start).");
+      setError(
+        repeatProblem ?? "Add a name, date, and start/end times (end after start).",
+      );
       return;
     }
     setSaving(true);
@@ -44,8 +56,8 @@ export default function QuickEventForm() {
       // Interpreted as UTC wall-clock, matching the calendar + display.
       start: new Date(`${date}T${start}:00Z`).toISOString(),
       end: new Date(`${date}T${end}:00Z`).toISOString(),
-      showOnDashboard: onDashboard,
       color,
+      recurrence: recurrenceToSave(repeat),
     });
     setSaving(false);
     if (err) {
@@ -59,6 +71,7 @@ export default function QuickEventForm() {
     setLocation("");
     setStart("");
     setEnd("");
+    setRepeat(REPEAT_OFF);
   }
 
   return (
@@ -76,7 +89,9 @@ export default function QuickEventForm() {
       />
       <div className="grid gap-4 lg:grid-cols-3">
         <label className="block">
-          <span className={labelClass}>Date</span>
+          <span className={labelClass}>
+            {repeat.on ? "Date (first date)" : "Date"}
+          </span>
           <input
             type="date"
             className={inputClass}
@@ -104,17 +119,15 @@ export default function QuickEventForm() {
         </label>
       </div>
 
-      <ColorPicker value={color} onChange={setColor} />
+      <RepeatFields
+        value={repeat}
+        onChange={setRepeat}
+        startDate={date}
+        error={repeatProblem}
+        inputClass={inputClass}
+      />
 
-      <label className="flex items-center gap-3 text-base font-semibold">
-        <input
-          type="checkbox"
-          className="h-5 w-5 accent-blue"
-          checked={onDashboard}
-          onChange={(e) => setOnDashboard(e.target.checked)}
-        />
-        Show on the Live Calendar and &ldquo;Events happening today&rdquo;
-      </label>
+      <ColorPicker value={color} onChange={setColor} />
 
       {error && (
         <p role="alert" className="text-base font-semibold text-blue">

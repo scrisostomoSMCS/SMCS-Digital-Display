@@ -5,11 +5,14 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type {
+  DatesSetArg,
   DateSelectArg,
   EventClickArg,
+  EventContentArg,
   EventDropArg,
   EventInput,
 } from "@fullcalendar/core";
+import { Repeat } from "lucide-react";
 import type { EventResizeDoneArg } from "@fullcalendar/interaction";
 import { supabase } from "@/lib/supabase";
 import {
@@ -18,8 +21,16 @@ import {
   updateEvent,
   moveEvent,
   deleteEvent,
+  setSkippedDates,
   type ManageEvent,
 } from "@/lib/manageEvents";
+import {
+  expandEvents,
+  recurrenceToSave,
+  repeatStateFrom,
+  repeatsLabel,
+  REPEAT_OFF,
+} from "@/lib/recurrence";
 import EventForm, { type EventFormState } from "./EventForm";
 import { DEFAULT_EVENT_COLOR } from "@/lib/eventColors";
 
@@ -29,6 +40,11 @@ import { DEFAULT_EVENT_COLOR } from "@/lib/eventColors";
   appear on the public/TV display. All writes go to the one Supabase `events`
   table; the dashboard and app pick up changes through their existing realtime
   subscriptions. Desktop keeps the full week; smaller screens use a day view.
+
+  Weekly series (0035) are expanded for the visible range. Their occurrences
+  can't be dragged or resized (that would move one date's time onto the whole
+  series); clicking one opens the series itself, with "Skip … only" for the
+  date that was clicked.
 */
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -50,7 +66,30 @@ type OpenForm = {
   mode: "create" | "edit";
   id: string | null;
   initial: EventFormState;
+  skipDate?: string; // series only: the occurrence that was clicked
 };
+
+// Same markup as FullCalendar's default time-grid event (so one-time events
+// look exactly as before), plus a "Repeats Mon, Wed" line on a series.
+function renderManageEvent(arg: EventContentArg) {
+  const repeat = arg.event.extendedProps.repeatLabel as string | undefined;
+  return (
+    <div className="fc-event-main-frame">
+      {arg.timeText && <div className="fc-event-time">{arg.timeText}</div>}
+      <div className="fc-event-title-container">
+        <div className="fc-event-title fc-sticky">
+          {arg.event.title || "\u00A0"}
+        </div>
+        {repeat && (
+          <div className="flex items-center gap-1 text-xs font-semibold">
+            <Repeat size={12} aria-hidden="true" />
+            {repeat}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function ManageCalendar() {
   const calendarRef = useRef<FullCalendar>(null);
@@ -60,6 +99,8 @@ export default function ManageCalendar() {
   const [form, setForm] = useState<OpenForm | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // The dates FullCalendar is showing, reported by datesSet.
+  const [range, setRange] = useState<{ start: Date; end: Date } | null>(null);
 
   const load = useCallback(async () => {
     setEvents(await fetchAllEvents());
@@ -101,20 +142,25 @@ export default function ManageCalendar() {
   }, [compact]);
 
   // Each event renders in its chosen color (the same tint it shows on the Live
-  // Calendar). Off-dashboard events are dimmed (see .evt-off-board) so staff can
-  // still tell at a glance which events are on the public board.
-  const fcEvents: EventInput[] = events.map((e) => ({
+  // Calendar).
+  const fcEvents: EventInput[] = expandEvents(
+    events,
+    range?.start ?? null,
+    range?.end ?? null,
+  ).map((e) => ({
     id: e.id,
     title: e.name,
     start: e.start,
     end: e.end,
     backgroundColor: e.color || DEFAULT_EVENT_COLOR,
     borderColor: e.color || DEFAULT_EVENT_COLOR,
-    classNames: e.showOnDashboard ? undefined : ["evt-off-board"],
+    editable: !e.recurrence,
     extendedProps: {
+      seriesId: e.seriesId,
+      occurrenceDate: e.occurrenceDate,
+      repeatLabel: e.recurrence ? repeatsLabel(e.recurrence) : undefined,
       description: e.description,
       location: e.location,
-      showOnDashboard: e.showOnDashboard,
       color: e.color || DEFAULT_EVENT_COLOR,
     },
   }));
@@ -131,17 +177,37 @@ export default function ManageCalendar() {
         location: "",
         startLocal: dateToLocal(sel.start),
         endLocal: dateToLocal(sel.end),
-        showOnDashboard: true,
         color: DEFAULT_EVENT_COLOR,
+        repeat: REPEAT_OFF,
       },
     });
     sel.view.calendar.unselect();
   }
 
-  // Click an event → edit.
+  // Click an event → edit. A series occurrence opens the SERIES row, so the
+  // form shows its real first date; saving from a later date never moves it.
   function handleEventClick(click: EventClickArg) {
     setError(null);
     const e = click.event;
+    const seriesId = e.extendedProps.seriesId as string | undefined;
+    const series = seriesId && events.find((x) => x.id === seriesId);
+    if (series) {
+      setForm({
+        mode: "edit",
+        id: series.id,
+        skipDate: e.extendedProps.occurrenceDate as string | undefined,
+        initial: {
+          name: series.name,
+          description: series.description ?? "",
+          location: series.location ?? "",
+          startLocal: dateToLocal(new Date(series.start)),
+          endLocal: series.end ? dateToLocal(new Date(series.end)) : "",
+          color: series.color || DEFAULT_EVENT_COLOR,
+          repeat: repeatStateFrom(series.recurrence),
+        },
+      });
+      return;
+    }
     setForm({
       mode: "edit",
       id: e.id,
@@ -151,8 +217,8 @@ export default function ManageCalendar() {
         location: (e.extendedProps.location as string) ?? "",
         startLocal: e.start ? dateToLocal(e.start) : "",
         endLocal: e.end ? dateToLocal(e.end) : "",
-        showOnDashboard: Boolean(e.extendedProps.showOnDashboard),
         color: (e.extendedProps.color as string) ?? DEFAULT_EVENT_COLOR,
+        repeat: REPEAT_OFF,
       },
     });
   }
@@ -183,8 +249,8 @@ export default function ManageCalendar() {
       location: s.location,
       start: localToISO(s.startLocal),
       end: localToISO(s.endLocal),
-      showOnDashboard: s.showOnDashboard,
       color: s.color,
+      recurrence: recurrenceToSave(s.repeat),
     };
     const err =
       form.mode === "create"
@@ -212,6 +278,38 @@ export default function ManageCalendar() {
     setForm(null);
     load();
   }
+
+  // "Skip Tue, Nov 25 only": hide one date of the series, then close.
+  async function handleSkip(date: string) {
+    if (!form?.id) return;
+    setSaving(true);
+    setError(null);
+    const err = await setSkippedDates(form.id, { add: date });
+    setSaving(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    setForm(null);
+    load();
+  }
+
+  // Undo a skip from the form's "Skipped dates" list. The form stays open
+  // (and keeps any unsaved edits); the list refreshes from the reload.
+  async function handleUndoSkip(date: string) {
+    if (!form?.id) return;
+    setSaving(true);
+    setError(null);
+    const err = await setSkippedDates(form.id, { remove: date });
+    setSaving(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    load();
+  }
+
+  const openSeries = form?.id ? events.find((x) => x.id === form.id) : undefined;
 
   if (!mounted) return <div className="h-full" aria-hidden="true" />;
 
@@ -242,6 +340,8 @@ export default function ManageCalendar() {
         allDaySlot={false}
         height="100%"
         events={fcEvents}
+        eventContent={renderManageEvent}
+        datesSet={(arg: DatesSetArg) => setRange({ start: arg.start, end: arg.end })}
         select={handleSelect}
         eventClick={handleEventClick}
         eventDrop={handleEventDrop}
@@ -257,6 +357,10 @@ export default function ManageCalendar() {
           onSave={handleSave}
           onDelete={form.mode === "edit" ? handleDelete : undefined}
           onClose={() => setForm(null)}
+          skipDate={form.skipDate}
+          skipped={openSeries?.recurrence?.exceptions}
+          onSkip={handleSkip}
+          onUndoSkip={handleUndoSkip}
         />
       )}
     </div>

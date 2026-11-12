@@ -129,11 +129,6 @@ select:disabled,
   --fc-button-active-bg-color: var(--color-teal);
   --fc-button-active-border-color: var(--color-teal);
 }
-/* Events not shown on the public Live Calendar are dimmed in the editor so
-   staff can still tell them apart from on-board events at a glance. */
-.manage-calendar .fc .evt-off-board {
-  opacity: 0.5;
-}
 .manage-calendar .fc {
   font-size: 0.95rem;
 }
